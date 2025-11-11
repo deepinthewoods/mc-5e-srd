@@ -252,8 +252,8 @@ public class CharacterEntity extends PathfinderMob {
     }
 
     @Override
-    public void saveAdditional(CompoundTag tag) {
-        super.saveAdditional(tag);
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
 
         // Save character data
         tag.putString("Race", race.getSerializedName());
@@ -285,8 +285,8 @@ public class CharacterEntity extends PathfinderMob {
     }
 
     @Override
-    public void load(CompoundTag tag) {
-        super.load(tag);
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
 
         // Load character data
         tag.getString("Race").ifPresent(raceStr -> {
