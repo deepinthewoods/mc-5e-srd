@@ -252,13 +252,16 @@ public class CharacterEntity extends PathfinderMob {
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag tag) {
+    public void addAdditionalSaveData(net.minecraft.nbt.ValueOutput tag) {
         super.addAdditionalSaveData(tag);
 
+        // Create a compound tag for our data
+        CompoundTag ourTag = new CompoundTag();
+
         // Save character data
-        tag.putString("Race", race.getSerializedName());
-        tag.putString("Class", characterClass.getSerializedName());
-        tag.putInt("Level", level);
+        ourTag.putString("Race", race.getSerializedName());
+        ourTag.putString("Class", characterClass.getSerializedName());
+        ourTag.putInt("Level", level);
 
         // Save stats
         CompoundTag statsTag = new CompoundTag();
@@ -268,7 +271,7 @@ public class CharacterEntity extends PathfinderMob {
         statsTag.putInt("INT", stats.intelligence());
         statsTag.putInt("WIS", stats.wisdom());
         statsTag.putInt("CHA", stats.charisma());
-        tag.put("Stats", statsTag);
+        ourTag.put("Stats", statsTag);
 
         // Save combat state
         CompoundTag combatTag = new CompoundTag();
@@ -281,12 +284,18 @@ public class CharacterEntity extends PathfinderMob {
         combatTag.putInt("ArmorClass", combatState.armorClass());
         combatTag.putInt("CurrentHP", combatState.currentHitPoints());
         combatTag.putInt("MaxHP", combatState.maxHitPoints());
-        tag.put("Combat", combatTag);
+        ourTag.put("Combat", combatTag);
+
+        // Write to the output
+        tag.writeCompoundTag(ourTag);
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag tag) {
-        super.readAdditionalSaveData(tag);
+    public void readAdditionalSaveData(net.minecraft.nbt.ValueInput input) {
+        super.readAdditionalSaveData(input);
+
+        // Read our compound tag
+        CompoundTag tag = input.readCompoundTag().orElse(new CompoundTag());
 
         // Load character data
         tag.getString("Race").ifPresent(raceStr -> {
