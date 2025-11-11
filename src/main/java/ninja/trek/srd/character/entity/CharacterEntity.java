@@ -252,16 +252,13 @@ public class CharacterEntity extends PathfinderMob {
     }
 
     @Override
-    public void addAdditionalSaveData(net.minecraft.nbt.ValueOutput tag) {
-        super.addAdditionalSaveData(tag);
-
-        // Create a compound tag for our data
-        CompoundTag ourTag = new CompoundTag();
+    public void saveAdditional(CompoundTag tag) {
+        super.saveAdditional(tag);
 
         // Save character data
-        ourTag.putString("Race", race.getSerializedName());
-        ourTag.putString("Class", characterClass.getSerializedName());
-        ourTag.putInt("Level", level);
+        tag.putString("Race", race.getSerializedName());
+        tag.putString("Class", characterClass.getSerializedName());
+        tag.putInt("Level", level);
 
         // Save stats
         CompoundTag statsTag = new CompoundTag();
@@ -271,7 +268,7 @@ public class CharacterEntity extends PathfinderMob {
         statsTag.putInt("INT", stats.intelligence());
         statsTag.putInt("WIS", stats.wisdom());
         statsTag.putInt("CHA", stats.charisma());
-        ourTag.put("Stats", statsTag);
+        tag.put("Stats", statsTag);
 
         // Save combat state
         CompoundTag combatTag = new CompoundTag();
@@ -284,18 +281,12 @@ public class CharacterEntity extends PathfinderMob {
         combatTag.putInt("ArmorClass", combatState.armorClass());
         combatTag.putInt("CurrentHP", combatState.currentHitPoints());
         combatTag.putInt("MaxHP", combatState.maxHitPoints());
-        ourTag.put("Combat", combatTag);
-
-        // Write to the output
-        tag.writeCompoundTag(ourTag);
+        tag.put("Combat", combatTag);
     }
 
     @Override
-    public void readAdditionalSaveData(net.minecraft.nbt.ValueInput input) {
-        super.readAdditionalSaveData(input);
-
-        // Read our compound tag
-        CompoundTag tag = input.readCompoundTag().orElse(new CompoundTag());
+    public void load(CompoundTag tag) {
+        super.load(tag);
 
         // Load character data
         tag.getString("Race").ifPresent(raceStr -> {
