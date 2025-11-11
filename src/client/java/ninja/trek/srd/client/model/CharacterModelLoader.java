@@ -16,12 +16,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * The full implementation will use Assimp to load character_parts.gltf and cache
  * all mesh parts for efficient runtime rendering.
  */
-public class CharacterModelLoader extends SimplePreparableReloadListener<Map<String, MeshPart>> {
+public class CharacterModelLoader extends SimplePreparableReloadListener<Map<String, CharacterModelLoader.MeshPart>> {
 
-    private static volatile Map<String, MeshPart> meshParts = Collections.emptyMap();
+    private static volatile Map<String, CharacterModelLoader.MeshPart> meshParts = Collections.emptyMap();
 
     @Override
-    protected Map<String, MeshPart> prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
+    protected Map<String, CharacterModelLoader.MeshPart> prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
         FiveESrdMod.LOGGER.info("Loading character mesh parts...");
 
         // TODO: Load GLTF file using Assimp
@@ -35,7 +35,7 @@ public class CharacterModelLoader extends SimplePreparableReloadListener<Map<Str
     }
 
     @Override
-    protected void apply(Map<String, MeshPart> prepared, ResourceManager resourceManager, ProfilerFiller profiler) {
+    protected void apply(Map<String, CharacterModelLoader.MeshPart> prepared, ResourceManager resourceManager, ProfilerFiller profiler) {
         meshParts = prepared;
         FiveESrdMod.LOGGER.info("Loaded {} character mesh parts", meshParts.size());
     }
@@ -43,7 +43,7 @@ public class CharacterModelLoader extends SimplePreparableReloadListener<Map<Str
     /**
      * Get all loaded mesh parts.
      */
-    public static Map<String, MeshPart> getMeshParts() {
+    public static Map<String, CharacterModelLoader.MeshPart> getMeshParts() {
         return meshParts;
     }
 

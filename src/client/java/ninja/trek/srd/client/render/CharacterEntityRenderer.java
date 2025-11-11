@@ -47,20 +47,11 @@ public class CharacterEntityRenderer extends EntityRenderer<CharacterEntity, Cha
         state.pitch = entity.getXRot();
     }
 
-    @Override
-    public void render(CharacterRenderState state, PoseStack poseStack, MultiBufferSource buffer, int packedLight) {
-        super.render(state, poseStack, buffer, packedLight);
-
-        // TODO: Implement GLTF-based modular rendering
-        // For now, this is a stub that doesn't render anything visible
-        // Full implementation will:
-        // 1. Get mesh parts from CharacterModelLoader based on appearance
-        // 2. Render body, legs, arms, head with appropriate animations
-        // 3. Apply texture from character atlas
-    }
-
-    @Override
-    public ResourceLocation getTextureLocation(CharacterRenderState state) {
-        return TEXTURE;
-    }
+    // TODO: Implement GLTF-based modular rendering
+    // The render method signature has changed in Minecraft 1.21.10
+    // For now, rendering is handled by the parent class
+    // Full implementation will:
+    // 1. Get mesh parts from CharacterModelLoader based on appearance
+    // 2. Render body, legs, arms, head with appropriate animations
+    // 3. Apply texture from character atlas
 }
