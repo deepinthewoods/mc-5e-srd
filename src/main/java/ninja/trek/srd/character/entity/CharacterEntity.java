@@ -1,5 +1,7 @@
 package ninja.trek.srd.character.entity;
 
+import com.mojang.serialization.ValueInput;
+import com.mojang.serialization.ValueOutput;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -252,7 +254,7 @@ public class CharacterEntity extends PathfinderMob {
     }
 
     @Override
-    public void addAdditionalSaveData(net.minecraft.nbt.ValueOutput output) {
+    public void addAdditionalSaveData(ValueOutput output) {
         super.addAdditionalSaveData(output);
 
         // Save character data
@@ -285,7 +287,7 @@ public class CharacterEntity extends PathfinderMob {
     }
 
     @Override
-    public void readAdditionalSaveData(net.minecraft.nbt.ValueInput input) {
+    public void readAdditionalSaveData(ValueInput input) {
         super.readAdditionalSaveData(input);
 
         // Load character data
