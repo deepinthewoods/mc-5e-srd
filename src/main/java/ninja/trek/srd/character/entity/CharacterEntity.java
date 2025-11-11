@@ -52,8 +52,8 @@ public class CharacterEntity extends PathfinderMob {
         this.combatState = CombatState.createDefault(maxHp, ac);
 
         // Register AI goals if on server
-        if (!level.isClientSide) {
-            ninja.trek.srd.character.ai.CombatAIController.registerGoals(this);
+        if (!level.isClientSide()) {
+            registerAIGoals();
         }
     }
 
@@ -75,6 +75,18 @@ public class CharacterEntity extends PathfinderMob {
         builder.define(DATA_LEGS_INDEX, 0);
         builder.define(DATA_ARMS_INDEX, 0);
         builder.define(DATA_HEAD_INDEX, 0);
+    }
+
+    /**
+     * Register AI goals for this character entity.
+     */
+    private void registerAIGoals() {
+        this.goalSelector.addGoal(1, new ninja.trek.srd.character.ai.CombatAIController(this));
+        this.targetSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
+            this,
+            net.minecraft.world.entity.player.Player.class,
+            false
+        ));
     }
 
     /**
@@ -277,45 +289,52 @@ public class CharacterEntity extends PathfinderMob {
         super.readAdditionalSaveData(tag);
 
         // Load character data
-        if (tag.contains("Race")) {
-            this.race = Race.valueOf(tag.getString("Race").toUpperCase());
-        }
-        if (tag.contains("Class")) {
-            this.characterClass = CharacterClass.valueOf(tag.getString("Class").toUpperCase());
-        }
-        if (tag.contains("Level")) {
-            this.level = tag.getInt("Level");
-        }
+        tag.getString("Race").ifPresent(raceStr -> {
+            this.race = Race.valueOf(raceStr.toUpperCase());
+        });
+        tag.getString("Class").ifPresent(classStr -> {
+            this.characterClass = CharacterClass.valueOf(classStr.toUpperCase());
+        });
+        tag.getInt("Level").ifPresent(lvl -> {
+            this.level = lvl;
+        });
 
         // Load stats
-        if (tag.contains("Stats")) {
-            CompoundTag statsTag = tag.getCompound("Stats");
-            this.stats = new CharacterStats(
-                statsTag.getInt("STR"),
-                statsTag.getInt("DEX"),
-                statsTag.getInt("CON"),
-                statsTag.getInt("INT"),
-                statsTag.getInt("WIS"),
-                statsTag.getInt("CHA")
-            );
-        }
+        tag.getCompound("Stats").ifPresent(statsTag -> {
+            int str = statsTag.getInt("STR").orElse(10);
+            int dex = statsTag.getInt("DEX").orElse(10);
+            int con = statsTag.getInt("CON").orElse(10);
+            int intel = statsTag.getInt("INT").orElse(10);
+            int wis = statsTag.getInt("WIS").orElse(10);
+            int cha = statsTag.getInt("CHA").orElse(10);
+            this.stats = new CharacterStats(str, dex, con, intel, wis, cha);
+        });
 
         // Load combat state
-        if (tag.contains("Combat")) {
-            CompoundTag combatTag = tag.getCompound("Combat");
+        tag.getCompound("Combat").ifPresent(combatTag -> {
+            boolean inCombat = combatTag.getBoolean("InCombat").orElse(false);
+            int initiative = combatTag.getInt("Initiative").orElse(0);
+            int remainingMovement = combatTag.getInt("RemainingMovement").orElse(0);
+            boolean hasAction = combatTag.getBoolean("HasAction").orElse(false);
+            boolean hasBonusAction = combatTag.getBoolean("HasBonusAction").orElse(false);
+            boolean hasReaction = combatTag.getBoolean("HasReaction").orElse(false);
+            int armorClass = combatTag.getInt("ArmorClass").orElse(10);
+            int currentHP = combatTag.getInt("CurrentHP").orElse(1);
+            int maxHP = combatTag.getInt("MaxHP").orElse(1);
+
             this.combatState = new CombatState(
-                combatTag.getBoolean("InCombat"),
-                combatTag.getInt("Initiative"),
+                inCombat,
+                initiative,
                 this.position(),
-                combatTag.getInt("RemainingMovement"),
-                combatTag.getBoolean("HasAction"),
-                combatTag.getBoolean("HasBonusAction"),
-                combatTag.getBoolean("HasReaction"),
-                combatTag.getInt("ArmorClass"),
-                combatTag.getInt("CurrentHP"),
-                combatTag.getInt("MaxHP")
+                remainingMovement,
+                hasAction,
+                hasBonusAction,
+                hasReaction,
+                armorClass,
+                currentHP,
+                maxHP
             );
-        }
+        });
 
         updateMinecraftAttributes();
     }

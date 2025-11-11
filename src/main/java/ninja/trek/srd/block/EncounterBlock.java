@@ -40,11 +40,11 @@ public class EncounterBlock extends Block {
      */
     private void checkForEncounterTrigger(ServerLevel level, BlockPos pos) {
         Vec3 centerPos = Vec3.atCenterOf(pos);
-        AABB searchBox = new AABB(centerPos).inflate(DEFAULT_TRIGGER_RADIUS);
+        AABB searchBox = AABB.ofSize(centerPos, DEFAULT_TRIGGER_RADIUS * 2, DEFAULT_TRIGGER_RADIUS * 2, DEFAULT_TRIGGER_RADIUS * 2);
 
         // Find all entities in range
         List<Entity> nearbyEntities = level.getEntities(
-            null,
+            (Entity) null,
             searchBox,
             entity -> entity instanceof CharacterEntity || entity.getType().getCategory().isFriendly()
         );
