@@ -252,13 +252,13 @@ public class CharacterEntity extends PathfinderMob {
     }
 
     @Override
-    public void addAdditionalSaveData(CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
+    public void addAdditionalSaveData(net.minecraft.nbt.ValueOutput output) {
+        super.addAdditionalSaveData(output);
 
         // Save character data
-        tag.putString("Race", race.getSerializedName());
-        tag.putString("Class", characterClass.getSerializedName());
-        tag.putInt("Level", level);
+        output.putString("Race", race.getSerializedName());
+        output.putString("Class", characterClass.getSerializedName());
+        output.putInt("Level", level);
 
         // Save stats
         CompoundTag statsTag = new CompoundTag();
@@ -268,7 +268,7 @@ public class CharacterEntity extends PathfinderMob {
         statsTag.putInt("INT", stats.intelligence());
         statsTag.putInt("WIS", stats.wisdom());
         statsTag.putInt("CHA", stats.charisma());
-        tag.put("Stats", statsTag);
+        output.put("Stats", statsTag);
 
         // Save combat state
         CompoundTag combatTag = new CompoundTag();
@@ -281,26 +281,26 @@ public class CharacterEntity extends PathfinderMob {
         combatTag.putInt("ArmorClass", combatState.armorClass());
         combatTag.putInt("CurrentHP", combatState.currentHitPoints());
         combatTag.putInt("MaxHP", combatState.maxHitPoints());
-        tag.put("Combat", combatTag);
+        output.put("Combat", combatTag);
     }
 
     @Override
-    public void readAdditionalSaveData(CompoundTag tag) {
-        super.readAdditionalSaveData(tag);
+    public void readAdditionalSaveData(net.minecraft.nbt.ValueInput input) {
+        super.readAdditionalSaveData(input);
 
         // Load character data
-        tag.getString("Race").ifPresent(raceStr -> {
+        input.getString("Race").ifPresent(raceStr -> {
             this.race = Race.valueOf(raceStr.toUpperCase());
         });
-        tag.getString("Class").ifPresent(classStr -> {
+        input.getString("Class").ifPresent(classStr -> {
             this.characterClass = CharacterClass.valueOf(classStr.toUpperCase());
         });
-        tag.getInt("Level").ifPresent(lvl -> {
+        input.getInt("Level").ifPresent(lvl -> {
             this.level = lvl;
         });
 
         // Load stats
-        tag.getCompound("Stats").ifPresent(statsTag -> {
+        input.getCompound("Stats").ifPresent(statsTag -> {
             int str = statsTag.getInt("STR").orElse(10);
             int dex = statsTag.getInt("DEX").orElse(10);
             int con = statsTag.getInt("CON").orElse(10);
@@ -311,7 +311,7 @@ public class CharacterEntity extends PathfinderMob {
         });
 
         // Load combat state
-        tag.getCompound("Combat").ifPresent(combatTag -> {
+        input.getCompound("Combat").ifPresent(combatTag -> {
             boolean inCombat = combatTag.getBoolean("InCombat").orElse(false);
             int initiative = combatTag.getInt("Initiative").orElse(0);
             int remainingMovement = combatTag.getInt("RemainingMovement").orElse(0);
