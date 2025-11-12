@@ -1,5 +1,7 @@
 pluginManagement {
 	repositories {
+		// Local Maven repository (for offline/proxy-restricted environments)
+		mavenLocal()
 		maven {
 			name = 'Fabric'
 			url = 'https://maven.fabricmc.net/'
