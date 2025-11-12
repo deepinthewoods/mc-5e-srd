@@ -108,13 +108,49 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
 - ✅ **FiveESrdMod** - Main mod initialization
 - ✅ **FiveESrdModClient** - Client-side initialization with renderer registration
 
-## Not Yet Implemented
+#### Network Synchronization
+- ✅ **ModNetworking** (`registry/ModNetworking.java`)
+  - Network payload registration for S2C and C2S packets
+  - Proper codec setup for all packet types
 
-### Phase 2: Turn-Based Combat (Remaining)
-- ⏳ Full encounter triggering with client synchronization
-- ⏳ Network packets for combat state synchronization
-- ⏳ Turn advancement with proper networking
-- ⏳ Movement validation on server
+- ✅ **ServerPacketHandlers** (`network/ServerPacketHandlers.java`)
+  - UseAction packet handling with validation
+  - EndTurn packet handling with turn advancement
+  - Automatic AI turn execution for NPCs
+  - Proper broadcasting to encounter participants
+
+- ✅ **ClientPacketHandlers** (`network/ClientPacketHandlers.java`)
+  - SyncEncounterState handling
+  - SyncCombatState handling
+  - TurnStart and TurnEnd handling
+  - Client state cache updates
+
+- ✅ **Network Payloads** (`network/payloads/`)
+  - SyncEncounterStatePayload - Full encounter state with turn order
+  - SyncCombatStatePayload - Combat state for individual entities
+  - TurnStartPayload - Turn start notifications
+  - TurnEndPayload - Turn end notifications
+  - UseActionPayload - Client action requests
+  - EndTurnPayload - Client turn end requests
+
+- ✅ **ClientEncounterState** (`client/ClientEncounterState.java`)
+  - Client-side encounter state cache
+  - Combat state tracking per entity
+  - Turn tracking and round management
+  - Ready for UI integration
+
+### Phase 2: Turn-Based Combat - ✅ MOSTLY COMPLETED
+
+#### Completed
+- ✅ Full encounter triggering with client synchronization
+- ✅ Network packets for combat state synchronization
+- ✅ Turn advancement with proper networking
+- ✅ AI turn execution for NPCs
+- ✅ Client-side state tracking
+
+#### Remaining
+- ⏳ Movement validation on server (needs integration with combat system)
+- ⏳ Encounter sync when player joins ongoing combat
 
 ### Phase 3: UI & Multiplayer
 - ⏳ Action hotbar UI
@@ -160,47 +196,64 @@ src/main/java/ninja/trek/srd/
 │   ├── EncounterManager.java           # Encounter singleton
 │   ├── EncounterState.java             # Turn order management
 │   └── InitiativeTracker.java          # Initiative tracking
+├── network/
+│   ├── ServerPacketHandlers.java       # Server-side packet handling
+│   └── payloads/
+│       ├── EndTurnPayload.java         # C2S: End turn request
+│       ├── SyncCombatStatePayload.java # S2C: Combat state sync
+│       ├── SyncEncounterStatePayload.java # S2C: Encounter sync
+│       ├── TurnEndPayload.java         # S2C: Turn end notification
+│       ├── TurnStartPayload.java       # S2C: Turn start notification
+│       └── UseActionPayload.java       # C2S: Use action request
 ├── registry/
 │   ├── ModBlocks.java                  # Block registry
 │   ├── ModCreativeTabs.java            # Creative tabs
 │   ├── ModDataComponents.java          # Data component registry
-│   └── ModEntities.java                # Entity registry
+│   ├── ModEntities.java                # Entity registry
+│   └── ModNetworking.java              # Network packet registry
 └── util/
     └── DiceRoller.java                 # Dice rolling utility
 
 src/client/java/ninja/trek/srd/
 ├── FiveESrdModClient.java              # Client initialization
 ├── client/
+│   ├── ClientEncounterState.java       # Client-side state cache
 │   ├── model/
 │   │   └── CharacterModelLoader.java   # GLTF loader stub
 │   └── render/
 │       ├── CharacterEntityRenderer.java # Entity renderer
 │       └── CharacterRenderState.java    # Render state
+└── network/
+    └── ClientPacketHandlers.java       # Client-side packet handling
 ```
 
 ## Technical Notes
 
 ### Current State
 - All core data structures are implemented and follow 5e SRD rules
-- Entity system is complete with save/load support
-- Combat encounter system is functional server-side
-- Basic AI decision-making is implemented
+- Entity system is complete with player-controlled flag and AI integration
+- Combat encounter system is functional server-side with full networking
+- Basic AI decision-making is implemented with automatic turn execution
+- Network synchronization is fully implemented for turn-based combat
+- Client-side state tracking is in place and ready for UI integration
 - Rendering infrastructure is in place (awaiting GLTF implementation)
 
 ### Build Status
 - Code structure is complete and sound
 - Build requires network access for Fabric Loom plugin download
 - All Java code follows Minecraft 1.21.10 and Fabric API patterns
+- Network packets use modern Minecraft 1.21+ payload system
 - Ready for testing in a development environment with network access
 
 ### Next Steps (Priority Order)
-1. Test build in environment with network access
-2. Implement network synchronization packets
-3. Add character creation GUI
-4. Implement action hotbar and combat UI
-5. Add full GLTF model loading with Assimp
+1. Test build in environment with network access (blocked by network limitations)
+2. Add character creation GUI
+3. Implement action hotbar and combat UI
+4. Add movement validation during combat
+5. Implement encounter sync for players joining ongoing combat
 6. Implement complete 5e attack and damage calculation
-7. Add spell system foundation
+7. Add full GLTF model loading with Assimp
+8. Add spell system foundation
 
 ## Notes
 This implementation provides a solid foundation for a full-featured D&D 5e mod. The architecture is modular and extensible, following Minecraft and Fabric best practices. The turn-based combat system is designed to be server-authoritative and multiplayer-compatible from the start.

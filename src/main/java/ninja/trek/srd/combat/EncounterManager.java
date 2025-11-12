@@ -133,7 +133,7 @@ public class EncounterManager {
     /**
      * Broadcast a payload to all players involved in an encounter.
      */
-    public void broadcastToEncounter(UUID encounterId, CustomPayload payload) {
+    public void broadcastToEncounter(MinecraftServer server, UUID encounterId, CustomPayload payload) {
         EncounterState encounter = activeEncounters.get(encounterId);
         if (encounter == null) {
             return;
@@ -144,7 +144,7 @@ public class EncounterManager {
         encounter.getTurnOrder().forEach(tracker -> entityIds.add(tracker.entityId()));
 
         // Find all online players in the encounter and send them the payload
-        for (ServerPlayerEntity player : PlayerLookup.all(null)) {
+        for (ServerPlayerEntity player : PlayerLookup.all(server)) {
             if (entityIds.contains(player.getUuid())) {
                 ServerPlayNetworking.send(player, payload);
             }

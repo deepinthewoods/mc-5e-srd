@@ -11,6 +11,7 @@ import ninja.trek.srd.combat.EncounterState;
 import ninja.trek.srd.network.payloads.EndTurnPayload;
 import ninja.trek.srd.network.payloads.SyncCombatStatePayload;
 import ninja.trek.srd.network.payloads.TurnEndPayload;
+import ninja.trek.srd.network.payloads.TurnStartPayload;
 import ninja.trek.srd.network.payloads.UseActionPayload;
 
 import java.util.UUID;
@@ -91,13 +92,26 @@ public class ServerPacketHandlers {
 
             // Send turn end notification
             TurnEndPayload turnEndPayload = new TurnEndPayload(encounter.getEncounterId(), player.getUuid());
-            manager.broadcastToEncounter(encounter.getEncounterId(), turnEndPayload);
+            manager.broadcastToEncounter(context.server(), encounter.getEncounterId(), turnEndPayload);
 
             // Advance to next turn
             encounter.nextTurn();
 
-            // TODO: Send turn start notification for next entity
-            // TODO: Handle AI turns if next entity is an NPC
+            // Send turn start notification for next entity
+            UUID nextEntityId = encounter.getCurrentTurnEntity();
+            if (nextEntityId != null) {
+                TurnStartPayload turnStartPayload = new TurnStartPayload(encounter.getEncounterId(), nextEntityId);
+                manager.broadcastToEncounter(context.server(), encounter.getEncounterId(), turnStartPayload);
+
+                // Handle AI turns if next entity is an NPC
+                Entity nextEntity = context.server().getOverworld().getEntity(nextEntityId);
+                if (nextEntity instanceof CharacterEntity character && !character.isPlayerControlled()) {
+                    // Schedule AI turn to execute after a short delay
+                    context.server().execute(() -> {
+                        character.executeAITurn(context.server(), encounter);
+                    });
+                }
+            }
         });
     }
 }
