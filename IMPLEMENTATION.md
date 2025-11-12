@@ -367,17 +367,61 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
 - [x] End turn button (click + hotkey with state-aware tooltips)
 
 
-### Phase 4: Combat Actions & AI
+### Phase 4: Combat Actions & AI - ✅ COMPLETED
 
-- ⏳ Attack roll calculation with 5e rules
+#### Combat Systems
+- ✅ **Weapon System** (`combat/Weapon.java`, `combat/Weapons.java`, `combat/WeaponProperty.java`, `combat/DamageType.java`)
+  - Complete weapon definitions with damage dice, properties, and ranges
+  - 15+ standard 5e SRD weapons (longsword, greatsword, bow, etc.)
+  - Weapon properties (finesse, light, heavy, reach, versatile, etc.)
+  - Damage types (slashing, piercing, bludgeoning, elemental, magical)
 
-- ⏳ Damage calculation
+- ✅ **Attack Roll Calculation** (`combat/CombatResolver.java`)
+  - d20 + ability modifier + proficiency bonus + magic bonus
+  - Proper ability score selection (STR for melee, DEX for ranged/finesse)
+  - Finesse weapons choose higher of STR or DEX
+  - Advantage and disadvantage support
+  - Natural 1 = automatic miss, Natural 20 = critical hit
 
-- ⏳ Opportunity attacks
+- ✅ **Damage Calculation** (`combat/CombatResolver.java`, `combat/AttackResult.java`)
+  - Weapon damage dice + ability modifier + magic bonus
+  - Critical hits double weapon dice (not modifiers)
+  - Versatile weapons use higher damage when two-handed
+  - Proper damage type tracking
 
-- ⏳ Advanced AI tactics
+- ✅ **Opportunity Attacks** (`combat/OpportunityAttackHandler.java`)
+  - Automatic detection when entities leave reach
+  - Consumes reaction resource
+  - Respects weapon reach (1 block standard, 2 blocks for reach weapons)
+  - Integrated into CharacterEntity tick loop
+  - Broadcasts opportunity attack messages
 
-- ⏳ Death and unconsciousness
+- ✅ **Death and Unconsciousness** (`combat/DeathSaves.java`, updated `combat/CombatState.java`)
+  - Unconscious state at 0 HP
+  - Death saving throws (3 successes to stabilize, 3 failures to die)
+  - Natural 1 = 2 failures, Natural 20 = regain 1 HP and wake
+  - Massive damage rule (instant death if damage >= max HP)
+  - Hitting unconscious targets adds death save failures
+  - Healing from 0 HP wakes entity and clears death saves
+
+- ✅ **Combat Action Execution** (updated `network/ServerPacketHandlers.java`)
+  - Attack action with full 5e resolution
+  - Dash action (doubles movement)
+  - Disengage action (prevents opportunity attacks - placeholder)
+  - Dodge action (gives disadvantage to attackers - placeholder)
+  - Action economy validation and resource consumption
+
+- ✅ **AI Combat Enhancement** (updated `character/ai/CombatAIController.java`)
+  - Uses CombatResolver for proper 5e attacks
+  - Broadcasts attack results to all participants
+  - Handles target death and encounter cleanup
+  - Automatic turn execution for NPCs
+
+#### Remaining
+- ⏳ Advanced AI tactics (positioning, target prioritization, ability usage)
+- ⏳ Disengage flag in CombatState (currently just consumes action)
+- ⏳ Dodge flag in CombatState (currently just consumes action)
+- ⏳ Critical hit detection for opportunity attacks (2 death save failures)
 
 
 
@@ -433,13 +477,29 @@ src/main/java/ninja/trek/srd/
 
 ├── combat/
 
-│   ├── CombatState.java                # Action economy tracking
+│   ├── AttackResult.java               # Attack roll results
+
+│   ├── CombatResolver.java             # 5e attack & damage calculation
+
+│   ├── CombatState.java                # Action economy & death saves tracking
+
+│   ├── DamageType.java                 # Damage type enum
+
+│   ├── DeathSaves.java                 # Death saving throw tracking
 
 │   ├── EncounterManager.java           # Encounter singleton
 
 │   ├── EncounterState.java             # Turn order management
 
-│   └── InitiativeTracker.java          # Initiative tracking
+│   ├── InitiativeTracker.java          # Initiative tracking
+
+│   ├── OpportunityAttackHandler.java   # Opportunity attack detection
+
+│   ├── Weapon.java                     # Weapon data structure
+
+│   ├── WeaponProperty.java             # Weapon property enum
+
+│   └── Weapons.java                    # Standard 5e weapon registry
 
 ├── item/
 
@@ -557,15 +617,19 @@ src/client/java/ninja/trek/srd/
 
 1. Test build in environment with network access (blocked by network limitations)
 
-2. Add movement validation during combat
+2. ~~Add movement validation during combat~~ ✅ COMPLETED (Phase 2)
 
-3. Implement encounter sync for players joining ongoing combat
+3. ~~Implement encounter sync for players joining ongoing combat~~ ✅ COMPLETED (Phase 2)
 
-4. Implement complete 5e attack and damage calculation
+4. ~~Implement complete 5e attack and damage calculation~~ ✅ COMPLETED (Phase 4)
 
-5. Add full GLTF model loading with Assimp
+5. Add full GLTF model loading with Assimp (Phase 5)
 
-6. Add spell system foundation
+6. Add spell system foundation (Phase 5)
+
+7. Implement advanced AI tactics (Phase 4 polish)
+
+8. Add Disengage/Dodge status effects to CombatState (Phase 4 polish)
 
 ## Notes
 
