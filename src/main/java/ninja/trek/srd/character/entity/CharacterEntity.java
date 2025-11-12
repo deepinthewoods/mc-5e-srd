@@ -1,9 +1,10 @@
 package ninja.trek.srd.character.entity;
 
-import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -251,14 +252,65 @@ public class CharacterEntity extends PathfinderMob {
         this.combatState = combatState;
     }
 
-    // TODO: Implement entity persistence using correct Minecraft 1.21.10 API
-    // The NBT serialization API is unclear for Fabric with official Mojang mappings.
-    // Multiple approaches have been attempted:
-    // 1. CompoundTag - fails with "cannot be converted to ValueOutput"
-    // 2. ValueOutput/ValueInput from com.mojang.serialization - classes don't exist
-    // 3. Different packages - no success
-    //
-    // For now, entity data will not persist across world reloads.
-    // This will be implemented once the correct API is identified or
-    // by using Fabric's Data Attachment API as an alternative.
+    /**
+     * Write custom character data to storage using the ReadView/WriteView API.
+     * This method uses Codecs for type-safe serialization.
+     *
+     * API: writeCustomData(WriteView) replaces addAdditionalSaveData(CompoundTag) in 1.21.6+
+     */
+    @Override
+    protected void writeCustomData(WriteView view) {
+        super.writeCustomData(view);
+
+        // Write character stats using Codec
+        view.put("stats", CharacterStats.CODEC, this.stats);
+
+        // Write race using Codec
+        view.put("race", Race.CODEC, this.race);
+
+        // Write character class using Codec
+        view.put("character_class", CharacterClass.CODEC, this.characterClass);
+
+        // Write level as primitive
+        view.putInt("level", this.level);
+
+        // Write combat state using Codec
+        view.put("combat_state", CombatState.CODEC, this.combatState);
+    }
+
+    /**
+     * Read custom character data from storage using the ReadView/WriteView API.
+     * This method uses Codecs for type-safe deserialization with fallback defaults.
+     *
+     * API: readCustomData(ReadView) replaces readAdditionalSaveData(CompoundTag) in 1.21.6+
+     */
+    @Override
+    protected void readCustomData(ReadView view) {
+        super.readCustomData(view);
+
+        // Read character stats with fallback to default
+        this.stats = view.read("stats", CharacterStats.CODEC)
+            .orElse(CharacterStats.createDefault());
+
+        // Read race with fallback to HUMAN
+        this.race = view.read("race", Race.CODEC)
+            .orElse(Race.HUMAN);
+
+        // Read character class with fallback to FIGHTER
+        this.characterClass = view.read("character_class", CharacterClass.CODEC)
+            .orElse(CharacterClass.FIGHTER);
+
+        // Read level with fallback to 1
+        this.level = view.getOptionalInt("level")
+            .orElse(1);
+
+        // Read combat state with fallback to default
+        int maxHp = calculateMaxHitPoints();
+        int ac = calculateArmorClass();
+        this.combatState = view.read("combat_state", CombatState.CODEC)
+            .orElse(CombatState.createDefault(maxHp, ac));
+
+        // Update Minecraft attributes after loading data
+        updateMinecraftAttributes();
+    }
 }

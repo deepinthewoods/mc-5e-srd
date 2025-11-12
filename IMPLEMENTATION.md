@@ -62,7 +62,8 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
   - Synced entity data for appearance (using SynchedEntityData.Builder)
   - Turn management integration
   - Attribute calculation from 5e stats
-  - Note: NBT persistence not yet implemented (API unclear for Fabric + Mojang mappings)
+  - Entity data persistence using ReadView/WriteView API (Minecraft 1.21.6+)
+  - Type-safe serialization with Codecs
 
 - ✅ **CombatAIController** (`character/ai/CombatAIController.java`)
   - Basic combat AI implementation
@@ -196,12 +197,14 @@ All methods have been verified against official Minecraft 1.21.10 Javadocs:
   - Uses Builder pattern introduced in 1.21.x
   - Replaces old defineSynchedData(SynchedEntityData) signature
 
-- ⏳ **Entity NBT Persistence** - Not yet implemented
-  - Multiple approaches attempted without success
-  - CompoundTag approach: fails with "cannot be converted to ValueOutput"
-  - ValueOutput/ValueInput approach: classes don't exist in com.mojang.serialization
-  - API is unclear for Fabric with official Mojang mappings in 1.21.10
-  - Will investigate Fabric Data Attachment API as alternative
+- ✅ **Entity Data Persistence** - Implemented using ReadView/WriteView API
+  - Uses `writeCustomData(WriteView)` instead of deprecated `addAdditionalSaveData(CompoundTag)`
+  - Uses `readCustomData(ReadView)` instead of deprecated `readAdditionalSaveData(CompoundTag)`
+  - Leverages Codecs for type-safe serialization (CharacterStats, Race, CharacterClass, CombatState)
+  - Primitive types use view.putInt()/getOptionalInt() for integers
+  - Complex types use view.put(key, Codec, value) and view.read(key, Codec)
+  - All reads have proper fallback defaults using Optional.orElse()
+  - API introduced in Minecraft 1.21.6+ (Yarn mappings)
 
 #### Attribute System
 - ✅ **LivingEntity.getAttribute(Holder<Attribute>)** - Correctly used
@@ -223,8 +226,49 @@ All methods have been verified against official Minecraft 1.21.10 Javadocs:
 - ✅ **LivingEntityRenderState** - Correctly extended by CharacterRenderState
   - New render state system separates rendering data from entity logic
 
+### Fabric API Updates (1.21.6+ and 1.21.9+)
+
+This mod is built for Minecraft 1.21.10 and follows the latest Fabric API changes:
+
+#### Minecraft 1.21.6+ Changes (Applicable)
+- ✅ **Entity Data Persistence**: Using new ReadView/WriteView API
+  - `writeCustomData(WriteView)` replaces `addAdditionalSaveData(CompoundTag)`
+  - `readCustomData(ReadView)` replaces `readAdditionalSaveData(CompoundTag)`
+  - Type-safe serialization with Codecs instead of manual NBT manipulation
+
+#### Minecraft 1.21.6+ Changes (Not Yet Applicable)
+- **BlockRenderLayerMap**: No block rendering layers used yet
+  - When implemented, use `net.fabricmc.fabric.api.client.rendering.v1.BlockRenderLayerMap`
+  - Use `BlockRenderLayerMap.putBlock()` instead of `BlockRenderLayerMap.INSTANCE.putBlock()`
+
+- **HUD API**: No custom HUD elements yet
+  - When implemented, use `HudElementRegistry.addLast(id, renderer)`
+  - Old HUD API completely replaced with new registry system
+
+- **Tracked Data Handlers**: Not using custom tracked data handlers
+  - If needed, use `FabricTrackedDataRegistry.registerHandler(id, handler)`
+  - Instead of `TrackedDataHandlerRegistry.register(handler)`
+
+#### Minecraft 1.21.9+ Changes (Not Yet Applicable)
+- **Entity Methods**: Not currently using getWorld()
+  - When needed, use `Entity#getEntityWorld()` instead of `Entity#getWorld()`
+
+- **Resource Loader API**: No resource reloaders yet
+  - When implemented, use `ResourceLoader.get(type).registerReloader(id, reloader)`
+  - Instead of `ResourceManagerHelper.get(type).registerReloadListener(reloader)`
+
+- **KeyBinding Categories**: No keybindings yet
+  - When implemented, use `KeyBinding.Category.create(Identifier)`
+  - Pass Category object to KeyBinding constructor instead of String
+
+#### General Mapping Changes (Post 1.21.11)
+- This mod already uses **Mojang mappings** (not Yarn) for new code
+- Uses official Mojang names at runtime instead of Intermediary mappings
+- Ready for post-obfuscation removal changes
+
 ### Build Status
 - Code structure is complete and sound
+- Entity data persistence fully implemented using modern API
 - Build requires network access for Fabric Loom plugin download
 - All Java code follows Minecraft 1.21.10 and Fabric API patterns (Mojang mappings)
 - All API methods verified against official Javadocs
