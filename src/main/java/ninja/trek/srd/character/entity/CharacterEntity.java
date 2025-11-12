@@ -1,5 +1,7 @@
 package ninja.trek.srd.character.entity;
 
+import com.mojang.serialization.ValueInput;
+import com.mojang.serialization.ValueOutput;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -253,16 +255,16 @@ public class CharacterEntity extends PathfinderMob {
 
     /**
      * Save character data to NBT.
-     * API: Entity.addAdditionalSaveData(CompoundTag) - Minecraft 1.21.10
+     * API: Entity.addAdditionalSaveData(ValueOutput) - Minecraft 1.21.10
      */
     @Override
-    protected void addAdditionalSaveData(CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
+    protected void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
 
         // Save character data
-        tag.putString("Race", race.getSerializedName());
-        tag.putString("Class", characterClass.getSerializedName());
-        tag.putInt("Level", level);
+        output.putString("Race", race.getSerializedName());
+        output.putString("Class", characterClass.getSerializedName());
+        output.putInt("Level", level);
 
         // Save stats
         CompoundTag statsTag = new CompoundTag();
@@ -272,7 +274,7 @@ public class CharacterEntity extends PathfinderMob {
         statsTag.putInt("INT", stats.intelligence());
         statsTag.putInt("WIS", stats.wisdom());
         statsTag.putInt("CHA", stats.charisma());
-        tag.put("Stats", statsTag);
+        output.put("Stats", statsTag);
 
         // Save combat state
         CompoundTag combatTag = new CompoundTag();
@@ -285,58 +287,55 @@ public class CharacterEntity extends PathfinderMob {
         combatTag.putInt("ArmorClass", combatState.armorClass());
         combatTag.putInt("CurrentHP", combatState.currentHitPoints());
         combatTag.putInt("MaxHP", combatState.maxHitPoints());
-        tag.put("Combat", combatTag);
+        output.put("Combat", combatTag);
     }
 
     /**
      * Load character data from NBT.
-     * API: Entity.readAdditionalSaveData(CompoundTag) - Minecraft 1.21.10
+     * API: Entity.readAdditionalSaveData(ValueInput) - Minecraft 1.21.10
      */
     @Override
-    protected void readAdditionalSaveData(CompoundTag tag) {
-        super.readAdditionalSaveData(tag);
+    protected void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
 
         // Load character data
-        if (tag.contains("Race")) {
-            this.race = Race.fromSerializedName(tag.getString("Race"));
-        }
-        if (tag.contains("Class")) {
-            this.characterClass = CharacterClass.fromSerializedName(tag.getString("Class"));
-        }
-        if (tag.contains("Level")) {
-            this.level = tag.getInt("Level");
-        }
+        input.getString("Race").ifPresent(raceStr -> {
+            this.race = Race.fromSerializedName(raceStr);
+        });
+        input.getString("Class").ifPresent(classStr -> {
+            this.characterClass = CharacterClass.fromSerializedName(classStr);
+        });
+        input.getInt("Level").ifPresent(lvl -> {
+            this.level = lvl;
+        });
 
         // Load stats
-        if (tag.contains("Stats")) {
-            CompoundTag statsTag = tag.getCompound("Stats");
-            this.stats = new CharacterStats(
-                statsTag.contains("STR") ? statsTag.getInt("STR") : 10,
-                statsTag.contains("DEX") ? statsTag.getInt("DEX") : 10,
-                statsTag.contains("CON") ? statsTag.getInt("CON") : 10,
-                statsTag.contains("INT") ? statsTag.getInt("INT") : 10,
-                statsTag.contains("WIS") ? statsTag.getInt("WIS") : 10,
-                statsTag.contains("CHA") ? statsTag.getInt("CHA") : 10
-            );
-        }
+        input.getCompound("Stats").ifPresent(statsTag -> {
+            int str = statsTag.getInt("STR").orElse(10);
+            int dex = statsTag.getInt("DEX").orElse(10);
+            int con = statsTag.getInt("CON").orElse(10);
+            int intel = statsTag.getInt("INT").orElse(10);
+            int wis = statsTag.getInt("WIS").orElse(10);
+            int cha = statsTag.getInt("CHA").orElse(10);
+            this.stats = new CharacterStats(str, dex, con, intel, wis, cha);
+        });
 
         // Load combat state
-        if (tag.contains("Combat")) {
-            CompoundTag combatTag = tag.getCompound("Combat");
-            boolean inCombat = combatTag.contains("InCombat") ? combatTag.getBoolean("InCombat") : false;
-            int initiative = combatTag.contains("Initiative") ? combatTag.getInt("Initiative") : 0;
-            int remainingMovement = combatTag.contains("RemainingMovement") ? combatTag.getInt("RemainingMovement") : 0;
-            boolean hasAction = combatTag.contains("HasAction") ? combatTag.getBoolean("HasAction") : true;
-            boolean hasBonusAction = combatTag.contains("HasBonusAction") ? combatTag.getBoolean("HasBonusAction") : true;
-            boolean hasReaction = combatTag.contains("HasReaction") ? combatTag.getBoolean("HasReaction") : true;
-            int armorClass = combatTag.contains("ArmorClass") ? combatTag.getInt("ArmorClass") : 10;
-            int currentHP = combatTag.contains("CurrentHP") ? combatTag.getInt("CurrentHP") : 1;
-            int maxHP = combatTag.contains("MaxHP") ? combatTag.getInt("MaxHP") : 1;
+        input.getCompound("Combat").ifPresent(combatTag -> {
+            boolean inCombat = combatTag.getBoolean("InCombat").orElse(false);
+            int initiative = combatTag.getInt("Initiative").orElse(0);
+            int remainingMovement = combatTag.getInt("RemainingMovement").orElse(0);
+            boolean hasAction = combatTag.getBoolean("HasAction").orElse(true);
+            boolean hasBonusAction = combatTag.getBoolean("HasBonusAction").orElse(true);
+            boolean hasReaction = combatTag.getBoolean("HasReaction").orElse(true);
+            int armorClass = combatTag.getInt("ArmorClass").orElse(10);
+            int currentHP = combatTag.getInt("CurrentHP").orElse(1);
+            int maxHP = combatTag.getInt("MaxHP").orElse(1);
 
             this.combatState = new CombatState(
                 inCombat,
                 initiative,
-                Vec3.ZERO, // turnStartPosition (3rd parameter is Vec3!)
+                this.position(), // turnStartPosition - use current position
                 remainingMovement,
                 hasAction,
                 hasBonusAction,
@@ -345,7 +344,7 @@ public class CharacterEntity extends PathfinderMob {
                 currentHP,
                 maxHP
             );
-        }
+        });
 
         // Update Minecraft attributes based on loaded data
         updateMinecraftAttributes();

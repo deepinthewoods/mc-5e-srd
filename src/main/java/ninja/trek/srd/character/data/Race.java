@@ -83,7 +83,7 @@ public enum Race implements StringRepresentable {
 
     /**
      * Deserialize Race from string name.
-     * API: Used by Entity.readAdditionalSaveData(CompoundTag) - Minecraft 1.21.10
+     * API: Used by Entity.readAdditionalSaveData(ValueInput) - Minecraft 1.21.10
      */
     public static Race fromSerializedName(String name) {
         for (Race race : values()) {

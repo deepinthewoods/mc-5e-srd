@@ -59,7 +59,7 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
 #### Entity System
 - ✅ **CharacterEntity** (`character/entity/CharacterEntity.java`)
   - Full character sheet integration
-  - NBT save/load for persistence (using CompoundTag API)
+  - NBT save/load for persistence (using ValueOutput/ValueInput API)
   - Synced entity data for appearance (using SynchedEntityData.Builder)
   - Turn management integration
   - Attribute calculation from 5e stats
@@ -183,7 +183,7 @@ src/client/java/ninja/trek/srd/
 
 ### Current State
 - All core data structures are implemented and follow 5e SRD rules
-- Entity system is complete with save/load support using CompoundTag API
+- Entity system is complete with save/load support using ValueOutput/ValueInput API
 - Combat encounter system is functional server-side
 - Basic AI decision-making is implemented
 - Rendering infrastructure is in place (awaiting GLTF implementation)
@@ -197,15 +197,15 @@ All methods have been verified against official Minecraft 1.21.10 Javadocs:
   - Uses Builder pattern introduced in 1.21.x
   - Replaces old defineSynchedData(SynchedEntityData) signature
 
-- ✅ **Entity.addAdditionalSaveData(CompoundTag)** - Correctly implemented
-  - Standard NBT persistence method using CompoundTag
+- ✅ **Entity.addAdditionalSaveData(ValueOutput)** - Correctly implemented
+  - Modern NBT persistence API using ValueOutput interface
+  - ValueOutput from com.mojang.serialization package
   - Used in CharacterEntity for saving character data, stats, and combat state
-  - CompoundTag from net.minecraft.nbt package
 
-- ✅ **Entity.readAdditionalSaveData(CompoundTag)** - Correctly implemented
-  - Standard NBT deserialization using CompoundTag
-  - Uses tag.contains() checks before reading values
-  - Includes proper fallback values with ternary operators
+- ✅ **Entity.readAdditionalSaveData(ValueInput)** - Correctly implemented
+  - Modern NBT deserialization using ValueInput interface
+  - All getters return Optional<T> requiring .orElse() or .ifPresent()
+  - ValueInput from com.mojang.serialization package
 
 #### Attribute System
 - ✅ **LivingEntity.getAttribute(Holder<Attribute>)** - Correctly used
