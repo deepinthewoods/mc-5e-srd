@@ -64,5 +64,10 @@ public class ModNetworking {
             EndTurnPayload.ID,
             EndTurnPayload.CODEC
         );
+
+        PayloadTypeRegistry.playC2S().register(
+            CreateCharacterPayload.ID,
+            CreateCharacterPayload.CODEC
+        );
     }
 }

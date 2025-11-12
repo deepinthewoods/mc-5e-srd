@@ -8,6 +8,7 @@ import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.combat.CombatState;
 import ninja.trek.srd.combat.EncounterManager;
 import ninja.trek.srd.combat.EncounterState;
+import ninja.trek.srd.network.payloads.CreateCharacterPayload;
 import ninja.trek.srd.network.payloads.EndTurnPayload;
 import ninja.trek.srd.network.payloads.SyncCombatStatePayload;
 import ninja.trek.srd.network.payloads.TurnEndPayload;
@@ -32,6 +33,9 @@ public class ServerPacketHandlers {
 
         // Handle EndTurn packets
         ServerPlayNetworking.registerGlobalReceiver(EndTurnPayload.ID, ServerPacketHandlers::handleEndTurn);
+
+        // Handle CreateCharacter packets
+        ServerPlayNetworking.registerGlobalReceiver(CreateCharacterPayload.ID, ServerPacketHandlers::handleCreateCharacter);
 
         FiveESrdMod.LOGGER.info("Server packet handlers registered successfully!");
     }
@@ -112,6 +116,50 @@ public class ServerPacketHandlers {
                     });
                 }
             }
+        });
+    }
+
+    /**
+     * Handle CreateCharacter packet from client.
+     */
+    private static void handleCreateCharacter(CreateCharacterPayload payload, ServerPlayNetworking.Context context) {
+        ServerPlayerEntity player = context.player();
+
+        // Execute on server thread
+        context.server().execute(() -> {
+            FiveESrdMod.LOGGER.info("Creating character '{}' for player {}", payload.name(), player.getName().getString());
+
+            // Create character entity in the player's world
+            CharacterEntity character = new CharacterEntity(
+                ninja.trek.srd.registry.ModEntities.CHARACTER,
+                player.getServerWorld()
+            );
+
+            // Initialize character data
+            character.initializeCharacter(
+                payload.race(),
+                payload.characterClass(),
+                payload.stats(),
+                payload.appearance()
+            );
+
+            // Set as player-controlled
+            character.setPlayerControlled(true);
+
+            // Set custom name
+            character.setCustomName(net.minecraft.text.Text.literal(payload.name()));
+            character.setCustomNameVisible(true);
+
+            // Position the character near the player
+            double offsetX = player.getX() + 2.0;
+            double offsetZ = player.getZ();
+            character.refreshPositionAndAngles(offsetX, player.getY(), offsetZ, player.getYaw(), 0);
+
+            // Spawn the entity in the world
+            player.getServerWorld().spawnEntity(character);
+
+            FiveESrdMod.LOGGER.info("Character '{}' created successfully at ({}, {}, {})",
+                payload.name(), offsetX, player.getY(), offsetZ);
         });
     }
 }

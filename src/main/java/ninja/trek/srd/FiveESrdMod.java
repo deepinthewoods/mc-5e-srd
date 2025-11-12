@@ -22,6 +22,7 @@ public class FiveESrdMod implements ModInitializer {
 		// Register all custom content
 		ModDataComponents.initialize();
 		ModBlocks.initialize();
+		ninja.trek.srd.registry.ModItems.initialize();
 		ModEntities.initialize();
 		ninja.trek.srd.registry.ModCreativeTabs.initialize();
 		ninja.trek.srd.registry.ModNetworking.initialize();
