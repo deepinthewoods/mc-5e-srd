@@ -251,8 +251,14 @@ public class CharacterEntity extends PathfinderMob {
         this.combatState = combatState;
     }
 
-    // TODO: Implement entity persistence using Minecraft 1.21.10 API
-    // The NBT save/load methods have changed significantly in 1.21.10
-    // For now, entity data will not persist across world reloads
-    // This will be implemented once the correct API is identified
+    // TODO: Implement entity persistence using correct Minecraft 1.21.10 API
+    // The NBT serialization API is unclear for Fabric with official Mojang mappings.
+    // Multiple approaches have been attempted:
+    // 1. CompoundTag - fails with "cannot be converted to ValueOutput"
+    // 2. ValueOutput/ValueInput from com.mojang.serialization - classes don't exist
+    // 3. Different packages - no success
+    //
+    // For now, entity data will not persist across world reloads.
+    // This will be implemented once the correct API is identified or
+    // by using Fabric's Data Attachment API as an alternative.
 }
