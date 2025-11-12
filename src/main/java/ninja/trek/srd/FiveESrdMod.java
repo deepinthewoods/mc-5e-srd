@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
  * Implements D&D 5e SRD rules with turn-based combat and modular character rendering.
  */
 public class FiveESrdMod implements ModInitializer {
-	public static final String MOD_ID = "5e-srd";
+	public static final String MOD_ID = "fiveesrd";
 	public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
 	@Override

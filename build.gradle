@@ -28,7 +28,7 @@ loom {
 	splitEnvironmentSourceSets()
 
 	mods {
-		"5e-srd" {
+		"fiveesrd" {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}
