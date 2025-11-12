@@ -62,8 +62,8 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
   - Synced entity data for appearance (using SynchedEntityData.Builder)
   - Turn management integration
   - Attribute calculation from 5e stats
-  - Entity data persistence using CompoundTag with Codecs (Mojang mappings)
-  - Type-safe serialization with NbtOps
+  - Entity data persistence using ValueOutput/ValueInput API (Mojang mappings)
+  - Type-safe serialization with Codecs
 
 - ✅ **CombatAIController** (`character/ai/CombatAIController.java`)
   - Basic combat AI implementation
@@ -183,7 +183,7 @@ src/client/java/ninja/trek/srd/
 
 ### Current State
 - All core data structures are implemented and follow 5e SRD rules
-- Entity system is functional (NBT persistence pending - API unclear)
+- Entity system is fully functional with NBT persistence
 - Combat encounter system is functional server-side
 - Basic AI decision-making is implemented
 - Rendering infrastructure is in place (awaiting GLTF implementation)
@@ -199,14 +199,16 @@ All methods have been verified against official Minecraft 1.21.10 with Mojang ma
   - Uses Builder pattern introduced in 1.21.x
   - Replaces old defineSynchedData(SynchedEntityData) signature
 
-- ✅ **Entity Data Persistence** - Implemented using CompoundTag with Codecs
-  - Uses `addAdditionalSaveData(CompoundTag)` for saving entity data
-  - Uses `readAdditionalSaveData(CompoundTag)` for loading entity data
-  - Leverages Codecs with NbtOps for type-safe serialization (CharacterStats, Race, CharacterClass, CombatState)
-  - Uses `Codec.encodeStart(NbtOps.INSTANCE, value)` to encode complex types to NBT
-  - Uses `Codec.parse(NbtOps.INSTANCE, nbt)` to decode complex types from NBT
-  - Primitive types use standard CompoundTag methods (putInt/getInt)
-  - All reads have proper fallback defaults using DataResult.orElse()
+- ✅ **Entity Data Persistence** - Implemented using ValueOutput/ValueInput with Codecs
+  - Uses `addAdditionalSaveData(ValueOutput)` for saving entity data
+  - Uses `readAdditionalSaveData(ValueInput)` for loading entity data
+  - Leverages Codecs for type-safe serialization (CharacterStats, Race, CharacterClass, CombatState)
+  - Uses `output.put(key, Codec, value)` to write complex types
+  - Uses `input.read(key, Codec)` to read complex types (returns Optional)
+  - Primitive types use `output.putInt()` / `input.getOptionalInt()` methods
+  - All reads have proper fallback defaults using Optional.orElse()
+  - ValueOutput/ValueInput are from `com.mojang.serialization` package
+  - Mojang mapping equivalents of Yarn's WriteView/ReadView
   - Standard Mojang mappings API for Minecraft 1.21.10
 
 #### Attribute System
@@ -235,10 +237,12 @@ This mod is built for Minecraft 1.21.10 with **Mojang mappings** and follows sta
 
 #### Mapping System Notes
 - ✅ **Using Mojang Mappings**: Configured in build.gradle with `loom.officialMojangMappings()`
-  - Uses official method names from Mojang (e.g., `addAdditionalSaveData`, `readAdditionalSaveData`)
-  - Yarn mappings use different names (e.g., `writeCustomData`, `readCustomData`)
-  - Always verify API documentation matches your mapping system
-  - This mod uses standard CompoundTag-based NBT serialization with Codecs and NbtOps
+  - **Method names**: Mojang uses `addAdditionalSaveData` / `readAdditionalSaveData`
+  - **Parameter types**: Mojang uses `ValueOutput` / `ValueInput` (from `com.mojang.serialization`)
+  - **Yarn equivalent**: Yarn uses `writeCustomData` / `readCustomData` with `WriteView` / `ReadView` parameters
+  - **Important**: ValueOutput/ValueInput (Mojang) = WriteView/ReadView (Yarn) - same functionality, different names
+  - Always verify API documentation matches your mapping system (Mojang vs Yarn)
+  - This mod uses ValueOutput/ValueInput with Codecs for type-safe serialization
 
 #### Minecraft 1.21.6+ Changes (Not Yet Applicable)
 - **BlockRenderLayerMap**: No block rendering layers used yet

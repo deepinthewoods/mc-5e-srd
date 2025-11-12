@@ -1,8 +1,7 @@
 package ninja.trek.srd.character.entity;
 
-import com.mojang.serialization.DataResult;
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.NbtOps;
+import com.mojang.serialization.ValueInput;
+import com.mojang.serialization.ValueOutput;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -254,89 +253,62 @@ public class CharacterEntity extends PathfinderMob {
     }
 
     /**
-     * Save custom character data to NBT using Codecs.
-     * Uses the standard Mojang mappings API for entity persistence.
+     * Save custom character data using the ValueOutput API with Codecs.
+     * Uses Minecraft 1.21.10 Mojang mappings API for entity persistence.
      *
-     * @param tag The CompoundTag to write data to
+     * @param output The ValueOutput to write data to
      */
     @Override
-    protected void addAdditionalSaveData(CompoundTag tag) {
-        super.addAdditionalSaveData(tag);
+    protected void addAdditionalSaveData(ValueOutput output) {
+        super.addAdditionalSaveData(output);
 
         // Write character stats using Codec
-        CharacterStats.CODEC.encodeStart(NbtOps.INSTANCE, this.stats)
-            .resultOrPartial(error -> {})
-            .ifPresent(nbt -> tag.put("stats", nbt));
+        output.put("stats", CharacterStats.CODEC, this.stats);
 
         // Write race using Codec
-        Race.CODEC.encodeStart(NbtOps.INSTANCE, this.race)
-            .resultOrPartial(error -> {})
-            .ifPresent(nbt -> tag.put("race", nbt));
+        output.put("race", Race.CODEC, this.race);
 
         // Write character class using Codec
-        CharacterClass.CODEC.encodeStart(NbtOps.INSTANCE, this.characterClass)
-            .resultOrPartial(error -> {})
-            .ifPresent(nbt -> tag.put("character_class", nbt));
+        output.put("character_class", CharacterClass.CODEC, this.characterClass);
 
         // Write level as primitive
-        tag.putInt("level", this.level);
+        output.putInt("level", this.level);
 
         // Write combat state using Codec
-        CombatState.CODEC.encodeStart(NbtOps.INSTANCE, this.combatState)
-            .resultOrPartial(error -> {})
-            .ifPresent(nbt -> tag.put("combat_state", nbt));
+        output.put("combat_state", CombatState.CODEC, this.combatState);
     }
 
     /**
-     * Load custom character data from NBT using Codecs.
-     * Uses the standard Mojang mappings API for entity persistence.
+     * Load custom character data using the ValueInput API with Codecs.
+     * Uses Minecraft 1.21.10 Mojang mappings API for entity persistence.
      *
-     * @param tag The CompoundTag to read data from
+     * @param input The ValueInput to read data from
      */
     @Override
-    protected void readAdditionalSaveData(CompoundTag tag) {
-        super.readAdditionalSaveData(tag);
+    protected void readAdditionalSaveData(ValueInput input) {
+        super.readAdditionalSaveData(input);
 
         // Read character stats with fallback to default
-        if (tag.contains("stats")) {
-            this.stats = CharacterStats.CODEC.parse(NbtOps.INSTANCE, tag.get("stats"))
-                .resultOrPartial(error -> {})
-                .orElse(CharacterStats.createDefault());
-        } else {
-            this.stats = CharacterStats.createDefault();
-        }
+        this.stats = input.read("stats", CharacterStats.CODEC)
+            .orElse(CharacterStats.createDefault());
 
         // Read race with fallback to HUMAN
-        if (tag.contains("race")) {
-            this.race = Race.CODEC.parse(NbtOps.INSTANCE, tag.get("race"))
-                .resultOrPartial(error -> {})
-                .orElse(Race.HUMAN);
-        } else {
-            this.race = Race.HUMAN;
-        }
+        this.race = input.read("race", Race.CODEC)
+            .orElse(Race.HUMAN);
 
         // Read character class with fallback to FIGHTER
-        if (tag.contains("character_class")) {
-            this.characterClass = CharacterClass.CODEC.parse(NbtOps.INSTANCE, tag.get("character_class"))
-                .resultOrPartial(error -> {})
-                .orElse(CharacterClass.FIGHTER);
-        } else {
-            this.characterClass = CharacterClass.FIGHTER;
-        }
+        this.characterClass = input.read("character_class", CharacterClass.CODEC)
+            .orElse(CharacterClass.FIGHTER);
 
         // Read level with fallback to 1
-        this.level = tag.contains("level") ? tag.getInt("level") : 1;
+        this.level = input.getOptionalInt("level")
+            .orElse(1);
 
         // Read combat state with fallback to default
         int maxHp = calculateMaxHitPoints();
         int ac = calculateArmorClass();
-        if (tag.contains("combat_state")) {
-            this.combatState = CombatState.CODEC.parse(NbtOps.INSTANCE, tag.get("combat_state"))
-                .resultOrPartial(error -> {})
-                .orElse(CombatState.createDefault(maxHp, ac));
-        } else {
-            this.combatState = CombatState.createDefault(maxHp, ac);
-        }
+        this.combatState = input.read("combat_state", CombatState.CODEC)
+            .orElse(CombatState.createDefault(maxHp, ac));
 
         // Update Minecraft attributes after loading data
         updateMinecraftAttributes();
