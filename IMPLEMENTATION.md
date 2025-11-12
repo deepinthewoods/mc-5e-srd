@@ -59,11 +59,10 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
 #### Entity System
 - ✅ **CharacterEntity** (`character/entity/CharacterEntity.java`)
   - Full character sheet integration
-  - NBT save/load for persistence (using ValueOutput/ValueInput API)
   - Synced entity data for appearance (using SynchedEntityData.Builder)
   - Turn management integration
   - Attribute calculation from 5e stats
-  - Serialization methods: Race.fromSerializedName() and CharacterClass.fromSerializedName()
+  - Note: NBT persistence not yet implemented (API unclear for Fabric + Mojang mappings)
 
 - ✅ **CombatAIController** (`character/ai/CombatAIController.java`)
   - Basic combat AI implementation
@@ -183,7 +182,7 @@ src/client/java/ninja/trek/srd/
 
 ### Current State
 - All core data structures are implemented and follow 5e SRD rules
-- Entity system is complete with save/load support using ValueOutput/ValueInput API
+- Entity system is functional (NBT persistence pending - API unclear)
 - Combat encounter system is functional server-side
 - Basic AI decision-making is implemented
 - Rendering infrastructure is in place (awaiting GLTF implementation)
@@ -197,15 +196,12 @@ All methods have been verified against official Minecraft 1.21.10 Javadocs:
   - Uses Builder pattern introduced in 1.21.x
   - Replaces old defineSynchedData(SynchedEntityData) signature
 
-- ✅ **Entity.addAdditionalSaveData(ValueOutput)** - Correctly implemented
-  - Modern NBT persistence API using ValueOutput interface
-  - ValueOutput from com.mojang.serialization package
-  - Used in CharacterEntity for saving character data, stats, and combat state
-
-- ✅ **Entity.readAdditionalSaveData(ValueInput)** - Correctly implemented
-  - Modern NBT deserialization using ValueInput interface
-  - All getters return Optional<T> requiring .orElse() or .ifPresent()
-  - ValueInput from com.mojang.serialization package
+- ⏳ **Entity NBT Persistence** - Not yet implemented
+  - Multiple approaches attempted without success
+  - CompoundTag approach: fails with "cannot be converted to ValueOutput"
+  - ValueOutput/ValueInput approach: classes don't exist in com.mojang.serialization
+  - API is unclear for Fabric with official Mojang mappings in 1.21.10
+  - Will investigate Fabric Data Attachment API as alternative
 
 #### Attribute System
 - ✅ **LivingEntity.getAttribute(Holder<Attribute>)** - Correctly used

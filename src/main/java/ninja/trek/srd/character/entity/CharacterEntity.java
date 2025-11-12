@@ -1,7 +1,5 @@
 package ninja.trek.srd.character.entity;
 
-import com.mojang.serialization.ValueInput;
-import com.mojang.serialization.ValueOutput;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
@@ -253,100 +251,14 @@ public class CharacterEntity extends PathfinderMob {
         this.combatState = combatState;
     }
 
-    /**
-     * Save character data to NBT.
-     * API: Entity.addAdditionalSaveData(ValueOutput) - Minecraft 1.21.10
-     */
-    @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
-        super.addAdditionalSaveData(output);
-
-        // Save character data
-        output.putString("Race", race.getSerializedName());
-        output.putString("Class", characterClass.getSerializedName());
-        output.putInt("Level", level);
-
-        // Save stats
-        CompoundTag statsTag = new CompoundTag();
-        statsTag.putInt("STR", stats.strength());
-        statsTag.putInt("DEX", stats.dexterity());
-        statsTag.putInt("CON", stats.constitution());
-        statsTag.putInt("INT", stats.intelligence());
-        statsTag.putInt("WIS", stats.wisdom());
-        statsTag.putInt("CHA", stats.charisma());
-        output.put("Stats", statsTag);
-
-        // Save combat state
-        CompoundTag combatTag = new CompoundTag();
-        combatTag.putBoolean("InCombat", combatState.inCombat());
-        combatTag.putInt("Initiative", combatState.initiative());
-        combatTag.putInt("RemainingMovement", combatState.remainingMovement());
-        combatTag.putBoolean("HasAction", combatState.hasAction());
-        combatTag.putBoolean("HasBonusAction", combatState.hasBonusAction());
-        combatTag.putBoolean("HasReaction", combatState.hasReaction());
-        combatTag.putInt("ArmorClass", combatState.armorClass());
-        combatTag.putInt("CurrentHP", combatState.currentHitPoints());
-        combatTag.putInt("MaxHP", combatState.maxHitPoints());
-        output.put("Combat", combatTag);
-    }
-
-    /**
-     * Load character data from NBT.
-     * API: Entity.readAdditionalSaveData(ValueInput) - Minecraft 1.21.10
-     */
-    @Override
-    protected void readAdditionalSaveData(ValueInput input) {
-        super.readAdditionalSaveData(input);
-
-        // Load character data
-        input.getString("Race").ifPresent(raceStr -> {
-            this.race = Race.fromSerializedName(raceStr);
-        });
-        input.getString("Class").ifPresent(classStr -> {
-            this.characterClass = CharacterClass.fromSerializedName(classStr);
-        });
-        input.getInt("Level").ifPresent(lvl -> {
-            this.level = lvl;
-        });
-
-        // Load stats
-        input.getCompound("Stats").ifPresent(statsTag -> {
-            int str = statsTag.getInt("STR").orElse(10);
-            int dex = statsTag.getInt("DEX").orElse(10);
-            int con = statsTag.getInt("CON").orElse(10);
-            int intel = statsTag.getInt("INT").orElse(10);
-            int wis = statsTag.getInt("WIS").orElse(10);
-            int cha = statsTag.getInt("CHA").orElse(10);
-            this.stats = new CharacterStats(str, dex, con, intel, wis, cha);
-        });
-
-        // Load combat state
-        input.getCompound("Combat").ifPresent(combatTag -> {
-            boolean inCombat = combatTag.getBoolean("InCombat").orElse(false);
-            int initiative = combatTag.getInt("Initiative").orElse(0);
-            int remainingMovement = combatTag.getInt("RemainingMovement").orElse(0);
-            boolean hasAction = combatTag.getBoolean("HasAction").orElse(true);
-            boolean hasBonusAction = combatTag.getBoolean("HasBonusAction").orElse(true);
-            boolean hasReaction = combatTag.getBoolean("HasReaction").orElse(true);
-            int armorClass = combatTag.getInt("ArmorClass").orElse(10);
-            int currentHP = combatTag.getInt("CurrentHP").orElse(1);
-            int maxHP = combatTag.getInt("MaxHP").orElse(1);
-
-            this.combatState = new CombatState(
-                inCombat,
-                initiative,
-                this.position(), // turnStartPosition - use current position
-                remainingMovement,
-                hasAction,
-                hasBonusAction,
-                hasReaction,
-                armorClass,
-                currentHP,
-                maxHP
-            );
-        });
-
-        // Update Minecraft attributes based on loaded data
-        updateMinecraftAttributes();
-    }
+    // TODO: Implement entity persistence using correct Minecraft 1.21.10 API
+    // The NBT serialization API is unclear for Fabric with official Mojang mappings.
+    // Multiple approaches have been attempted:
+    // 1. CompoundTag - fails with "cannot be converted to ValueOutput"
+    // 2. ValueOutput/ValueInput from com.mojang.serialization - classes don't exist
+    // 3. Different packages - no success
+    //
+    // For now, entity data will not persist across world reloads.
+    // This will be implemented once the correct API is identified or
+    // by using Fabric's Data Attachment API as an alternative.
 }
