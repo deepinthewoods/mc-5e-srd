@@ -37,6 +37,8 @@ public class CharacterEntity extends PathAwareEntity {
     private CharacterClass characterClass;
     private int level;
     private CombatState combatState;
+    private boolean playerControlled = false;
+    private ninja.trek.srd.character.ai.CombatAIController aiController;
 
     public CharacterEntity(EntityType<? extends PathAwareEntity> entityType, World level) {
         super(entityType, level);
@@ -81,7 +83,8 @@ public class CharacterEntity extends PathAwareEntity {
      * Register AI goals for this character entity.
      */
     private void registerAIGoals() {
-        this.goalSelector.add(1, new ninja.trek.srd.character.ai.CombatAIController(this));
+        this.aiController = new ninja.trek.srd.character.ai.CombatAIController(this);
+        this.goalSelector.add(1, this.aiController);
         this.targetSelector.add(1, new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
             this,
             net.minecraft.entity.player.PlayerEntity.class,
@@ -249,6 +252,30 @@ public class CharacterEntity extends PathAwareEntity {
 
     public void setCombatState(CombatState combatState) {
         this.combatState = combatState;
+    }
+
+    public boolean isPlayerControlled() {
+        return playerControlled;
+    }
+
+    public void setPlayerControlled(boolean playerControlled) {
+        this.playerControlled = playerControlled;
+    }
+
+    public ninja.trek.srd.character.ai.CombatAIController getAIController() {
+        return aiController;
+    }
+
+    /**
+     * Execute a turn for this AI-controlled character.
+     * This is called when it's the AI's turn in combat.
+     */
+    public void executeAITurn(net.minecraft.server.MinecraftServer server, EncounterState encounter) {
+        if (aiController != null && !playerControlled) {
+            // The AI controller will handle the turn logic
+            // and call the appropriate methods to advance the turn
+            aiController.tick();
+        }
     }
 
     // TODO: Implement entity persistence using Minecraft 1.21.10 API

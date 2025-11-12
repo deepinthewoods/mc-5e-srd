@@ -2,6 +2,7 @@ package ninja.trek.srd.network;
 
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import ninja.trek.srd.FiveESrdMod;
+import ninja.trek.srd.client.ClientEncounterState;
 import ninja.trek.srd.network.payloads.*;
 
 /**
@@ -54,8 +55,10 @@ public class ClientPacketHandlers {
                 payload.currentTurnIndex() + 1
             );
 
-            // TODO: Update client-side encounter state cache
-            // TODO: Update combat UI to show initiative order
+            // Update client-side encounter state cache
+            ClientEncounterState.getInstance().updateEncounter(payload);
+
+            // TODO: Update combat UI to show initiative order (Phase 3)
         });
     }
 
@@ -71,8 +74,19 @@ public class ClientPacketHandlers {
                 payload.maxHitPoints()
             );
 
-            // TODO: Update entity's combat state on client
-            // TODO: Update combat UI to show action availability
+            // Update entity's combat state on client
+            ClientEncounterState.getInstance().updateCombatState(
+                payload.entityId(),
+                payload.currentHitPoints(),
+                payload.maxHitPoints(),
+                payload.armorClass(),
+                payload.hasAction(),
+                payload.hasBonusAction(),
+                payload.hasReaction(),
+                payload.remainingMovement()
+            );
+
+            // TODO: Update combat UI to show action availability (Phase 3)
         });
     }
 
@@ -84,9 +98,12 @@ public class ClientPacketHandlers {
         context.client().execute(() -> {
             FiveESrdMod.LOGGER.info("Turn started for entity: {}", payload.entityId());
 
-            // TODO: Highlight current turn entity
-            // TODO: Enable/disable action buttons based on whose turn it is
-            // TODO: Play turn start sound/visual effect
+            // Update client-side state
+            ClientEncounterState.getInstance().startTurn(payload.encounterId(), payload.entityId());
+
+            // TODO: Highlight current turn entity (Phase 3)
+            // TODO: Enable/disable action buttons based on whose turn it is (Phase 3)
+            // TODO: Play turn start sound/visual effect (Phase 5)
         });
     }
 
@@ -98,8 +115,11 @@ public class ClientPacketHandlers {
         context.client().execute(() -> {
             FiveESrdMod.LOGGER.info("Turn ended for entity: {}", payload.entityId());
 
-            // TODO: Remove highlighting from entity
-            // TODO: Disable action buttons
+            // Update client-side state
+            ClientEncounterState.getInstance().endTurn(payload.encounterId(), payload.entityId());
+
+            // TODO: Remove highlighting from entity (Phase 3)
+            // TODO: Disable action buttons (Phase 3)
         });
     }
 }
