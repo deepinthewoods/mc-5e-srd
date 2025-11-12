@@ -11,9 +11,7 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.world.World;
 import net.minecraft.util.math.Vec3d;
 import ninja.trek.srd.character.data.*;
-import ninja.trek.srd.combat.CombatState;
-import ninja.trek.srd.combat.EncounterManager;
-import ninja.trek.srd.combat.EncounterState;
+import ninja.trek.srd.combat.*;
 import ninja.trek.srd.util.DiceRoller;
 
 /**
@@ -40,6 +38,7 @@ public class CharacterEntity extends PathAwareEntity {
     private Vec3d lastCombatPosition = Vec3d.ZERO;
     private boolean playerControlled = false;
     private ninja.trek.srd.character.ai.CombatAIController aiController;
+    private Weapon equippedWeapon;
 
     public CharacterEntity(EntityType<? extends PathAwareEntity> entityType, World level) {
         super(entityType, level);
@@ -48,6 +47,7 @@ public class CharacterEntity extends PathAwareEntity {
         this.race = Race.HUMAN;
         this.characterClass = CharacterClass.FIGHTER;
         this.level = 1;
+        this.equippedWeapon = Weapons.getStartingWeaponForFighter();
 
         // Calculate initial combat state
         int maxHp = calculateMaxHitPoints();
@@ -66,7 +66,31 @@ public class CharacterEntity extends PathAwareEntity {
         super.tick();
 
         if (!this.getEntityWorld().isClient()) {
+            // Store position before movement for opportunity attack detection
+            Vec3d previousPosition = OpportunityAttackHandler.getPreviousPosition(this.getUuid());
+            Vec3d currentPosition = currentPositionVector();
+
+            // Check for opportunity attacks if in combat and moved
+            if (this.combatState.inCombat() && !previousPosition.equals(Vec3d.ZERO)) {
+                double distanceMoved = previousPosition.distanceTo(currentPosition);
+                if (distanceMoved > 0.1) { // Threshold to avoid tiny movements
+                    var server = this.getEntityWorld().getServer();
+                    if (server != null) {
+                        OpportunityAttackHandler.checkForOpportunityAttacks(
+                            this,
+                            previousPosition,
+                            currentPosition,
+                            server
+                        );
+                    }
+                }
+            }
+
+            // Update movement constraints
             updateCombatMovementConstraints();
+
+            // Update position tracking for next tick
+            OpportunityAttackHandler.updatePosition(this.getUuid(), currentPosition);
         } else if (!this.combatState.inCombat()) {
             this.lastCombatPosition = currentPositionVector();
         }
@@ -118,6 +142,9 @@ public class CharacterEntity extends PathAwareEntity {
 
         // Set appearance
         setAppearance(appearance);
+
+        // Equip starting weapon based on class
+        this.equippedWeapon = Weapons.getStartingWeaponForFighter();
 
         // Calculate and set attributes
         int maxHp = calculateMaxHitPoints();
@@ -284,6 +311,14 @@ public class CharacterEntity extends PathAwareEntity {
 
     public ninja.trek.srd.character.ai.CombatAIController getAIController() {
         return aiController;
+    }
+
+    public Weapon getEquippedWeapon() {
+        return equippedWeapon != null ? equippedWeapon : Weapons.getDefaultWeapon();
+    }
+
+    public void setEquippedWeapon(Weapon weapon) {
+        this.equippedWeapon = weapon;
     }
 
     /**
