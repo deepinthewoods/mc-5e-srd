@@ -11,6 +11,9 @@ base {
 }
 
 repositories {
+	// Local Maven repository (for offline/proxy-restricted environments)
+	mavenLocal()
+
 	// Local repository for vendored dependencies
 	maven {
 		name = 'VendoredDependencies'
