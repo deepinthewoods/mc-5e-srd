@@ -49,7 +49,7 @@ public enum CharacterClass implements StringRepresentable {
 
     /**
      * Deserialize CharacterClass from string name.
-     * API: Used by Entity.readAdditionalSaveData(ValueInput) - Minecraft 1.21.10
+     * API: Used by Entity.readAdditionalSaveData(CompoundTag) - Minecraft 1.21.10
      */
     public static CharacterClass fromSerializedName(String name) {
         for (CharacterClass charClass : values()) {
