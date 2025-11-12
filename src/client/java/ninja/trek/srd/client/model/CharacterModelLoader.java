@@ -1,8 +1,8 @@
 package ninja.trek.srd.client.model;
 
-import net.minecraft.server.packs.resources.ResourceManager;
-import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
-import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.resource.ResourceManager;
+import net.minecraft.resource.SinglePreparationResourceReloader;
+import net.minecraft.util.profiler.Profiler;
 import ninja.trek.srd.FiveESrdMod;
 
 import java.util.Collections;
@@ -16,12 +16,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * The full implementation will use Assimp to load character_parts.gltf and cache
  * all mesh parts for efficient runtime rendering.
  */
-public class CharacterModelLoader extends SimplePreparableReloadListener<Map<String, CharacterModelLoader.MeshPart>> {
+public class CharacterModelLoader extends SinglePreparationResourceReloader<Map<String, CharacterModelLoader.MeshPart>> {
 
     private static volatile Map<String, CharacterModelLoader.MeshPart> meshParts = Collections.emptyMap();
 
     @Override
-    protected Map<String, CharacterModelLoader.MeshPart> prepare(ResourceManager resourceManager, ProfilerFiller profiler) {
+    protected Map<String, CharacterModelLoader.MeshPart> prepare(ResourceManager resourceManager, Profiler profiler) {
         FiveESrdMod.LOGGER.info("Loading character mesh parts...");
 
         // TODO: Load GLTF file using Assimp
@@ -35,7 +35,7 @@ public class CharacterModelLoader extends SimplePreparableReloadListener<Map<Str
     }
 
     @Override
-    protected void apply(Map<String, CharacterModelLoader.MeshPart> prepared, ResourceManager resourceManager, ProfilerFiller profiler) {
+    protected void apply(Map<String, CharacterModelLoader.MeshPart> prepared, ResourceManager resourceManager, Profiler profiler) {
         meshParts = prepared;
         FiveESrdMod.LOGGER.info("Loaded {} character mesh parts", meshParts.size());
     }

@@ -2,7 +2,7 @@ package ninja.trek.srd.combat;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.util.math.Vec3d;
 
 /**
  * Tracks an entity's current combat state and action economy.
@@ -10,7 +10,7 @@ import net.minecraft.world.phys.Vec3;
 public record CombatState(
     boolean inCombat,
     int initiative,
-    Vec3 turnStartPosition,
+    Vec3d turnStartPosition,
     int remainingMovement,
     boolean hasAction,
     boolean hasBonusAction,
@@ -23,7 +23,7 @@ public record CombatState(
         instance.group(
             Codec.BOOL.fieldOf("in_combat").forGetter(CombatState::inCombat),
             Codec.INT.fieldOf("initiative").forGetter(CombatState::initiative),
-            Vec3.CODEC.fieldOf("turn_start_position").forGetter(CombatState::turnStartPosition),
+            Vec3d.CODEC.fieldOf("turn_start_position").forGetter(CombatState::turnStartPosition),
             Codec.INT.fieldOf("remaining_movement").forGetter(CombatState::remainingMovement),
             Codec.BOOL.fieldOf("has_action").forGetter(CombatState::hasAction),
             Codec.BOOL.fieldOf("has_bonus_action").forGetter(CombatState::hasBonusAction),
@@ -41,7 +41,7 @@ public record CombatState(
         return new CombatState(
             false,
             0,
-            Vec3.ZERO,
+            Vec3d.ZERO,
             0,
             false,
             false,
@@ -55,7 +55,7 @@ public record CombatState(
     /**
      * Start a new turn for this entity.
      */
-    public CombatState startTurn(Vec3 currentPosition, int movementSpeed) {
+    public CombatState startTurn(Vec3d currentPosition, int movementSpeed) {
         return new CombatState(
             true,
             this.initiative,
@@ -181,7 +181,7 @@ public record CombatState(
     /**
      * Check if movement to target position is valid.
      */
-    public boolean canMoveTo(Vec3 targetPos) {
+    public boolean canMoveTo(Vec3d targetPos) {
         // If no action/bonus action used, can freely explore movement sphere
         if (this.hasAction && this.hasBonusAction) {
             return true;

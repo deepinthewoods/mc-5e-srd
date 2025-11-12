@@ -1,15 +1,15 @@
 package ninja.trek.srd.character.entity;
 
-import net.minecraft.nbt.CompoundTag;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.PathfinderMob;
-import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.nbt.NbtCompound;
+import net.minecraft.entity.data.TrackedData;
+import net.minecraft.entity.data.TrackedDataHandlerRegistry;
+import net.minecraft.entity.data.DataTracker;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.mob.PathAwareEntity;
+import net.minecraft.entity.attribute.DefaultAttributeContainer;
+import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.world.World;
+import net.minecraft.util.math.Vec3d;
 import ninja.trek.srd.character.data.*;
 import ninja.trek.srd.combat.CombatState;
 import ninja.trek.srd.combat.EncounterManager;
@@ -19,17 +19,17 @@ import ninja.trek.srd.util.DiceRoller;
 /**
  * Base entity for D&D 5e characters with full character sheet data.
  */
-public class CharacterEntity extends PathfinderMob {
+public class CharacterEntity extends PathAwareEntity {
 
     // Synced entity data
-    private static final EntityDataAccessor<Integer> DATA_BODY_INDEX =
-        SynchedEntityData.defineId(CharacterEntity.class, EntityDataSerializers.INT);
-    private static final EntityDataAccessor<Integer> DATA_LEGS_INDEX =
-        SynchedEntityData.defineId(CharacterEntity.class, EntityDataSerializers.INT);
-    private static final EntityDataAccessor<Integer> DATA_ARMS_INDEX =
-        SynchedEntityData.defineId(CharacterEntity.class, EntityDataSerializers.INT);
-    private static final EntityDataAccessor<Integer> DATA_HEAD_INDEX =
-        SynchedEntityData.defineId(CharacterEntity.class, EntityDataSerializers.INT);
+    private static final TrackedData<Integer> DATA_BODY_INDEX =
+        DataTracker.registerData(CharacterEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> DATA_LEGS_INDEX =
+        DataTracker.registerData(CharacterEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> DATA_ARMS_INDEX =
+        DataTracker.registerData(CharacterEntity.class, TrackedDataHandlerRegistry.INTEGER);
+    private static final TrackedData<Integer> DATA_HEAD_INDEX =
+        DataTracker.registerData(CharacterEntity.class, TrackedDataHandlerRegistry.INTEGER);
 
     // Character data (stored in NBT)
     private CharacterStats stats;
@@ -38,7 +38,7 @@ public class CharacterEntity extends PathfinderMob {
     private int level;
     private CombatState combatState;
 
-    public CharacterEntity(EntityType<? extends PathfinderMob> entityType, Level level) {
+    public CharacterEntity(EntityType<? extends PathAwareEntity> entityType, World level) {
         super(entityType, level);
         // Initialize with defaults
         this.stats = CharacterStats.createDefault();
@@ -52,7 +52,7 @@ public class CharacterEntity extends PathfinderMob {
         this.combatState = CombatState.createDefault(maxHp, ac);
 
         // Register AI goals if on server
-        if (!level.isClientSide()) {
+        if (!level.isClient()) {
             registerAIGoals();
         }
     }
@@ -60,31 +60,31 @@ public class CharacterEntity extends PathfinderMob {
     /**
      * Create default attribute supplier for character entities.
      */
-    public static AttributeSupplier.Builder createAttributes() {
-        return PathfinderMob.createMobAttributes()
-            .add(Attributes.MAX_HEALTH, 10.0)
-            .add(Attributes.MOVEMENT_SPEED, 0.25)
-            .add(Attributes.ATTACK_DAMAGE, 2.0)
-            .add(Attributes.ARMOR, 0.0);
+    public static DefaultAttributeContainer.Builder createAttributes() {
+        return PathAwareEntity.createMobAttributes()
+            .add(EntityAttributes.MAX_HEALTH, 10.0)
+            .add(EntityAttributes.MOVEMENT_SPEED, 0.25)
+            .add(EntityAttributes.ATTACK_DAMAGE, 2.0)
+            .add(EntityAttributes.ARMOR, 0.0);
     }
 
     @Override
-    protected void defineSynchedData(SynchedEntityData.Builder builder) {
-        super.defineSynchedData(builder);
-        builder.define(DATA_BODY_INDEX, 0);
-        builder.define(DATA_LEGS_INDEX, 0);
-        builder.define(DATA_ARMS_INDEX, 0);
-        builder.define(DATA_HEAD_INDEX, 0);
+    protected void initDataTracker(DataTracker.Builder builder) {
+        super.initDataTracker(builder);
+        builder.add(DATA_BODY_INDEX, 0);
+        builder.add(DATA_LEGS_INDEX, 0);
+        builder.add(DATA_ARMS_INDEX, 0);
+        builder.add(DATA_HEAD_INDEX, 0);
     }
 
     /**
      * Register AI goals for this character entity.
      */
     private void registerAIGoals() {
-        this.goalSelector.addGoal(1, new ninja.trek.srd.character.ai.CombatAIController(this));
-        this.targetSelector.addGoal(1, new net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal<>(
+        this.goalSelector.add(1, new ninja.trek.srd.character.ai.CombatAIController(this));
+        this.targetSelector.add(1, new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
             this,
-            net.minecraft.world.entity.player.Player.class,
+            net.minecraft.entity.player.PlayerEntity.class,
             false
         ));
     }
@@ -117,10 +117,10 @@ public class CharacterEntity extends PathfinderMob {
      * Set character appearance (mesh indices).
      */
     public void setAppearance(CharacterAppearance appearance) {
-        this.entityData.set(DATA_BODY_INDEX, appearance.bodyIndex());
-        this.entityData.set(DATA_LEGS_INDEX, appearance.legsIndex());
-        this.entityData.set(DATA_ARMS_INDEX, appearance.armsIndex());
-        this.entityData.set(DATA_HEAD_INDEX, appearance.headIndex());
+        this.dataTracker.set(DATA_BODY_INDEX, appearance.bodyIndex());
+        this.dataTracker.set(DATA_LEGS_INDEX, appearance.legsIndex());
+        this.dataTracker.set(DATA_ARMS_INDEX, appearance.armsIndex());
+        this.dataTracker.set(DATA_HEAD_INDEX, appearance.headIndex());
     }
 
     /**
@@ -128,10 +128,10 @@ public class CharacterEntity extends PathfinderMob {
      */
     public CharacterAppearance getAppearance() {
         return new CharacterAppearance(
-            this.entityData.get(DATA_BODY_INDEX),
-            this.entityData.get(DATA_LEGS_INDEX),
-            this.entityData.get(DATA_ARMS_INDEX),
-            this.entityData.get(DATA_HEAD_INDEX)
+            this.dataTracker.get(DATA_BODY_INDEX),
+            this.dataTracker.get(DATA_LEGS_INDEX),
+            this.dataTracker.get(DATA_ARMS_INDEX),
+            this.dataTracker.get(DATA_HEAD_INDEX)
         );
     }
 
@@ -166,22 +166,22 @@ public class CharacterEntity extends PathfinderMob {
      */
     private void updateMinecraftAttributes() {
         // Set max health
-        if (this.getAttribute(Attributes.MAX_HEALTH) != null) {
-            this.getAttribute(Attributes.MAX_HEALTH).setBaseValue(combatState.maxHitPoints());
+        if (this.getAttributeInstance(EntityAttributes.MAX_HEALTH) != null) {
+            this.getAttributeInstance(EntityAttributes.MAX_HEALTH).setBaseValue(combatState.maxHitPoints());
             this.setHealth(combatState.currentHitPoints());
         }
 
         // Set movement speed based on race
-        if (this.getAttribute(Attributes.MOVEMENT_SPEED) != null) {
+        if (this.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED) != null) {
             // Convert blocks per turn to blocks per tick
             // 6 blocks per turn / 20 ticks per second * some scaling factor
             double movementSpeed = race.getBaseMovementSpeed() * 0.05;
-            this.getAttribute(Attributes.MOVEMENT_SPEED).setBaseValue(movementSpeed);
+            this.getAttributeInstance(EntityAttributes.MOVEMENT_SPEED).setBaseValue(movementSpeed);
         }
 
         // Set armor
-        if (this.getAttribute(Attributes.ARMOR) != null) {
-            this.getAttribute(Attributes.ARMOR).setBaseValue(combatState.armorClass());
+        if (this.getAttributeInstance(EntityAttributes.ARMOR) != null) {
+            this.getAttributeInstance(EntityAttributes.ARMOR).setBaseValue(combatState.armorClass());
         }
     }
 
@@ -193,7 +193,7 @@ public class CharacterEntity extends PathfinderMob {
             return;
         }
 
-        Vec3 currentPos = this.position();
+        Vec3d currentPos = Vec3d.ofBottomCenter(this.getBlockPos());
         int movementSpeed = race.getBaseMovementSpeed();
         this.combatState = combatState.startTurn(currentPos, movementSpeed);
     }
@@ -209,11 +209,11 @@ public class CharacterEntity extends PathfinderMob {
      * Check if it's currently this entity's turn.
      */
     public boolean isMyTurn() {
-        EncounterState encounter = EncounterManager.getInstance().getEncounterForEntity(this.getUUID());
+        EncounterState encounter = EncounterManager.getInstance().getEncounterForEntity(this.getUuid());
         if (encounter == null) {
             return false;
         }
-        return this.getUUID().equals(encounter.getCurrentTurnEntity());
+        return this.getUuid().equals(encounter.getCurrentTurnEntity());
     }
 
     // Getters and setters

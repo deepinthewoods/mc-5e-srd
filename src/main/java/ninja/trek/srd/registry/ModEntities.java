@@ -1,11 +1,11 @@
 package ninja.trek.srd.registry;
 
 import net.fabricmc.fabric.api.object.builder.v1.entity.FabricDefaultAttributeRegistry;
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EntityType;
-import net.minecraft.world.entity.MobCategory;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
+import net.minecraft.entity.EntityType;
+import net.minecraft.entity.SpawnGroup;
 import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.character.entity.CharacterEntity;
 
@@ -15,11 +15,10 @@ import ninja.trek.srd.character.entity.CharacterEntity;
 public class ModEntities {
 
     public static final EntityType<CharacterEntity> CHARACTER = Registry.register(
-        BuiltInRegistries.ENTITY_TYPE,
-        ResourceLocation.fromNamespaceAndPath(FiveESrdMod.MOD_ID, "character"),
-        EntityType.Builder.of(CharacterEntity::new, MobCategory.CREATURE)
-            .sized(0.6f, 1.8f) // Similar to player dimensions
-            .clientTrackingRange(10)
+        Registries.ENTITY_TYPE,
+        Identifier.of(FiveESrdMod.MOD_ID, "character"),
+        EntityType.Builder.create(CharacterEntity::new, SpawnGroup.CREATURE)
+            .dimensions(0.6f, 1.8f) // Similar to player dimensions
             .build(null)
     );
 

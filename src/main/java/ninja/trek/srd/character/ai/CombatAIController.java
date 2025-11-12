@@ -1,9 +1,9 @@
 package ninja.trek.srd.character.ai;
 
-import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.ai.goal.Goal;
-import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
-import net.minecraft.world.entity.player.Player;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.entity.ai.goal.Goal;
+import net.minecraft.entity.ai.goal.ActiveTargetGoal;
+import net.minecraft.entity.player.PlayerEntity;
 import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.combat.EncounterManager;
 
@@ -23,11 +23,11 @@ public class CombatAIController extends Goal {
 
     public CombatAIController(CharacterEntity character) {
         this.character = character;
-        this.setFlags(EnumSet.of(Goal.Flag.MOVE, Goal.Flag.LOOK));
+        this.setControls(EnumSet.of(Goal.Control.MOVE, Goal.Control.LOOK));
     }
 
     @Override
-    public boolean canUse() {
+    public boolean canStart() {
         // Only use AI when in combat and it's this entity's turn
         if (!character.getCombatState().inCombat()) {
             return false;
@@ -43,8 +43,8 @@ public class CombatAIController extends Goal {
     }
 
     @Override
-    public boolean canContinueToUse() {
-        return canUse();
+    public boolean shouldContinue() {
+        return canStart();
     }
 
     @Override
@@ -67,12 +67,12 @@ public class CombatAIController extends Goal {
             int remainingMovement = character.getCombatState().remainingMovement();
             if (distanceToTarget <= remainingMovement) {
                 // Move to target and attack
-                character.getNavigation().moveTo(target, 1.0);
+                character.getNavigation().startMovingTo(target, 1.0);
                 // Wait a tick for movement, then attack
                 // TODO: Implement proper action sequencing
             } else {
                 // Just move closer
-                character.getNavigation().moveTo(target, 1.0);
+                character.getNavigation().startMovingTo(target, 1.0);
                 endTurn();
             }
         }
@@ -84,8 +84,8 @@ public class CombatAIController extends Goal {
     private LivingEntity findNearestTarget() {
         // Simple implementation: find nearest player
         // TODO: Implement proper faction/hostility system
-        return character.level()
-            .getNearestPlayer(character, 20.0);
+        return character.getEntityWorld()
+            .getClosestPlayer(character, 20.0);
     }
 
     /**
@@ -93,8 +93,8 @@ public class CombatAIController extends Goal {
      */
     private void performAttack(LivingEntity target) {
         // TODO: Implement proper 5e attack roll and damage calculation
-        if (character.level() instanceof net.minecraft.server.level.ServerLevel serverLevel) {
-            character.doHurtTarget(serverLevel, target);
+        if (character.getEntityWorld() instanceof net.minecraft.server.world.ServerWorld serverWorld) {
+            character.tryAttack(serverWorld, target);
         }
 
         // Use action
@@ -107,7 +107,7 @@ public class CombatAIController extends Goal {
      */
     private void endTurn() {
         var encounter = EncounterManager.getInstance()
-            .getEncounterForEntity(character.getUUID());
+            .getEncounterForEntity(character.getUuid());
 
         if (encounter != null) {
             EncounterManager.getInstance().advanceTurn(encounter.getEncounterId());

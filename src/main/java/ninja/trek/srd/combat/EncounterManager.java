@@ -1,7 +1,12 @@
 package ninja.trek.srd.combat;
 
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.phys.Vec3;
+import net.fabricmc.fabric.api.networking.v1.PlayerLookup;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
+import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.entity.Entity;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,9 +27,17 @@ public class EncounterManager {
     }
 
     /**
+     * Get the singleton instance.
+     * Note: MinecraftServer parameter is for API compatibility but not currently used.
+     */
+    public static EncounterManager getInstance(MinecraftServer server) {
+        return INSTANCE;
+    }
+
+    /**
      * Start a new encounter at the given position.
      */
-    public UUID startEncounter(Vec3 centerPosition, List<Entity> participants) {
+    public UUID startEncounter(Vec3d centerPosition, List<Entity> participants) {
         UUID encounterId = UUID.randomUUID();
         EncounterState encounter = new EncounterState(encounterId, centerPosition);
 
@@ -115,5 +128,26 @@ public class EncounterManager {
      */
     public Collection<EncounterState> getAllEncounters() {
         return Collections.unmodifiableCollection(activeEncounters.values());
+    }
+
+    /**
+     * Broadcast a payload to all players involved in an encounter.
+     */
+    public void broadcastToEncounter(UUID encounterId, CustomPayload payload) {
+        EncounterState encounter = activeEncounters.get(encounterId);
+        if (encounter == null) {
+            return;
+        }
+
+        // Get all entity IDs in the encounter
+        Set<UUID> entityIds = new HashSet<>();
+        encounter.getTurnOrder().forEach(tracker -> entityIds.add(tracker.entityId()));
+
+        // Find all online players in the encounter and send them the payload
+        for (ServerPlayerEntity player : PlayerLookup.all(null)) {
+            if (entityIds.contains(player.getUuid())) {
+                ServerPlayNetworking.send(player, payload);
+            }
+        }
     }
 }

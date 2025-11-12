@@ -1,14 +1,14 @@
 package ninja.trek.srd.util;
 
-import net.minecraft.util.RandomSource;
+import net.minecraft.util.math.random.Random;
 
 /**
  * Utility class for rolling dice according to D&D 5e rules.
  */
 public class DiceRoller {
-    private final RandomSource random;
+    private final Random random;
 
-    public DiceRoller(RandomSource random) {
+    public DiceRoller(Random random) {
         this.random = random;
     }
 

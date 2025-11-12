@@ -1,6 +1,6 @@
 package ninja.trek.srd.client.render;
 
-import net.minecraft.client.renderer.entity.state.LivingEntityRenderState;
+import net.minecraft.client.render.entity.state.LivingEntityRenderState;
 import ninja.trek.srd.character.data.CharacterAppearance;
 
 /**

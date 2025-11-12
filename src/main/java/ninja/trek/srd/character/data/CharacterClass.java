@@ -1,20 +1,20 @@
 package ninja.trek.srd.character.data;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.util.StringRepresentable;
+import net.minecraft.util.StringIdentifiable;
 
 /**
  * Represents character classes from the 5e SRD.
  * Initial implementation starts with Fighter only.
  */
-public enum CharacterClass implements StringRepresentable {
+public enum CharacterClass implements StringIdentifiable {
     FIGHTER(
         "fighter",
         10,  // hit die (d10)
         2    // proficiency bonus at level 1
     );
 
-    public static final Codec<CharacterClass> CODEC = StringRepresentable.fromEnum(CharacterClass::values);
+    public static final Codec<CharacterClass> CODEC = StringIdentifiable.createCodec(CharacterClass::values);
 
     private final String name;
     private final int hitDie;
@@ -27,7 +27,7 @@ public enum CharacterClass implements StringRepresentable {
     }
 
     @Override
-    public String getSerializedName() {
+    public String asString() {
         return name;
     }
 

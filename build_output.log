@@ -1,0 +1,534 @@
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.1.0/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+
+> Configure project :
+Fabric Loom: 1.12.7
+
+> Task :compileJava FAILED
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\block\EncounterBlock.java:31: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\block\EncounterBlock.java:34: error: cannot find symbol
+        super.tick(state, level, pos, random);
+             ^
+  symbol: method tick(BlockState,ServerWorld,BlockPos,Random)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\block\EncounterBlock.java:43: error: no suitable constructor found for Box(Vec3d,int,int,int)
+        Box searchBox = new Box(centerPos, DEFAULT_TRIGGER_RADIUS * 2, DEFAULT_TRIGGER_RADIUS * 2, DEFAULT_TRIGGER_RADIUS * 2);
+                        ^
+    constructor Box.Box(double,double,double,double,double,double) is not applicable
+      (actual and formal argument lists differ in length)
+    constructor Box.Box(BlockPos) is not applicable
+      (actual and formal argument lists differ in length)
+    constructor Box.Box(Vec3d,Vec3d) is not applicable
+      (actual and formal argument lists differ in length)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\block\EncounterBlock.java:46: error: cannot find symbol
+        List<Entity> nearbyEntities = level.getEntities(
+                                           ^
+  symbol:   method getEntities(Entity,Box,(entity)->[...]dly())
+  location: variable level of type ServerWorld
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\block\EncounterBlock.java:89: error: cannot find symbol
+                    character.getPos(),
+                             ^
+  symbol:   method getPos()
+  location: variable character of type CharacterEntity
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:19: error: CombatAIController is not abstract and does not override abstract method canStart() in Goal
+public class CombatAIController extends Goal {
+       ^
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:26: error: cannot find symbol
+        this.setFlags(EnumSet.of(Goal.Control.MOVE, Goal.Control.LOOK));
+            ^
+  symbol: method setFlags(EnumSet<Control>)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:29: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:45: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:70: error: cannot find symbol
+                character.getNavigation().moveTo(target, 1.0);
+                                         ^
+  symbol:   method moveTo(LivingEntity,double)
+  location: class EntityNavigation
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:75: error: cannot find symbol
+                character.getNavigation().moveTo(target, 1.0);
+                                         ^
+  symbol:   method moveTo(LivingEntity,double)
+  location: class EntityNavigation
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:87: error: cannot find symbol
+        return character.getWorld()
+                        ^
+  symbol:   method getWorld()
+  location: variable character of type CharacterEntity
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:96: error: cannot find symbol
+        if (character.getWorld() instanceof net.minecraft.server.world.ServerWorld serverWorld) {
+                     ^
+  symbol:   method getWorld()
+  location: variable character of type CharacterEntity
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:26: error: cannot find symbol
+        DataTracker.defineId(CharacterEntity.class, TrackedDataHandlerRegistry.INT);
+                                                                              ^
+  symbol:   variable INT
+  location: class TrackedDataHandlerRegistry
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:28: error: cannot find symbol
+        DataTracker.defineId(CharacterEntity.class, TrackedDataHandlerRegistry.INT);
+                                                                              ^
+  symbol:   variable INT
+  location: class TrackedDataHandlerRegistry
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:30: error: cannot find symbol
+        DataTracker.defineId(CharacterEntity.class, TrackedDataHandlerRegistry.INT);
+                                                                              ^
+  symbol:   variable INT
+  location: class TrackedDataHandlerRegistry
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:32: error: cannot find symbol
+        DataTracker.defineId(CharacterEntity.class, TrackedDataHandlerRegistry.INT);
+                                                                              ^
+  symbol:   variable INT
+  location: class TrackedDataHandlerRegistry
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:55: error: isClient has private access in World
+        if (!level.isClient) {
+                  ^
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:71: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:73: error: cannot find symbol
+        super.defineSynchedData(builder);
+             ^
+  symbol: method defineSynchedData(Builder)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:84: error: cannot find symbol
+        this.goalSelector.addGoal(1, new ninja.trek.srd.character.ai.CombatAIController(this));
+                         ^
+  symbol:   method addGoal(int,CombatAIController)
+  location: variable goalSelector of type GoalSelector
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:85: error: cannot find symbol
+        this.targetSelector.addGoal(1, new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
+                           ^
+  symbol:   method addGoal(int,ActiveTargetGoal<PlayerEntity>)
+  location: variable targetSelector of type GoalSelector
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:120: error: cannot find symbol
+        this.entityData.set(DATA_BODY_INDEX, appearance.bodyIndex());
+            ^
+  symbol: variable entityData
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:121: error: cannot find symbol
+        this.entityData.set(DATA_LEGS_INDEX, appearance.legsIndex());
+            ^
+  symbol: variable entityData
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:122: error: cannot find symbol
+        this.entityData.set(DATA_ARMS_INDEX, appearance.armsIndex());
+            ^
+  symbol: variable entityData
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:123: error: cannot find symbol
+        this.entityData.set(DATA_HEAD_INDEX, appearance.headIndex());
+            ^
+  symbol: variable entityData
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:131: error: cannot find symbol
+            this.entityData.get(DATA_BODY_INDEX),
+                ^
+  symbol: variable entityData
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:132: error: cannot find symbol
+            this.entityData.get(DATA_LEGS_INDEX),
+                ^
+  symbol: variable entityData
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:133: error: cannot find symbol
+            this.entityData.get(DATA_ARMS_INDEX),
+                ^
+  symbol: variable entityData
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:134: error: cannot find symbol
+            this.entityData.get(DATA_HEAD_INDEX)
+                ^
+  symbol: variable entityData
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:169: error: cannot find symbol
+        if (this.getAttribute(EntityAttributes.MAX_HEALTH) != null) {
+                ^
+  symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:170: error: cannot find symbol
+            this.getAttribute(EntityAttributes.MAX_HEALTH).setBaseValue(combatState.maxHitPoints());
+                ^
+  symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:175: error: cannot find symbol
+        if (this.getAttribute(EntityAttributes.MOVEMENT_SPEED) != null) {
+                ^
+  symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:179: error: cannot find symbol
+            this.getAttribute(EntityAttributes.MOVEMENT_SPEED).setBaseValue(movementSpeed);
+                ^
+  symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:183: error: cannot find symbol
+        if (this.getAttribute(EntityAttributes.ARMOR) != null) {
+                ^
+  symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:184: error: cannot find symbol
+            this.getAttribute(EntityAttributes.ARMOR).setBaseValue(combatState.armorClass());
+                ^
+  symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:196: error: cannot find symbol
+        Vec3d currentPos = this.getPos();
+                               ^
+  symbol: method getPos()
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\data\Race.java:10: error: Race is not abstract and does not override abstract method asString() in StringIdentifiable
+public enum Race implements StringIdentifiable {
+       ^
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\data\Race.java:51: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\data\CharacterClass.java:10: error: CharacterClass is not abstract and does not override abstract method asString() in StringIdentifiable
+public enum CharacterClass implements StringIdentifiable {
+       ^
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\data\CharacterClass.java:29: error: method does not override or implement a method from a supertype
+    @Override
+    ^
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\SyncCombatStatePayload.java:55: error: cannot find symbol
+        PacketCodecs.BOOL, SyncCombatStatePayload::inCombat,
+                    ^
+  symbol:   variable BOOL
+  location: interface PacketCodecs
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\SyncCombatStatePayload.java:59: error: cannot find symbol
+        PacketCodecs.BOOL, SyncCombatStatePayload::hasAction,
+                    ^
+  symbol:   variable BOOL
+  location: interface PacketCodecs
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\SyncCombatStatePayload.java:60: error: cannot find symbol
+        PacketCodecs.BOOL, SyncCombatStatePayload::hasBonusAction,
+                    ^
+  symbol:   variable BOOL
+  location: interface PacketCodecs
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\SyncCombatStatePayload.java:61: error: cannot find symbol
+        PacketCodecs.BOOL, SyncCombatStatePayload::hasReaction,
+                    ^
+  symbol:   variable BOOL
+  location: interface PacketCodecs
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\SyncEncounterStatePayload.java:44: error: cannot find symbol
+        PacketCodecs.BOOL, SyncEncounterStatePayload::ended,
+                    ^
+  symbol:   variable BOOL
+  location: interface PacketCodecs
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\UseActionPayload.java:28: error: incompatible types: invalid method reference
+        PacketCodecs.indexed(ActionType::values, ActionType::ordinal);
+                             ^
+    method values in enum ActionType cannot be applied to given types
+      required: no arguments
+      found:    int
+      reason: actual and formal argument lists differ in length
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\UseActionPayload.java:32: error: incompatible types: no instance(s) of type variable(s) O,B#2,V#2 exist so that PacketCodec<ByteBuf,O> conforms to PacketCodec<RegistryByteBuf,Optional<UUID>>
+        Uuids.PACKET_CODEC.collect(PacketCodecs::optional);
+                                  ^
+  where O,B#1,V#1,B#2,V#2 are type-variables:
+    O extends Object declared in method <O>collect(ResultFunction<B#1,V#1,O>)
+    B#1 extends Object declared in interface PacketCodec
+    V#1 extends Object declared in interface PacketCodec
+    B#2 extends ByteBuf declared in method <B#2,V#2>optional(PacketCodec<? super B#2,V#2>)
+    V#2 extends Object declared in method <B#2,V#2>optional(PacketCodec<? super B#2,V#2>)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\ServerPacketHandlers.java:47: error: cannot find symbol
+            EncounterState encounter = EncounterManager.getInstance(player.getWorld().getServer()).getEncounterForEntity(player.getUuid());
+                                                                          ^
+  symbol:   method getWorld()
+  location: variable player of type ServerPlayerEntity
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\ServerPacketHandlers.java:76: error: cannot find symbol
+            EncounterManager manager = EncounterManager.getInstance(player.getWorld().getServer());
+                                                                          ^
+  symbol:   method getWorld()
+  location: variable player of type ServerPlayerEntity
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\registry\ModBlocks.java:23: error: cannot find symbol
+            .mapColor(MapColor.COLOR_RED)
+                              ^
+  symbol:   variable COLOR_RED
+  location: class MapColor
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\registry\ModBlocks.java:51: error: cannot find symbol
+            new BlockItem(registered, new Item.Properties())
+                                              ^
+  symbol:   class Properties
+  location: class Item
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\registry\ModCreativeTabs.java:18: error: cannot find symbol
+        Registries.CREATIVE_MODE_TAB,
+                  ^
+  symbol:   variable CREATIVE_MODE_TAB
+  location: class Registries
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\registry\ModDataComponents.java:50: error: method fromCodec in interface PacketCodecs cannot be applied to given types;
+                .networkSynchronized(PacketCodecs.fromCodec(codec))
+                                                 ^
+  required: DynamicOps<T#1>,Codec<V>
+  found:    Codec<T#2>
+  reason: cannot infer type-variable(s) T#1,B,V
+    (actual and formal argument lists differ in length)
+  where T#1,B,V,T#2 are type-variables:
+    T#1 extends Object declared in method <T#1,B,V>fromCodec(DynamicOps<T#1>,Codec<V>)
+    B extends ByteBuf declared in method <T#1,B,V>fromCodec(DynamicOps<T#1>,Codec<V>)
+    V extends Object declared in method <T#1,B,V>fromCodec(DynamicOps<T#1>,Codec<V>)
+    T#2 extends Object declared in method <T#2>register(String,Codec<T#2>)
+C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\registry\ModEntities.java:20: error: cannot find symbol
+        EntityType.Builder.of(CharacterEntity::new, SpawnGroup.CREATURE)
+                          ^
+  symbol:   method of(CharacterE[...]::new,SpawnGroup)
+  location: class Builder
+Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+55 errors
+
+[Incubating] Problems report is available at: file:///C:/Users/niall/_dev/mc/mc-5e-srd/build/reports/problems/problems-report.html
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':compileJava'.
+> Compilation failed; see the compiler output below.
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\registry\ModDataComponents.java:50: error: method fromCodec in interface PacketCodecs cannot be applied to given types;
+                  .networkSynchronized(PacketCodecs.fromCodec(codec))
+                                                   ^
+    required: DynamicOps<T#1>,Codec<V>
+    found:    Codec<T#2>
+    reason: cannot infer type-variable(s) T#1,B,V
+      (actual and formal argument lists differ in length)
+    where T#1,B,V,T#2 are type-variables:
+      T#1 extends Object declared in method <T#1,B,V>fromCodec(DynamicOps<T#1>,Codec<V>)
+      B extends ByteBuf declared in method <T#1,B,V>fromCodec(DynamicOps<T#1>,Codec<V>)
+      V extends Object declared in method <T#1,B,V>fromCodec(DynamicOps<T#1>,Codec<V>)
+      T#2 extends Object declared in method <T#2>register(String,Codec<T#2>)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\block\EncounterBlock.java:43: error: no suitable constructor found for Box(Vec3d,int,int,int)
+          Box searchBox = new Box(centerPos, DEFAULT_TRIGGER_RADIUS * 2, DEFAULT_TRIGGER_RADIUS * 2, DEFAULT_TRIGGER_RADIUS * 2);
+                          ^
+      constructor Box.Box(double,double,double,double,double,double) is not applicable
+        (actual and formal argument lists differ in length)
+      constructor Box.Box(BlockPos) is not applicable
+        (actual and formal argument lists differ in length)
+      constructor Box.Box(Vec3d,Vec3d) is not applicable
+        (actual and formal argument lists differ in length)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\block\EncounterBlock.java:34: error: cannot find symbol
+          super.tick(state, level, pos, random);
+               ^
+    symbol: method tick(BlockState,ServerWorld,BlockPos,Random)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:26: error: cannot find symbol
+          this.setFlags(EnumSet.of(Goal.Control.MOVE, Goal.Control.LOOK));
+              ^
+    symbol: method setFlags(EnumSet<Control>)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:73: error: cannot find symbol
+          super.defineSynchedData(builder);
+               ^
+    symbol: method defineSynchedData(Builder)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:169: error: cannot find symbol
+          if (this.getAttribute(EntityAttributes.MAX_HEALTH) != null) {
+                  ^
+    symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:170: error: cannot find symbol
+              this.getAttribute(EntityAttributes.MAX_HEALTH).setBaseValue(combatState.maxHitPoints());
+                  ^
+    symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:175: error: cannot find symbol
+          if (this.getAttribute(EntityAttributes.MOVEMENT_SPEED) != null) {
+                  ^
+    symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:179: error: cannot find symbol
+              this.getAttribute(EntityAttributes.MOVEMENT_SPEED).setBaseValue(movementSpeed);
+                  ^
+    symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:183: error: cannot find symbol
+          if (this.getAttribute(EntityAttributes.ARMOR) != null) {
+                  ^
+    symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:184: error: cannot find symbol
+              this.getAttribute(EntityAttributes.ARMOR).setBaseValue(combatState.armorClass());
+                  ^
+    symbol: method getAttribute(RegistryEntry<EntityAttribute>)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:196: error: cannot find symbol
+          Vec3d currentPos = this.getPos();
+                                 ^
+    symbol: method getPos()
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\UseActionPayload.java:28: error: incompatible types: invalid method reference
+          PacketCodecs.indexed(ActionType::values, ActionType::ordinal);
+                               ^
+      method values in enum ActionType cannot be applied to given types
+        required: no arguments
+        found:    int
+        reason: actual and formal argument lists differ in length
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\UseActionPayload.java:32: error: incompatible types: no instance(s) of type variable(s) O,B#2,V#2 exist so that PacketCodec<ByteBuf,O> conforms to PacketCodec<RegistryByteBuf,Optional<UUID>>
+          Uuids.PACKET_CODEC.collect(PacketCodecs::optional);
+                                    ^
+    where O,B#1,V#1,B#2,V#2 are type-variables:
+      O extends Object declared in method <O>collect(ResultFunction<B#1,V#1,O>)
+      B#1 extends Object declared in interface PacketCodec
+      V#1 extends Object declared in interface PacketCodec
+      B#2 extends ByteBuf declared in method <B#2,V#2>optional(PacketCodec<? super B#2,V#2>)
+      V#2 extends Object declared in method <B#2,V#2>optional(PacketCodec<? super B#2,V#2>)
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:19: error: CombatAIController is not abstract and does not override abstract method canStart() in Goal
+  public class CombatAIController extends Goal {
+         ^
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\data\Race.java:10: error: Race is not abstract and does not override abstract method asString() in StringIdentifiable
+  public enum Race implements StringIdentifiable {
+         ^
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\data\CharacterClass.java:10: error: CharacterClass is not abstract and does not override abstract method asString() in StringIdentifiable
+  public enum CharacterClass implements StringIdentifiable {
+         ^
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:26: error: cannot find symbol
+          DataTracker.defineId(CharacterEntity.class, TrackedDataHandlerRegistry.INT);
+                                                                                ^
+    symbol:   variable INT
+    location: class TrackedDataHandlerRegistry
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:28: error: cannot find symbol
+          DataTracker.defineId(CharacterEntity.class, TrackedDataHandlerRegistry.INT);
+                                                                                ^
+    symbol:   variable INT
+    location: class TrackedDataHandlerRegistry
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:30: error: cannot find symbol
+          DataTracker.defineId(CharacterEntity.class, TrackedDataHandlerRegistry.INT);
+                                                                                ^
+    symbol:   variable INT
+    location: class TrackedDataHandlerRegistry
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:32: error: cannot find symbol
+          DataTracker.defineId(CharacterEntity.class, TrackedDataHandlerRegistry.INT);
+                                                                                ^
+    symbol:   variable INT
+    location: class TrackedDataHandlerRegistry
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\SyncCombatStatePayload.java:55: error: cannot find symbol
+          PacketCodecs.BOOL, SyncCombatStatePayload::inCombat,
+                      ^
+    symbol:   variable BOOL
+    location: interface PacketCodecs
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\SyncCombatStatePayload.java:59: error: cannot find symbol
+          PacketCodecs.BOOL, SyncCombatStatePayload::hasAction,
+                      ^
+    symbol:   variable BOOL
+    location: interface PacketCodecs
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\SyncCombatStatePayload.java:60: error: cannot find symbol
+          PacketCodecs.BOOL, SyncCombatStatePayload::hasBonusAction,
+                      ^
+    symbol:   variable BOOL
+    location: interface PacketCodecs
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\SyncCombatStatePayload.java:61: error: cannot find symbol
+          PacketCodecs.BOOL, SyncCombatStatePayload::hasReaction,
+                      ^
+    symbol:   variable BOOL
+    location: interface PacketCodecs
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\payloads\SyncEncounterStatePayload.java:44: error: cannot find symbol
+          PacketCodecs.BOOL, SyncEncounterStatePayload::ended,
+                      ^
+    symbol:   variable BOOL
+    location: interface PacketCodecs
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\registry\ModBlocks.java:23: error: cannot find symbol
+              .mapColor(MapColor.COLOR_RED)
+                                ^
+    symbol:   variable COLOR_RED
+    location: class MapColor
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\registry\ModBlocks.java:51: error: cannot find symbol
+              new BlockItem(registered, new Item.Properties())
+                                                ^
+    symbol:   class Properties
+    location: class Item
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\registry\ModCreativeTabs.java:18: error: cannot find symbol
+          Registries.CREATIVE_MODE_TAB,
+                    ^
+    symbol:   variable CREATIVE_MODE_TAB
+    location: class Registries
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:55: error: isClient has private access in World
+          if (!level.isClient) {
+                    ^
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\block\EncounterBlock.java:31: error: method does not override or implement a method from a supertype
+      @Override
+      ^
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:29: error: method does not override or implement a method from a supertype
+      @Override
+      ^
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:45: error: method does not override or implement a method from a supertype
+      @Override
+      ^
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:71: error: method does not override or implement a method from a supertype
+      @Override
+      ^
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\data\Race.java:51: error: method does not override or implement a method from a supertype
+      @Override
+      ^
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\data\CharacterClass.java:29: error: method does not override or implement a method from a supertype
+      @Override
+      ^
+  Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:120: error: cannot find symbol
+          this.entityData.set(DATA_BODY_INDEX, appearance.bodyIndex());
+              ^
+    symbol: variable entityData
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:121: error: cannot find symbol
+          this.entityData.set(DATA_LEGS_INDEX, appearance.legsIndex());
+              ^
+    symbol: variable entityData
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:122: error: cannot find symbol
+          this.entityData.set(DATA_ARMS_INDEX, appearance.armsIndex());
+              ^
+    symbol: variable entityData
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:123: error: cannot find symbol
+          this.entityData.set(DATA_HEAD_INDEX, appearance.headIndex());
+              ^
+    symbol: variable entityData
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:131: error: cannot find symbol
+              this.entityData.get(DATA_BODY_INDEX),
+                  ^
+    symbol: variable entityData
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:132: error: cannot find symbol
+              this.entityData.get(DATA_LEGS_INDEX),
+                  ^
+    symbol: variable entityData
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:133: error: cannot find symbol
+              this.entityData.get(DATA_ARMS_INDEX),
+                  ^
+    symbol: variable entityData
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:134: error: cannot find symbol
+              this.entityData.get(DATA_HEAD_INDEX)
+                  ^
+    symbol: variable entityData
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\block\EncounterBlock.java:46: error: cannot find symbol
+          List<Entity> nearbyEntities = level.getEntities(
+                                             ^
+    symbol:   method getEntities(Entity,Box,(entity)->[...]dly())
+    location: variable level of type ServerWorld
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\block\EncounterBlock.java:89: error: cannot find symbol
+                      character.getPos(),
+                               ^
+    symbol:   method getPos()
+    location: variable character of type CharacterEntity
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:70: error: cannot find symbol
+                  character.getNavigation().moveTo(target, 1.0);
+                                           ^
+    symbol:   method moveTo(LivingEntity,double)
+    location: class EntityNavigation
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:75: error: cannot find symbol
+                  character.getNavigation().moveTo(target, 1.0);
+                                           ^
+    symbol:   method moveTo(LivingEntity,double)
+    location: class EntityNavigation
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:87: error: cannot find symbol
+          return character.getWorld()
+                          ^
+    symbol:   method getWorld()
+    location: variable character of type CharacterEntity
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\ai\CombatAIController.java:96: error: cannot find symbol
+          if (character.getWorld() instanceof net.minecraft.server.world.ServerWorld serverWorld) {
+                       ^
+    symbol:   method getWorld()
+    location: variable character of type CharacterEntity
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:84: error: cannot find symbol
+          this.goalSelector.addGoal(1, new ninja.trek.srd.character.ai.CombatAIController(this));
+                           ^
+    symbol:   method addGoal(int,CombatAIController)
+    location: variable goalSelector of type GoalSelector
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\character\entity\CharacterEntity.java:85: error: cannot find symbol
+          this.targetSelector.addGoal(1, new net.minecraft.entity.ai.goal.ActiveTargetGoal<>(
+                             ^
+    symbol:   method addGoal(int,ActiveTargetGoal<PlayerEntity>)
+    location: variable targetSelector of type GoalSelector
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\ServerPacketHandlers.java:47: error: cannot find symbol
+              EncounterState encounter = EncounterManager.getInstance(player.getWorld().getServer()).getEncounterForEntity(player.getUuid());
+                                                                            ^
+    symbol:   method getWorld()
+    location: variable player of type ServerPlayerEntity
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\network\ServerPacketHandlers.java:76: error: cannot find symbol
+              EncounterManager manager = EncounterManager.getInstance(player.getWorld().getServer());
+                                                                            ^
+    symbol:   method getWorld()
+    location: variable player of type ServerPlayerEntity
+  C:\Users\niall\_dev\mc\mc-5e-srd\src\main\java\ninja\trek\srd\registry\ModEntities.java:20: error: cannot find symbol
+          EntityType.Builder.of(CharacterEntity::new, SpawnGroup.CREATURE)
+                            ^
+    symbol:   method of(CharacterE[...]::new,SpawnGroup)
+    location: class Builder
+  55 errors
+
+* Try:
+> Check your code and dependencies to fix the compilation error(s)
+> Run with --scan to generate a Build Scan (Powered by Develocity).
+
+BUILD FAILED in 8s
+1 actionable task: 1 executed

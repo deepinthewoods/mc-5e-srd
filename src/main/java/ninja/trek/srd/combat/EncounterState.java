@@ -1,6 +1,6 @@
 package ninja.trek.srd.combat;
 
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.util.math.Vec3d;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,10 +15,10 @@ public class EncounterState {
     private final List<InitiativeTracker> turnOrder;
     private int currentTurnIndex;
     private int roundNumber;
-    private final Vec3 centerPosition;
+    private final Vec3d centerPosition;
     private boolean ended;
 
-    public EncounterState(UUID encounterId, Vec3 centerPosition) {
+    public EncounterState(UUID encounterId, Vec3d centerPosition) {
         this.encounterId = encounterId;
         this.centerPosition = centerPosition;
         this.turnOrder = new ArrayList<>();
@@ -103,7 +103,7 @@ public class EncounterState {
         return roundNumber;
     }
 
-    public Vec3 getCenterPosition() {
+    public Vec3d getCenterPosition() {
         return centerPosition;
     }
 

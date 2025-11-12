@@ -1,10 +1,10 @@
 package ninja.trek.srd.client.render;
 
-import com.mojang.blaze3d.vertex.PoseStack;
-import net.minecraft.client.renderer.MultiBufferSource;
-import net.minecraft.client.renderer.entity.EntityRenderer;
-import net.minecraft.client.renderer.entity.EntityRendererProvider;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.entity.EntityRenderer;
+import net.minecraft.client.render.entity.EntityRendererFactory;
+import net.minecraft.util.Identifier;
 import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.character.entity.CharacterEntity;
 
@@ -16,12 +16,12 @@ import ninja.trek.srd.character.entity.CharacterEntity;
  */
 public class CharacterEntityRenderer extends EntityRenderer<CharacterEntity, CharacterRenderState> {
 
-    private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(
+    private static final Identifier TEXTURE = Identifier.of(
         FiveESrdMod.MOD_ID,
         "textures/entity/character_atlas.png"
     );
 
-    public CharacterEntityRenderer(EntityRendererProvider.Context context) {
+    public CharacterEntityRenderer(EntityRendererFactory.Context context) {
         super(context);
         this.shadowRadius = 0.5f;
     }
@@ -32,8 +32,8 @@ public class CharacterEntityRenderer extends EntityRenderer<CharacterEntity, Cha
     }
 
     @Override
-    public void extractRenderState(CharacterEntity entity, CharacterRenderState state, float partialTick) {
-        super.extractRenderState(entity, state, partialTick);
+    public void updateRenderState(CharacterEntity entity, CharacterRenderState state, float partialTick) {
+        super.updateRenderState(entity, state, partialTick);
 
         // Extract appearance data
         state.appearance = entity.getAppearance();
@@ -43,8 +43,8 @@ public class CharacterEntityRenderer extends EntityRenderer<CharacterEntity, Cha
         state.limbAngle = 0.0f;
         state.limbDistance = 0.0f;
         state.handSwingProgress = 0.0f;
-        state.yaw = entity.getYRot();
-        state.pitch = entity.getXRot();
+        state.yaw = entity.getYaw();
+        state.pitch = entity.getPitch();
     }
 
     // TODO: Implement GLTF-based modular rendering

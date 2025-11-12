@@ -1,14 +1,14 @@
 package ninja.trek.srd.block;
 
-import net.minecraft.core.BlockPos;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.util.RandomSource;
-import net.minecraft.world.entity.Entity;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.phys.AABB;
-import net.minecraft.world.phys.Vec3;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.math.random.Random;
+import net.minecraft.entity.Entity;
+import net.minecraft.world.World;
+import net.minecraft.block.Block;
+import net.minecraft.block.BlockState;
+import net.minecraft.util.math.Box;
+import net.minecraft.util.math.Vec3d;
 import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.combat.EncounterManager;
 import ninja.trek.srd.combat.InitiativeTracker;
@@ -24,29 +24,27 @@ import java.util.UUID;
 public class EncounterBlock extends Block {
     private static final int DEFAULT_TRIGGER_RADIUS = 10;
 
-    public EncounterBlock(Properties properties) {
-        super(properties);
-    }
-
-    @Override
-    @SuppressWarnings("deprecation")
-    public void tick(BlockState state, ServerLevel level, BlockPos pos, RandomSource random) {
-        super.tick(state, level, pos, random);
-        checkForEncounterTrigger(level, pos);
+    public EncounterBlock(Settings settings) {
+        super(settings);
     }
 
     /**
      * Check if any players or entities are within trigger radius.
+     * This should be called via scheduledTick or another mechanism.
      */
-    private void checkForEncounterTrigger(ServerLevel level, BlockPos pos) {
-        Vec3 centerPos = Vec3.atCenterOf(pos);
-        AABB searchBox = AABB.ofSize(centerPos, DEFAULT_TRIGGER_RADIUS * 2, DEFAULT_TRIGGER_RADIUS * 2, DEFAULT_TRIGGER_RADIUS * 2);
+    private void checkForEncounterTrigger(ServerWorld level, BlockPos pos) {
+        Vec3d centerPos = Vec3d.ofCenter(pos);
+        double radius = DEFAULT_TRIGGER_RADIUS;
+        Box searchBox = new Box(
+            centerPos.x - radius, centerPos.y - radius, centerPos.z - radius,
+            centerPos.x + radius, centerPos.y + radius, centerPos.z + radius
+        );
 
         // Find all entities in range
-        List<Entity> nearbyEntities = level.getEntities(
-            (Entity) null,
+        List<Entity> nearbyEntities = level.getEntitiesByClass(
+            Entity.class,
             searchBox,
-            entity -> entity instanceof CharacterEntity || entity.getType().getCategory().isFriendly()
+            entity -> entity instanceof CharacterEntity || entity.getType().getSpawnGroup().isPeaceful()
         );
 
         // If entities found, trigger encounter
@@ -60,7 +58,7 @@ public class EncounterBlock extends Block {
     /**
      * Trigger a combat encounter for all nearby entities.
      */
-    private void triggerEncounter(ServerLevel level, Vec3 centerPos, List<Entity> participants) {
+    private void triggerEncounter(ServerWorld level, Vec3d centerPos, List<Entity> participants) {
         DiceRoller roller = new DiceRoller(level.random);
         EncounterManager manager = EncounterManager.getInstance();
 
@@ -74,7 +72,7 @@ public class EncounterBlock extends Block {
                 int dexMod = character.getStats().getDexterityModifier();
 
                 InitiativeTracker tracker = new InitiativeTracker(
-                    character.getUUID(),
+                    character.getUuid(),
                     initiativeRoll,
                     dexMod
                 );
@@ -86,7 +84,7 @@ public class EncounterBlock extends Block {
                 character.setCombatState(new ninja.trek.srd.combat.CombatState(
                     true,
                     initiativeRoll + dexMod,
-                    character.position(),
+                    Vec3d.ofBottomCenter(character.getBlockPos()),
                     character.getRace().getBaseMovementSpeed(),
                     true,
                     true,

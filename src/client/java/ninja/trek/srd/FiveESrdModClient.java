@@ -17,6 +17,9 @@ public class FiveESrdModClient implements ClientModInitializer {
 		// Register entity renderers
 		EntityRendererRegistry.register(ModEntities.CHARACTER, CharacterEntityRenderer::new);
 
+		// Register client-side packet receivers
+		ninja.trek.srd.network.ClientPacketHandlers.register();
+
 		// TODO: Register model loader for character parts
 		// TODO: Register HUD overlays for combat UI
 		// TODO: Register keybindings for actions

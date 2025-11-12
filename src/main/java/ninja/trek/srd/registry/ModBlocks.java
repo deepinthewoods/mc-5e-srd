@@ -1,14 +1,14 @@
 package ninja.trek.srd.registry;
 
-import net.minecraft.core.Registry;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.item.BlockItem;
-import net.minecraft.world.item.Item;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.SoundType;
-import net.minecraft.world.level.block.state.BlockBehaviour;
-import net.minecraft.world.level.material.MapColor;
+import net.minecraft.registry.Registry;
+import net.minecraft.registry.Registries;
+import net.minecraft.util.Identifier;
+import net.minecraft.item.BlockItem;
+import net.minecraft.item.Item;
+import net.minecraft.block.Block;
+import net.minecraft.sound.BlockSoundGroup;
+import net.minecraft.block.AbstractBlock;
+import net.minecraft.block.MapColor;
 import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.block.EncounterBlock;
 
@@ -19,11 +19,11 @@ public class ModBlocks {
 
     public static final Block ENCOUNTER_BLOCK = registerWithItem(
         "encounter_block",
-        new EncounterBlock(BlockBehaviour.Properties.of()
-            .mapColor(MapColor.COLOR_RED)
+        new EncounterBlock(AbstractBlock.Settings.create()
+            .mapColor(MapColor.RED)
             .strength(1.0f)
-            .sound(SoundType.STONE)
-            .requiresCorrectToolForDrops()
+            .sounds(BlockSoundGroup.STONE)
+            .requiresTool()
         )
     );
 
@@ -32,8 +32,8 @@ public class ModBlocks {
      */
     private static Block register(String name, Block block) {
         return Registry.register(
-            BuiltInRegistries.BLOCK,
-            ResourceLocation.fromNamespaceAndPath(FiveESrdMod.MOD_ID, name),
+            Registries.BLOCK,
+            Identifier.of(FiveESrdMod.MOD_ID, name),
             block
         );
     }
@@ -46,9 +46,9 @@ public class ModBlocks {
 
         // Register corresponding item
         Registry.register(
-            BuiltInRegistries.ITEM,
-            ResourceLocation.fromNamespaceAndPath(FiveESrdMod.MOD_ID, name),
-            new BlockItem(registered, new Item.Properties())
+            Registries.ITEM,
+            Identifier.of(FiveESrdMod.MOD_ID, name),
+            new BlockItem(registered, new Item.Settings())
         );
 
         return registered;

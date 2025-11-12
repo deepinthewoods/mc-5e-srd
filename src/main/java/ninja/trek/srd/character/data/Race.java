@@ -1,13 +1,13 @@
 package ninja.trek.srd.character.data;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.util.StringRepresentable;
+import net.minecraft.util.StringIdentifiable;
 
 /**
  * Represents playable races from the 5e SRD.
  * Initial implementation includes Human and Dwarf.
  */
-public enum Race implements StringRepresentable {
+public enum Race implements StringIdentifiable {
     HUMAN(
         "human",
         6,  // 30 feet = 6 blocks
@@ -27,7 +27,7 @@ public enum Race implements StringRepresentable {
         true // darkvision 60ft
     );
 
-    public static final Codec<Race> CODEC = StringRepresentable.fromEnum(Race::values);
+    public static final Codec<Race> CODEC = StringIdentifiable.createCodec(Race::values);
 
     private final String name;
     private final int baseMovementSpeed;
@@ -49,7 +49,7 @@ public enum Race implements StringRepresentable {
     }
 
     @Override
-    public String getSerializedName() {
+    public String asString() {
         return name;
     }
 
