@@ -18,20 +18,8 @@ public class CharacterCreationItem extends Item {
 
     @Override
     public ActionResult use(World world, PlayerEntity user, Hand hand) {
-        if (world.isClient()) {
-            // Open character creation screen on client side
-            openCharacterCreationScreen();
-        }
+        // Client-side screen opening is handled by the client module
+        // to avoid mixing client and server code in the common source set
         return ActionResult.SUCCESS;
-    }
-
-    /**
-     * Opens the character creation screen.
-     * This method should only be called on the client side.
-     */
-    private void openCharacterCreationScreen() {
-        net.minecraft.client.MinecraftClient.getInstance().setScreen(
-            new ninja.trek.srd.client.gui.CharacterCreationScreen()
-        );
     }
 }
