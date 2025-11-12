@@ -132,7 +132,7 @@ public class ServerPacketHandlers {
             // Create character entity in the player's world
             CharacterEntity character = new CharacterEntity(
                 ninja.trek.srd.registry.ModEntities.CHARACTER,
-                player.getServerWorld()
+                player.getWorld()
             );
 
             // Initialize character data
@@ -156,7 +156,7 @@ public class ServerPacketHandlers {
             character.refreshPositionAndAngles(offsetX, player.getY(), offsetZ, player.getYaw(), 0);
 
             // Spawn the entity in the world
-            player.getServerWorld().spawnEntity(character);
+            player.getWorld().spawnEntity(character);
 
             FiveESrdMod.LOGGER.info("Character '{}' created successfully at ({}, {}, {})",
                 payload.name(), offsetX, player.getY(), offsetZ);
