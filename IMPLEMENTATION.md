@@ -62,8 +62,7 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
   - Synced entity data for appearance (using SynchedEntityData.Builder)
   - Turn management integration
   - Attribute calculation from 5e stats
-  - Entity data persistence using ValueOutput/ValueInput API (Mojang mappings)
-  - Type-safe serialization with Codecs
+  - ⏳ Entity data persistence pending (see notes below)
 
 - ✅ **CombatAIController** (`character/ai/CombatAIController.java`)
   - Basic combat AI implementation
@@ -183,7 +182,7 @@ src/client/java/ninja/trek/srd/
 
 ### Current State
 - All core data structures are implemented and follow 5e SRD rules
-- Entity system is fully functional with NBT persistence
+- Entity system is functional (NBT persistence pending - API needs verification in working build)
 - Combat encounter system is functional server-side
 - Basic AI decision-making is implemented
 - Rendering infrastructure is in place (awaiting GLTF implementation)
@@ -199,17 +198,20 @@ All methods have been verified against official Minecraft 1.21.10 with Mojang ma
   - Uses Builder pattern introduced in 1.21.x
   - Replaces old defineSynchedData(SynchedEntityData) signature
 
-- ✅ **Entity Data Persistence** - Implemented using ValueOutput/ValueInput with Codecs
-  - Uses `addAdditionalSaveData(ValueOutput)` for saving entity data
-  - Uses `readAdditionalSaveData(ValueInput)` for loading entity data
-  - Leverages Codecs for type-safe serialization (CharacterStats, Race, CharacterClass, CombatState)
-  - Uses `output.put(key, Codec, value)` to write complex types
-  - Uses `input.read(key, Codec)` to read complex types (returns Optional)
-  - Primitive types use `output.putInt()` / `input.getOptionalInt()` methods
-  - All reads have proper fallback defaults using Optional.orElse()
-  - ValueOutput/ValueInput are from `com.mojang.serialization` package
-  - Mojang mapping equivalents of Yarn's WriteView/ReadView
-  - Standard Mojang mappings API for Minecraft 1.21.10
+- ⏳ **Entity Data Persistence** - Not yet implemented
+  - **Issue**: Unable to determine correct API without compilation access
+  - **Attempted approaches**:
+    1. `CompoundTag` with `addAdditionalSaveData/readAdditionalSaveData` - error: "CompoundTag cannot be converted to ValueOutput"
+    2. `ValueOutput/ValueInput` from `com.mojang.serialization` - classes don't exist in package
+    3. `ReadView/WriteView` from `net.minecraft.storage` - classes don't exist in Mojang mappings
+  - **Root cause**: Mojang mappings use different method/class names than Yarn mappings
+    - Documentation found online primarily uses Yarn mappings (ReadView/WriteView)
+    - Project uses Mojang mappings, but exact API unclear without compilation
+  - **Current state**: Entity functions correctly during gameplay but won't persist data across world reloads
+  - **Next steps**:
+    - Needs access to working build environment to inspect actual API
+    - Consider Fabric Data Attachment API as alternative
+    - Or compile once to see actual method signatures required
 
 #### Attribute System
 - ✅ **LivingEntity.getAttribute(Holder<Attribute>)** - Correctly used
@@ -237,12 +239,13 @@ This mod is built for Minecraft 1.21.10 with **Mojang mappings** and follows sta
 
 #### Mapping System Notes
 - ✅ **Using Mojang Mappings**: Configured in build.gradle with `loom.officialMojangMappings()`
-  - **Method names**: Mojang uses `addAdditionalSaveData` / `readAdditionalSaveData`
-  - **Parameter types**: Mojang uses `ValueOutput` / `ValueInput` (from `com.mojang.serialization`)
-  - **Yarn equivalent**: Yarn uses `writeCustomData` / `readCustomData` with `WriteView` / `ReadView` parameters
-  - **Important**: ValueOutput/ValueInput (Mojang) = WriteView/ReadView (Yarn) - same functionality, different names
+  - **Challenge**: Most Fabric documentation uses Yarn mappings, not Mojang
+  - **Yarn vs Mojang differences**:
+    - Yarn: `writeNbt(NbtCompound, RegistryWrapper.WrapperLookup)` / `readNbt(NbtCompound, RegistryWrapper.WrapperLookup)`
+    - Mojang: Method names differ (possibly `addAdditionalSaveData` / `readAdditionalSaveData` but parameter types unclear)
+  - **Impact**: Entity persistence API unclear without ability to compile and inspect actual signatures
+  - **Recommendation**: Use working build environment to determine correct Mojang mapping method signatures
   - Always verify API documentation matches your mapping system (Mojang vs Yarn)
-  - This mod uses ValueOutput/ValueInput with Codecs for type-safe serialization
 
 #### Minecraft 1.21.6+ Changes (Not Yet Applicable)
 - **BlockRenderLayerMap**: No block rendering layers used yet
@@ -275,21 +278,25 @@ This mod is built for Minecraft 1.21.10 with **Mojang mappings** and follows sta
 - Ready for post-obfuscation removal changes
 
 ### Build Status
-- Code structure is complete and sound
-- Entity data persistence fully implemented using modern API
-- Build requires network access for Fabric Loom plugin download
-- All Java code follows Minecraft 1.21.10 and Fabric API patterns (Mojang mappings)
-- All API methods verified against official Javadocs
-- Ready for testing in a development environment with network access
+- ✅ Code structure is complete and sound
+- ⏳ Entity data persistence not implemented (requires working build to determine API)
+- ⚠️  Build requires network access for Gradle and Fabric Loom plugin download
+- ✅ All Java code follows Minecraft 1.21.10 and Fabric API patterns (Mojang mappings)
+- ✅ Most API methods verified against official Javadocs (except persistence)
+- 🔧 **Recommended**: Run initial build in environment with network access to:
+  - Download dependencies
+  - Inspect actual method signatures for entity persistence
+  - Implement persistence with correct API
 
 ### Next Steps (Priority Order)
-1. Test build in environment with network access
-2. Implement network synchronization packets
-3. Add character creation GUI
-4. Implement action hotbar and combat UI
-5. Add full GLTF model loading with Assimp
-6. Implement complete 5e attack and damage calculation
-7. Add spell system foundation
+1. **Build in network-enabled environment** - Download dependencies and verify compilation
+2. **Implement entity data persistence** - Inspect actual API and add save/load methods
+3. Implement network synchronization packets
+4. Add character creation GUI
+5. Implement action hotbar and combat UI
+6. Add full GLTF model loading with Assimp
+7. Implement complete 5e attack and damage calculation
+8. Add spell system foundation
 
 ## Notes
 This implementation provides a solid foundation for a full-featured D&D 5e mod. The architecture is modular and extensible, following Minecraft and Fabric best practices. The turn-based combat system is designed to be server-authoritative and multiplayer-compatible from the start.

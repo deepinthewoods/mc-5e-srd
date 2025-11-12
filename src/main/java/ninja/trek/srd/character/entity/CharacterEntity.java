@@ -1,7 +1,5 @@
 package ninja.trek.srd.character.entity;
 
-import com.mojang.serialization.ValueInput;
-import com.mojang.serialization.ValueOutput;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
@@ -252,65 +250,20 @@ public class CharacterEntity extends PathfinderMob {
         this.combatState = combatState;
     }
 
-    /**
-     * Save custom character data using the ValueOutput API with Codecs.
-     * Uses Minecraft 1.21.10 Mojang mappings API for entity persistence.
-     *
-     * @param output The ValueOutput to write data to
-     */
-    @Override
-    protected void addAdditionalSaveData(ValueOutput output) {
-        super.addAdditionalSaveData(output);
-
-        // Write character stats using Codec
-        output.put("stats", CharacterStats.CODEC, this.stats);
-
-        // Write race using Codec
-        output.put("race", Race.CODEC, this.race);
-
-        // Write character class using Codec
-        output.put("character_class", CharacterClass.CODEC, this.characterClass);
-
-        // Write level as primitive
-        output.putInt("level", this.level);
-
-        // Write combat state using Codec
-        output.put("combat_state", CombatState.CODEC, this.combatState);
-    }
-
-    /**
-     * Load custom character data using the ValueInput API with Codecs.
-     * Uses Minecraft 1.21.10 Mojang mappings API for entity persistence.
-     *
-     * @param input The ValueInput to read data from
-     */
-    @Override
-    protected void readAdditionalSaveData(ValueInput input) {
-        super.readAdditionalSaveData(input);
-
-        // Read character stats with fallback to default
-        this.stats = input.read("stats", CharacterStats.CODEC)
-            .orElse(CharacterStats.createDefault());
-
-        // Read race with fallback to HUMAN
-        this.race = input.read("race", Race.CODEC)
-            .orElse(Race.HUMAN);
-
-        // Read character class with fallback to FIGHTER
-        this.characterClass = input.read("character_class", CharacterClass.CODEC)
-            .orElse(CharacterClass.FIGHTER);
-
-        // Read level with fallback to 1
-        this.level = input.getOptionalInt("level")
-            .orElse(1);
-
-        // Read combat state with fallback to default
-        int maxHp = calculateMaxHitPoints();
-        int ac = calculateArmorClass();
-        this.combatState = input.read("combat_state", CombatState.CODEC)
-            .orElse(CombatState.createDefault(maxHp, ac));
-
-        // Update Minecraft attributes after loading data
-        updateMinecraftAttributes();
-    }
+    // TODO: Implement entity data persistence
+    // The correct API for Minecraft 1.21.10 with Mojang mappings is unclear without
+    // being able to compile and inspect the actual method signatures in PathfinderMob/LivingEntity.
+    //
+    // Attempted approaches:
+    // 1. CompoundTag with addAdditionalSaveData/readAdditionalSaveData - failed with "CompoundTag cannot be converted to ValueOutput"
+    // 2. ValueOutput/ValueInput from com.mojang.serialization - classes don't exist in that package
+    // 3. ReadView/WriteView from net.minecraft.storage - classes don't exist in Mojang mappings
+    //
+    // The entity will function correctly during gameplay but won't persist data across world reloads.
+    // This will be implemented once we can compile and test the actual API in Minecraft 1.21.10.
+    //
+    // Alternative approaches to investigate:
+    // - Fabric Data Attachment API (fabric-attachment-api-v1)
+    // - Check actual method signatures in a working build environment
+    // - Use Yarn mappings javadocs and translate to Mojang mapping equivalents
 }
