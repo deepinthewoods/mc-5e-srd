@@ -74,7 +74,8 @@ public class EncounterBlock extends Block {
                 InitiativeTracker tracker = new InitiativeTracker(
                     character.getUuid(),
                     initiativeRoll,
-                    dexMod
+                    dexMod,
+                    character.getDisplayName()
                 );
 
                 manager.addCombatant(encounterId, tracker);

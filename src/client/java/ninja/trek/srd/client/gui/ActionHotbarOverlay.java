@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
+import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.option.KeyBinding.Category;
@@ -14,6 +15,8 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.client.ClientEncounterState;
+import ninja.trek.srd.network.payloads.EndTurnPayload;
+import ninja.trek.srd.network.payloads.SyncEncounterStatePayload;
 import ninja.trek.srd.network.payloads.UseActionPayload;
 import org.lwjgl.glfw.GLFW;
 
@@ -40,6 +43,15 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
     private static final int ROW_SPACING = 6;
     private static final int PANEL_PADDING = 6;
     private static final int PANEL_BOTTOM_OFFSET = 56;
+    private static final int RESOURCE_SECTION_HEIGHT = 24;
+    private static final int TURN_PANEL_WIDTH = 180;
+    private static final int TURN_PANEL_PADDING = 6;
+    private static final int TURN_HEADER_HEIGHT = 16;
+    private static final int TURN_ROW_HEIGHT = 14;
+    private static final int MAX_TURN_ROWS = 6;
+    private static final int TURN_PANEL_MARGIN = 8;
+    private static final int END_TURN_BUTTON_WIDTH = 112;
+    private static final int END_TURN_BUTTON_HEIGHT = 22;
 
     private static final List<List<ActionButtonDefinition>> BUTTON_ROWS = List.of(
         List.of(
@@ -61,6 +73,12 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
 
     private static final List<ActionButtonDefinition> ALL_BUTTONS;
     private static final Map<UseActionPayload.ActionType, ActionButtonDefinition> BUTTON_LOOKUP;
+    private static final KeyBinding END_TURN_KEY = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+        "key.5e-srd.actionhotbar.end_turn",
+        InputUtil.Type.KEYSYM,
+        GLFW.GLFW_KEY_R,
+        KEYBIND_CATEGORY
+    ));
 
     static {
         List<ActionButtonDefinition> combined = new ArrayList<>();
@@ -77,6 +95,9 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
     }
 
     private final List<RenderedButton> renderedButtons = new ArrayList<>();
+    private Rect endTurnButtonBounds;
+    private boolean endTurnButtonEnabled;
+    private Text endTurnStatusText = Text.empty();
     private boolean cursorUnlockedForHotbar;
 
     private ActionHotbarOverlay() {}
@@ -103,6 +124,11 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
                         INSTANCE.sendActionIfAllowed(client, definition.actionType());
                     }
                 }
+                if (overlayActive) {
+                    while (END_TURN_KEY.wasPressed()) {
+                        INSTANCE.sendEndTurnIfAllowed(client);
+                    }
+                }
             }
 
             // Handle mouse clicks when the hotbar cursor is unlocked
@@ -116,7 +142,7 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
     public void onHudRender(DrawContext drawContext, RenderTickCounter tickCounter) {
         MinecraftClient client = MinecraftClient.getInstance();
         if (!shouldRender(client)) {
-            renderedButtons.clear();
+            clearInteractiveElements();
             return;
         }
 
@@ -124,20 +150,26 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
         ClientEncounterState state = ClientEncounterState.getInstance();
         UUID encounterId = state.getEncounterForEntity(playerId);
         if (encounterId == null) {
-            renderedButtons.clear();
+            clearInteractiveElements();
             return;
         }
 
         ClientEncounterState.EncounterData encounterData = state.getEncounter(encounterId);
         if (encounterData == null || encounterData.ended()) {
-            renderedButtons.clear();
+            clearInteractiveElements();
             return;
         }
 
         ClientEncounterState.CombatStateData combatState = state.getCombatState(playerId);
         boolean isPlayersTurn = playerId.equals(encounterData.getCurrentTurnEntity());
 
-        renderHotbar(drawContext, client, encounterData, combatState, isPlayersTurn);
+        double scale = client.getWindow().getScaleFactor();
+        double mouseX = client.mouse.getX() / scale;
+        double mouseY = client.mouse.getY() / scale;
+
+        PanelBounds hotbarBounds = renderHotbar(drawContext, client, encounterData, combatState, isPlayersTurn, mouseX, mouseY);
+        renderTurnTracker(drawContext, client, encounterData, playerId);
+        renderEndTurnButton(drawContext, client, hotbarBounds, combatState, isPlayersTurn, mouseX, mouseY);
     }
 
     private boolean shouldRender(MinecraftClient client) {
@@ -156,17 +188,20 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
         return encounter != null && !encounter.ended();
     }
 
-    private void renderHotbar(
+    private PanelBounds renderHotbar(
         DrawContext drawContext,
         MinecraftClient client,
         ClientEncounterState.EncounterData encounter,
         ClientEncounterState.CombatStateData combatState,
-        boolean isPlayersTurn
+        boolean isPlayersTurn,
+        double mouseX,
+        double mouseY
     ) {
         int screenWidth = client.getWindow().getScaledWidth();
         int screenHeight = client.getWindow().getScaledHeight();
 
-        int contentHeight = BUTTON_ROWS.size() * BUTTON_HEIGHT + Math.max(0, BUTTON_ROWS.size() - 1) * ROW_SPACING;
+        int buttonRowsHeight = BUTTON_ROWS.size() * BUTTON_HEIGHT + Math.max(0, BUTTON_ROWS.size() - 1) * ROW_SPACING;
+        int contentHeight = RESOURCE_SECTION_HEIGHT + ROW_SPACING + buttonRowsHeight;
         int panelHeight = contentHeight + PANEL_PADDING * 2;
         int panelWidth = calculatePanelWidth();
 
@@ -194,12 +229,14 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
             isPlayersTurn ? 0xFFF2C066 : 0xFFAAAAAA
         );
 
-        double mouseX = client.mouse.getX() / client.getWindow().getScaleFactor();
-        double mouseY = client.mouse.getY() / client.getWindow().getScaleFactor();
         RenderedButton hovered = null;
 
         renderedButtons.clear();
         int currentY = panelY + PANEL_PADDING;
+
+        renderResourceSummary(drawContext, client, combatState, panelX + PANEL_PADDING, currentY);
+        currentY += RESOURCE_SECTION_HEIGHT + ROW_SPACING;
+
         for (List<ActionButtonDefinition> row : BUTTON_ROWS) {
             if (row.isEmpty()) {
                 continue;
@@ -233,8 +270,10 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
         }
 
         if (hovered != null && cursorUnlockedForHotbar) {
-            drawTooltip(drawContext, client, hovered, mouseX, mouseY);
+            drawActionTooltip(drawContext, client, hovered, mouseX, mouseY);
         }
+
+        return new PanelBounds(panelX, panelY, panelWidth, panelHeight);
     }
 
     private int calculatePanelWidth() {
@@ -247,6 +286,198 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
             width = Math.max(width, rowWidth);
         }
         return width + PANEL_PADDING * 2;
+    }
+
+    private void renderResourceSummary(
+        DrawContext drawContext,
+        MinecraftClient client,
+        ClientEncounterState.CombatStateData combatState,
+        int x,
+        int y
+    ) {
+        TextRenderer renderer = client.textRenderer;
+        Text hpValue = combatState != null
+            ? Text.literal(combatState.currentHitPoints() + " / " + combatState.maxHitPoints())
+            : Text.literal("--");
+        Text acValue = combatState != null
+            ? Text.literal(String.valueOf(combatState.armorClass()))
+            : Text.literal("--");
+        Text moveValue = combatState != null
+            ? Text.literal(String.valueOf(combatState.remainingMovement()))
+            : Text.literal("--");
+
+        int baseY = y + 2;
+        int cursor = x;
+        cursor = drawLabelValue(drawContext, renderer, cursor, baseY, Text.literal("HP: "), hpValue, 0xFFF2C066);
+        cursor = drawLabelValue(drawContext, renderer, cursor, baseY, Text.literal("AC: "), acValue, 0xFFB8C4FF);
+        drawLabelValue(drawContext, renderer, cursor, baseY, Text.literal("Move: "), moveValue, 0xFFE3F2FD);
+
+        int resourceY = baseY + 12;
+        Text readyText = Text.literal("Ready");
+        Text spentText = Text.literal("Spent");
+
+        cursor = x;
+        cursor = drawLabelValue(drawContext, renderer, cursor, resourceY, Text.literal("Action: "),
+            combatState == null ? Text.literal("--") : (combatState.hasAction() ? readyText : spentText),
+            combatState == null ? 0xFFAAAAAA : (combatState.hasAction() ? 0xFF7BC37E : 0xFFB86E6E)
+        );
+        cursor = drawLabelValue(drawContext, renderer, cursor, resourceY, Text.literal("Bonus: "),
+            combatState == null ? Text.literal("--") : (combatState.hasBonusAction() ? readyText : spentText),
+            combatState == null ? 0xFFAAAAAA : (combatState.hasBonusAction() ? 0xFF7BC37E : 0xFFB86E6E)
+        );
+        drawLabelValue(drawContext, renderer, cursor, resourceY, Text.literal("Reaction: "),
+            combatState == null ? Text.literal("--") : (combatState.hasReaction() ? readyText : spentText),
+            combatState == null ? 0xFFAAAAAA : (combatState.hasReaction() ? 0xFF7BC37E : 0xFFB86E6E)
+        );
+    }
+
+    private int drawLabelValue(
+        DrawContext drawContext,
+        TextRenderer renderer,
+        int x,
+        int y,
+        Text label,
+        Text value,
+        int valueColor
+    ) {
+        drawContext.drawText(renderer, label, x, y, 0xFF9AA0A6, false);
+        x += renderer.getWidth(label);
+        drawContext.drawText(renderer, value, x, y, valueColor, false);
+        return x + renderer.getWidth(value) + 10;
+    }
+
+    private void renderTurnTracker(
+        DrawContext drawContext,
+        MinecraftClient client,
+        ClientEncounterState.EncounterData encounter,
+        UUID playerId
+    ) {
+        List<SyncEncounterStatePayload.InitiativeEntry> turnOrder = encounter.turnOrder();
+        if (turnOrder.isEmpty()) {
+            return;
+        }
+
+        int totalEntries = turnOrder.size();
+        int rows = Math.min(totalEntries, MAX_TURN_ROWS);
+        boolean hasOverflow = totalEntries > MAX_TURN_ROWS;
+        int panelWidth = TURN_PANEL_WIDTH;
+        int panelHeight = TURN_PANEL_PADDING * 2 + TURN_HEADER_HEIGHT + rows * TURN_ROW_HEIGHT + (hasOverflow ? TURN_ROW_HEIGHT : 0);
+
+        int x = TURN_PANEL_MARGIN;
+        int y = TURN_PANEL_MARGIN;
+        drawContext.fill(x, y, x + panelWidth, y + panelHeight, 0x90000000);
+        drawBorder(drawContext, x, y, panelWidth, panelHeight, 0x60FFFFFF);
+
+        TextRenderer renderer = client.textRenderer;
+        Text roundText = Text.literal("Round " + encounter.roundNumber());
+        drawContext.drawText(renderer, roundText, x + TURN_PANEL_PADDING, y + 4, 0xFFE8DFC0, false);
+
+        int currentTurnDisplay = Math.min(encounter.currentTurnIndex() + 1, totalEntries);
+        Text turnCounter = Text.literal("Turn " + currentTurnDisplay + "/" + totalEntries);
+        int counterWidth = renderer.getWidth(turnCounter);
+        drawContext.drawText(renderer, turnCounter, x + panelWidth - TURN_PANEL_PADDING - counterWidth, y + 4, 0xFFCCCCCC, false);
+        drawContext.drawText(renderer, Text.literal("Turn Order"), x + TURN_PANEL_PADDING, y + 4 + 10, 0xFFB0B0B0, false);
+
+        int startIndex = encounter.currentTurnIndex();
+        for (int i = 0; i < rows; i++) {
+            int orderIndex = (startIndex + i) % totalEntries;
+            SyncEncounterStatePayload.InitiativeEntry entry = turnOrder.get(orderIndex);
+            int rowTop = y + TURN_PANEL_PADDING + TURN_HEADER_HEIGHT + i * TURN_ROW_HEIGHT;
+            int rowBottom = rowTop + TURN_ROW_HEIGHT - 2;
+            int rowLeft = x + TURN_PANEL_PADDING;
+            int rowRight = x + panelWidth - TURN_PANEL_PADDING;
+
+            boolean isCurrent = (i == 0);
+            boolean isPlayer = entry.entityId().equals(playerId);
+
+            int rowColor = isCurrent ? 0x603E4C27 : 0x40101010;
+            drawContext.fill(rowLeft, rowTop, rowRight, rowBottom, rowColor);
+
+            int indicatorColor = isCurrent ? 0xFFF2C066 : (isPlayer ? 0xFF5BA8FF : 0xFF444444);
+            drawContext.fill(rowLeft - 3, rowTop, rowLeft - 1, rowBottom, indicatorColor);
+
+            Text name = entry.displayName() != null ? entry.displayName() : Text.literal(entry.entityId().toString().substring(0, 8));
+            int nameColor = isPlayer ? 0xFFFAF3C0 : 0xFFECE7DA;
+            drawContext.drawText(renderer, name, rowLeft + 4, rowTop + 1, nameColor, false);
+
+            int initiativeTotal = entry.initiativeRoll() + entry.dexModifier();
+            Text initiativeText = Text.literal(String.valueOf(initiativeTotal));
+            int initiativeWidth = renderer.getWidth(initiativeText);
+            drawContext.drawText(renderer, initiativeText, rowRight - initiativeWidth - 4, rowTop + 1, 0xFF9AD7FF, false);
+        }
+
+        if (hasOverflow) {
+            int remaining = totalEntries - rows;
+            Text overflow = Text.literal("+ " + remaining + " more");
+            drawContext.drawText(
+                renderer,
+                overflow,
+                x + TURN_PANEL_PADDING,
+                y + panelHeight - TURN_ROW_HEIGHT + 2,
+                0xFFAAAAAA,
+                false
+            );
+        }
+    }
+
+    private void renderEndTurnButton(
+        DrawContext drawContext,
+        MinecraftClient client,
+        PanelBounds hotbarBounds,
+        ClientEncounterState.CombatStateData combatState,
+        boolean isPlayersTurn,
+        double mouseX,
+        double mouseY
+    ) {
+        if (hotbarBounds == null) {
+            endTurnButtonBounds = null;
+            endTurnButtonEnabled = false;
+            endTurnStatusText = Text.empty();
+            return;
+        }
+
+        int screenWidth = client.getWindow().getScaledWidth();
+        int x = hotbarBounds.x() + hotbarBounds.width() + 8;
+        if (x + END_TURN_BUTTON_WIDTH > screenWidth - 6) {
+            x = screenWidth - END_TURN_BUTTON_WIDTH - 6;
+        }
+        int y = hotbarBounds.y() + hotbarBounds.height() - END_TURN_BUTTON_HEIGHT;
+
+        boolean enabled = isPlayersTurn && combatState != null;
+        endTurnButtonBounds = new Rect(x, y, END_TURN_BUTTON_WIDTH, END_TURN_BUTTON_HEIGHT);
+        endTurnButtonEnabled = enabled;
+        endTurnStatusText = enabled
+            ? Text.literal("End your turn and advance the initiative.")
+            : (combatState == null ? Text.literal("Awaiting combat sync") : Text.literal("Not your turn"));
+
+        boolean hovered = cursorUnlockedForHotbar && endTurnButtonBounds.contains(mouseX, mouseY);
+        int background = enabled ? 0xB01D2F1D : 0x60101010;
+        if (hovered) {
+            background = enabled ? 0xC0283B28 : 0x70353535;
+        }
+
+        drawContext.fill(x, y, x + END_TURN_BUTTON_WIDTH, y + END_TURN_BUTTON_HEIGHT, background);
+        drawBorder(drawContext, x, y, END_TURN_BUTTON_WIDTH, END_TURN_BUTTON_HEIGHT, enabled ? 0xFF7BC37E : 0xFF5A5A5A);
+
+        Text label = Text.literal("End Turn");
+        int labelX = x + (END_TURN_BUTTON_WIDTH - client.textRenderer.getWidth(label)) / 2;
+        drawContext.drawTextWithShadow(client.textRenderer, label, labelX, y + 6, enabled ? 0xFFFFFFFF : 0xFFB0B0B0);
+
+        Text keyText = END_TURN_KEY.getBoundKeyLocalizedText();
+        int keyWidth = client.textRenderer.getWidth(keyText);
+        drawContext.drawText(client.textRenderer, keyText, x + END_TURN_BUTTON_WIDTH - keyWidth - 4, y + END_TURN_BUTTON_HEIGHT - 9, 0xFFE0E0E0, false);
+
+        if (hovered) {
+            drawEndTurnTooltip(drawContext, client, mouseX, mouseY);
+        }
+    }
+
+    private void drawEndTurnTooltip(DrawContext drawContext, MinecraftClient client, double mouseX, double mouseY) {
+        List<Text> tooltip = new ArrayList<>();
+        tooltip.add(Text.literal("End Turn"));
+        tooltip.add(endTurnStatusText);
+        tooltip.add(Text.literal("Hotkey: " + END_TURN_KEY.getBoundKeyLocalizedText().getString()));
+        drawContext.drawTooltip(client.textRenderer, tooltip, (int) mouseX, (int) mouseY);
     }
 
     private ButtonState determineButtonState(
@@ -321,7 +552,7 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
         }
     }
 
-    private void drawTooltip(DrawContext drawContext, MinecraftClient client, RenderedButton hovered, double mouseX, double mouseY) {
+    private void drawActionTooltip(DrawContext drawContext, MinecraftClient client, RenderedButton hovered, double mouseX, double mouseY) {
         List<Text> tooltip = new ArrayList<>();
         tooltip.add(hovered.definition().label());
         tooltip.add(hovered.definition().description());
@@ -341,6 +572,9 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
                 sendActionIfAllowed(client, button.definition().actionType());
                 return;
             }
+        }
+        if (endTurnButtonEnabled && endTurnButtonBounds != null && endTurnButtonBounds.contains(mouseX, mouseY)) {
+            sendEndTurnIfAllowed(client);
         }
     }
 
@@ -374,6 +608,36 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
         }
 
         ClientPlayNetworking.send(new UseActionPayload(actionType, Optional.empty()));
+    }
+
+    private void sendEndTurnIfAllowed(MinecraftClient client) {
+        if (client.player == null) {
+            return;
+        }
+        ClientEncounterState state = ClientEncounterState.getInstance();
+        UUID playerId = client.player.getUuid();
+        UUID encounterId = state.getEncounterForEntity(playerId);
+        if (encounterId == null) {
+            return;
+        }
+
+        ClientEncounterState.EncounterData encounter = state.getEncounter(encounterId);
+        if (encounter == null || encounter.ended()) {
+            return;
+        }
+
+        if (!playerId.equals(encounter.getCurrentTurnEntity())) {
+            return;
+        }
+
+        ClientPlayNetworking.send(new EndTurnPayload());
+    }
+
+    private void clearInteractiveElements() {
+        renderedButtons.clear();
+        endTurnButtonBounds = null;
+        endTurnButtonEnabled = false;
+        endTurnStatusText = Text.empty();
     }
 
     private void handleCursorState(MinecraftClient client, boolean overlayActive, boolean altHeld) {
@@ -445,6 +709,14 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
         boolean enabled,
         Text statusText
     ) {
+        boolean contains(double mouseX, double mouseY) {
+            return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+        }
+    }
+
+    private record PanelBounds(int x, int y, int width, int height) {}
+
+    private record Rect(int x, int y, int width, int height) {
         boolean contains(double mouseX, double mouseY) {
             return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
         }

@@ -4,8 +4,9 @@ import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.network.packet.CustomPayload;
-import net.minecraft.util.Uuids;
+import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Uuids;
 import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.combat.InitiativeTracker;
 
@@ -27,11 +28,26 @@ public record SyncEncounterStatePayload(
     public static final Identifier ID_CONSTANT = Identifier.of(FiveESrdMod.MOD_ID, "sync_encounter_state");
     public static final CustomPayload.Id<SyncEncounterStatePayload> ID = new CustomPayload.Id<>(ID_CONSTANT);
 
-    // Codec for a single initiative entry (entity ID, initiative roll, dex modifier)
+    private static final int MAX_NAME_LENGTH = 256;
+
+    private static final PacketCodec<RegistryByteBuf, Text> DISPLAY_NAME_CODEC = new PacketCodec<>() {
+        @Override
+        public Text decode(RegistryByteBuf buf) {
+            return Text.literal(buf.readString(MAX_NAME_LENGTH));
+        }
+
+        @Override
+        public void encode(RegistryByteBuf buf, Text value) {
+            buf.writeString(value.getString(), MAX_NAME_LENGTH);
+        }
+    };
+
+    // Codec for a single initiative entry (entity ID, initiative roll, dex modifier, display name)
     public static final PacketCodec<RegistryByteBuf, InitiativeEntry> INITIATIVE_ENTRY_CODEC = PacketCodec.tuple(
         Uuids.PACKET_CODEC, InitiativeEntry::entityId,
         PacketCodecs.VAR_INT, InitiativeEntry::initiativeRoll,
         PacketCodecs.VAR_INT, InitiativeEntry::dexModifier,
+        DISPLAY_NAME_CODEC, InitiativeEntry::displayName,
         InitiativeEntry::new
     );
 
@@ -54,18 +70,18 @@ public record SyncEncounterStatePayload(
      * Creates a payload from an InitiativeTracker.
      */
     public static InitiativeEntry fromTracker(InitiativeTracker tracker) {
-        return new InitiativeEntry(tracker.entityId(), tracker.initiativeRoll(), tracker.dexModifier());
+        return new InitiativeEntry(tracker.entityId(), tracker.initiativeRoll(), tracker.dexModifier(), tracker.displayName());
     }
 
     /**
      * Converts an InitiativeEntry back to an InitiativeTracker.
      */
     public static InitiativeTracker toTracker(InitiativeEntry entry) {
-        return new InitiativeTracker(entry.entityId(), entry.initiativeRoll(), entry.dexModifier());
+        return new InitiativeTracker(entry.entityId(), entry.initiativeRoll(), entry.dexModifier(), entry.displayName());
     }
 
     /**
      * Simplified initiative entry for network transmission.
      */
-    public record InitiativeEntry(UUID entityId, int initiativeRoll, int dexModifier) {}
+    public record InitiativeEntry(UUID entityId, int initiativeRoll, int dexModifier, Text displayName) {}
 }

@@ -1,5 +1,7 @@
 package ninja.trek.srd.combat;
 
+import net.minecraft.text.Text;
+
 import java.util.UUID;
 
 /**
@@ -8,7 +10,8 @@ import java.util.UUID;
 public record InitiativeTracker(
     UUID entityId,
     int initiativeRoll,
-    int dexModifier
+    int dexModifier,
+    Text displayName
 ) implements Comparable<InitiativeTracker> {
 
     /**
