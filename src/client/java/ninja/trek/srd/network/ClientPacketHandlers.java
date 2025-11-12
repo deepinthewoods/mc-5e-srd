@@ -3,6 +3,7 @@ package ninja.trek.srd.network;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.client.ClientEncounterState;
+import ninja.trek.srd.client.gui.ActionHotbarOverlay;
 import ninja.trek.srd.network.payloads.*;
 
 /**
@@ -104,6 +105,8 @@ public class ClientPacketHandlers {
             // TODO: Highlight current turn entity (Phase 3)
             // TODO: Enable/disable action buttons based on whose turn it is (Phase 3)
             // TODO: Play turn start sound/visual effect (Phase 5)
+
+            ActionHotbarOverlay.notifyTurnStart(payload.encounterId(), payload.entityId());
         });
     }
 
@@ -120,6 +123,8 @@ public class ClientPacketHandlers {
 
             // TODO: Remove highlighting from entity (Phase 3)
             // TODO: Disable action buttons (Phase 3)
+
+            ActionHotbarOverlay.notifyTurnEnd(payload.encounterId(), payload.entityId());
         });
     }
 }

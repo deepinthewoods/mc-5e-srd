@@ -52,6 +52,11 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
     private static final int TURN_PANEL_MARGIN = 8;
     private static final int END_TURN_BUTTON_WIDTH = 112;
     private static final int END_TURN_BUTTON_HEIGHT = 22;
+    private static final int TURN_BANNER_DURATION_TICKS = 80;
+    private static final int TURN_BANNER_FADE_TICKS = 12;
+    private static final int TURN_BANNER_MARGIN_TOP = 18;
+    private static final int TURN_BANNER_PADDING = 8;
+    private static final Text CURSOR_HINT_TEXT = Text.literal("Hold Left Alt to interact with the combat UI");
 
     private static final List<List<ActionButtonDefinition>> BUTTON_ROWS = List.of(
         List.of(
@@ -99,8 +104,28 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
     private boolean endTurnButtonEnabled;
     private Text endTurnStatusText = Text.empty();
     private boolean cursorUnlockedForHotbar;
+    private UUID turnBannerEncounterId;
+    private UUID turnBannerEntityId;
+    private Text turnBannerPrimaryText = Text.empty();
+    private Text turnBannerSecondaryText = Text.empty();
+    private boolean turnBannerIsPlayer;
+    private int turnBannerTicksRemaining;
 
     private ActionHotbarOverlay() {}
+
+    /**
+     * Notify the overlay that a new turn started so the banner can animate.
+     */
+    public static void notifyTurnStart(UUID encounterId, UUID entityId) {
+        INSTANCE.updateTurnBanner(encounterId, entityId);
+    }
+
+    /**
+     * Notify the overlay that a turn finished so the banner can fade out faster.
+     */
+    public static void notifyTurnEnd(UUID encounterId, UUID entityId) {
+        INSTANCE.handleTurnEndNotification(encounterId, entityId);
+    }
 
     /**
      * Register the overlay renderer and key/input handlers.
@@ -141,6 +166,7 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
     @Override
     public void onHudRender(DrawContext drawContext, RenderTickCounter tickCounter) {
         MinecraftClient client = MinecraftClient.getInstance();
+        tickTurnBannerTimer();
         if (!shouldRender(client)) {
             clearInteractiveElements();
             return;
@@ -169,7 +195,12 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
 
         PanelBounds hotbarBounds = renderHotbar(drawContext, client, encounterData, combatState, isPlayersTurn, mouseX, mouseY);
         renderTurnTracker(drawContext, client, encounterData, playerId);
+        if (turnBannerEncounterId == null || !turnBannerEncounterId.equals(encounterId)) {
+            resetTurnBanner();
+        }
+        renderTurnBanner(drawContext, client);
         renderEndTurnButton(drawContext, client, hotbarBounds, combatState, isPlayersTurn, mouseX, mouseY);
+        renderCursorHint(drawContext, client, hotbarBounds);
     }
 
     private boolean shouldRender(MinecraftClient client) {
@@ -472,6 +503,52 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
         }
     }
 
+    private void renderCursorHint(DrawContext drawContext, MinecraftClient client, PanelBounds hotbarBounds) {
+        if (hotbarBounds == null || cursorUnlockedForHotbar || client == null) {
+            return;
+        }
+        int textWidth = client.textRenderer.getWidth(CURSOR_HINT_TEXT);
+        int x = hotbarBounds.x() + (hotbarBounds.width() - textWidth) / 2;
+        int y = hotbarBounds.y() + hotbarBounds.height() + 6;
+        drawContext.drawText(client.textRenderer, CURSOR_HINT_TEXT, x, y, 0xFFB7B7B7, false);
+    }
+
+    private void renderTurnBanner(DrawContext drawContext, MinecraftClient client) {
+        if (turnBannerTicksRemaining <= 0 || turnBannerPrimaryText == null || turnBannerPrimaryText.getString().isEmpty()) {
+            return;
+        }
+
+        int screenWidth = client.getWindow().getScaledWidth();
+        TextRenderer renderer = client.textRenderer;
+        int primaryWidth = renderer.getWidth(turnBannerPrimaryText);
+        int secondaryWidth = turnBannerSecondaryText != null ? renderer.getWidth(turnBannerSecondaryText) : 0;
+        boolean hasSecondary = turnBannerSecondaryText != null && !turnBannerSecondaryText.getString().isEmpty();
+        int bannerWidth = Math.max(primaryWidth, secondaryWidth) + TURN_BANNER_PADDING * 2;
+        int bannerHeight = hasSecondary ? 34 : 24;
+        int x = (screenWidth - bannerWidth) / 2;
+        int y = TURN_BANNER_MARGIN_TOP;
+
+        int background = turnBannerIsPlayer ? 0xC0283B28 : 0xC0121212;
+        int border = turnBannerIsPlayer ? 0xFF7BC37E : 0xFF5A5A5A;
+        if (turnBannerTicksRemaining < TURN_BANNER_FADE_TICKS) {
+            float alpha = turnBannerTicksRemaining / (float) TURN_BANNER_FADE_TICKS;
+            int alphaByte = (int) (alpha * 255) << 24;
+            background = (background & 0x00FFFFFF) | alphaByte;
+            border = (border & 0x00FFFFFF) | alphaByte;
+        }
+
+        drawContext.fill(x, y, x + bannerWidth, y + bannerHeight, background);
+        drawBorder(drawContext, x, y, bannerWidth, bannerHeight, border);
+
+        int primaryX = x + (bannerWidth - primaryWidth) / 2;
+        drawContext.drawText(renderer, turnBannerPrimaryText, primaryX, y + 6, 0xFFF8F3DF, false);
+
+        if (hasSecondary) {
+            int secondaryX = x + (bannerWidth - secondaryWidth) / 2;
+            drawContext.drawText(renderer, turnBannerSecondaryText, secondaryX, y + 18, 0xFFE4E0D1, false);
+        }
+    }
+
     private void drawEndTurnTooltip(DrawContext drawContext, MinecraftClient client, double mouseX, double mouseY) {
         List<Text> tooltip = new ArrayList<>();
         tooltip.add(Text.literal("End Turn"));
@@ -638,6 +715,79 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
         endTurnButtonBounds = null;
         endTurnButtonEnabled = false;
         endTurnStatusText = Text.empty();
+        resetTurnBanner();
+    }
+
+    private void tickTurnBannerTimer() {
+        if (turnBannerTicksRemaining > 0) {
+            turnBannerTicksRemaining--;
+            if (turnBannerTicksRemaining <= 0) {
+                resetTurnBanner();
+            }
+        }
+    }
+
+    private void resetTurnBanner() {
+        turnBannerEncounterId = null;
+        turnBannerEntityId = null;
+        turnBannerTicksRemaining = 0;
+        turnBannerPrimaryText = Text.empty();
+        turnBannerSecondaryText = Text.empty();
+        turnBannerIsPlayer = false;
+    }
+
+    private void updateTurnBanner(UUID encounterId, UUID entityId) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client == null || client.player == null) {
+            return;
+        }
+        ClientEncounterState state = ClientEncounterState.getInstance();
+        ClientEncounterState.EncounterData encounter = state.getEncounter(encounterId);
+        if (encounter == null) {
+            return;
+        }
+        Text displayName = resolveDisplayName(encounter.turnOrder(), entityId);
+        boolean isPlayerTurn = client.player.getUuid().equals(entityId);
+
+        this.turnBannerEncounterId = encounterId;
+        this.turnBannerEntityId = entityId;
+        this.turnBannerPrimaryText = isPlayerTurn
+            ? Text.literal("Your Turn")
+            : displayName;
+        this.turnBannerSecondaryText = buildTurnBannerSubtitle(isPlayerTurn, displayName);
+        this.turnBannerIsPlayer = isPlayerTurn;
+        this.turnBannerTicksRemaining = TURN_BANNER_DURATION_TICKS;
+    }
+
+    private void handleTurnEndNotification(UUID encounterId, UUID entityId) {
+        if (turnBannerEncounterId == null || !turnBannerEncounterId.equals(encounterId)) {
+            return;
+        }
+        if (turnBannerEntityId != null && turnBannerEntityId.equals(entityId)) {
+            turnBannerTicksRemaining = Math.min(turnBannerTicksRemaining, TURN_BANNER_FADE_TICKS);
+        }
+    }
+
+    private Text buildTurnBannerSubtitle(boolean isPlayerTurn, Text targetName) {
+        if (isPlayerTurn) {
+            String keyName = END_TURN_KEY.getBoundKeyLocalizedText().getString();
+            return Text.literal("Choose an action or press " + keyName + " to end turn");
+        }
+        return Text.literal("Waiting for " + targetName.getString());
+    }
+
+    private Text resolveDisplayName(List<SyncEncounterStatePayload.InitiativeEntry> turnOrder, UUID entityId) {
+        for (SyncEncounterStatePayload.InitiativeEntry entry : turnOrder) {
+            if (entry.entityId().equals(entityId)) {
+                Text display = entry.displayName();
+                if (display != null && !display.getString().isEmpty()) {
+                    return Text.literal(display.getString());
+                }
+                break;
+            }
+        }
+        String fallback = entityId.toString();
+        return Text.literal(fallback.substring(0, Math.min(8, fallback.length())));
     }
 
     private void handleCursorState(MinecraftClient client, boolean overlayActive, boolean altHeld) {

@@ -37,6 +37,7 @@ public class CharacterEntity extends PathAwareEntity {
     private CharacterClass characterClass;
     private int level;
     private CombatState combatState;
+    private Vec3d lastCombatPosition = Vec3d.ZERO;
     private boolean playerControlled = false;
     private ninja.trek.srd.character.ai.CombatAIController aiController;
 
@@ -52,10 +53,22 @@ public class CharacterEntity extends PathAwareEntity {
         int maxHp = calculateMaxHitPoints();
         int ac = calculateArmorClass();
         this.combatState = CombatState.createDefault(maxHp, ac);
+        this.lastCombatPosition = Vec3d.ofBottomCenter(this.getBlockPos());
 
         // Register AI goals if on server
         if (!level.isClient()) {
             registerAIGoals();
+        }
+    }
+
+    @Override
+    public void tick() {
+        super.tick();
+
+        if (!this.getEntityWorld().isClient()) {
+            updateCombatMovementConstraints();
+        } else if (!this.combatState.inCombat()) {
+            this.lastCombatPosition = currentPositionVector();
         }
     }
 
@@ -198,7 +211,8 @@ public class CharacterEntity extends PathAwareEntity {
 
         Vec3d currentPos = Vec3d.ofBottomCenter(this.getBlockPos());
         int movementSpeed = race.getBaseMovementSpeed();
-        this.combatState = combatState.startTurn(currentPos, movementSpeed);
+        this.setCombatState(combatState.startTurn(currentPos, movementSpeed));
+        this.lastCombatPosition = currentPos;
     }
 
     /**
@@ -252,6 +266,12 @@ public class CharacterEntity extends PathAwareEntity {
 
     public void setCombatState(CombatState combatState) {
         this.combatState = combatState;
+        if (!this.getEntityWorld().isClient()) {
+            var server = this.getEntityWorld().getServer();
+            if (server != null) {
+                EncounterManager.getInstance().syncCombatState(server, this.getUuid(), combatState);
+            }
+        }
     }
 
     public boolean isPlayerControlled() {
@@ -264,6 +284,63 @@ public class CharacterEntity extends PathAwareEntity {
 
     public ninja.trek.srd.character.ai.CombatAIController getAIController() {
         return aiController;
+    }
+
+    /**
+     * Maintain server-authoritative combat movement constraints.
+     */
+    private void updateCombatMovementConstraints() {
+        Vec3d currentPos = currentPositionVector();
+
+        if (!this.combatState.inCombat()) {
+            this.lastCombatPosition = currentPos;
+            return;
+        }
+
+        if (this.lastCombatPosition == Vec3d.ZERO) {
+            this.lastCombatPosition = currentPos;
+        }
+
+        // Freeze movement when it's not this entity's turn
+        if (!isMyTurn()) {
+            if (currentPos.squaredDistanceTo(this.lastCombatPosition) > 1.0E-4) {
+                teleportToCombatAnchor(this.lastCombatPosition);
+            }
+            return;
+        }
+
+        double distanceMoved = currentPos.distanceTo(this.lastCombatPosition);
+        if (distanceMoved < 1.0E-3) {
+            return;
+        }
+
+        int remainingMovement = this.combatState.remainingMovement();
+        if (remainingMovement <= 0) {
+            teleportToCombatAnchor(this.lastCombatPosition);
+            return;
+        }
+
+        double allowedDistance = Math.min(distanceMoved, remainingMovement);
+        if (distanceMoved > remainingMovement) {
+            Vec3d direction = currentPos.subtract(this.lastCombatPosition).normalize();
+            Vec3d clampedPos = this.lastCombatPosition.add(direction.multiply(remainingMovement));
+            teleportToCombatAnchor(clampedPos);
+            allowedDistance = remainingMovement;
+        }
+
+        int spentMovement = (int) Math.ceil(allowedDistance);
+        this.combatState = this.combatState.withRemainingMovement(Math.max(0, remainingMovement - spentMovement));
+        this.lastCombatPosition = currentPositionVector();
+    }
+
+    private void teleportToCombatAnchor(Vec3d targetPos) {
+        this.refreshPositionAndAngles(targetPos.x, targetPos.y, targetPos.z, this.getYaw(), this.getPitch());
+        this.setVelocity(Vec3d.ZERO);
+        this.lastCombatPosition = targetPos;
+    }
+
+    private Vec3d currentPositionVector() {
+        return new Vec3d(this.getX(), this.getY(), this.getZ());
     }
 
     /**

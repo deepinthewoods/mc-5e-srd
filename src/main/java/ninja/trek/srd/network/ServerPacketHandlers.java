@@ -99,7 +99,7 @@ public class ServerPacketHandlers {
             manager.broadcastToEncounter(context.server(), encounter.getEncounterId(), turnEndPayload);
 
             // Advance to next turn
-            encounter.nextTurn();
+            manager.advanceTurn(context.server(), encounter.getEncounterId());
 
             // Send turn start notification for next entity
             UUID nextEntityId = encounter.getCurrentTurnEntity();

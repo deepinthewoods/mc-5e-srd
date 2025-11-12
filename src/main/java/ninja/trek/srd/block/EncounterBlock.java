@@ -9,6 +9,7 @@ import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.server.network.ServerPlayerEntity;
 import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.combat.EncounterManager;
 import ninja.trek.srd.combat.InitiativeTracker;
@@ -23,6 +24,7 @@ import java.util.UUID;
  */
 public class EncounterBlock extends Block {
     private static final int DEFAULT_TRIGGER_RADIUS = 10;
+    private static final int DEFAULT_PLAYER_MOVEMENT = 6;
 
     public EncounterBlock(Settings settings) {
         super(settings);
@@ -78,7 +80,7 @@ public class EncounterBlock extends Block {
                     character.getDisplayName()
                 );
 
-                manager.addCombatant(encounterId, tracker);
+                manager.addCombatant(level.getServer(), encounterId, tracker);
 
                 // Mark character as in combat
                 var combatState = character.getCombatState();
@@ -94,10 +96,39 @@ public class EncounterBlock extends Block {
                     combatState.currentHitPoints(),
                     combatState.maxHitPoints()
                 ));
+
+                manager.syncCombatState(level.getServer(), character.getUuid(), character.getCombatState());
+                manager.setBaseMovementSpeed(character.getUuid(), character.getRace().getBaseMovementSpeed());
+            } else if (entity instanceof ServerPlayerEntity player && !player.isSpectator()) {
+                int initiativeRoll = roller.rollInitiative(0);
+                InitiativeTracker tracker = new InitiativeTracker(
+                    player.getUuid(),
+                    initiativeRoll,
+                    0,
+                    player.getDisplayName()
+                );
+
+                manager.addCombatant(level.getServer(), encounterId, tracker);
+
+                ninja.trek.srd.combat.CombatState combatState = new ninja.trek.srd.combat.CombatState(
+                    true,
+                    initiativeRoll,
+                    Vec3d.ofBottomCenter(player.getBlockPos()),
+                    DEFAULT_PLAYER_MOVEMENT,
+                    true,
+                    true,
+                    true,
+                    10 + (int) Math.round(player.getArmor()),
+                    (int) Math.round(player.getHealth()),
+                    (int) Math.round(player.getMaxHealth())
+                );
+
+                manager.syncCombatState(level.getServer(), player.getUuid(), combatState);
+                manager.setBaseMovementSpeed(player.getUuid(), DEFAULT_PLAYER_MOVEMENT);
             }
         }
 
-        // TODO: Sync encounter state to clients
+        manager.syncEncounter(level.getServer(), encounterId);
         // TODO: Spawn associated mobs from NBT data
     }
 }

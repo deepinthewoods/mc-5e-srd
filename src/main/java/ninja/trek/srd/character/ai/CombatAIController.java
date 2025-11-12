@@ -110,7 +110,10 @@ public class CombatAIController extends Goal {
             .getEncounterForEntity(character.getUuid());
 
         if (encounter != null) {
-            EncounterManager.getInstance().advanceTurn(encounter.getEncounterId());
+            var server = character.getEntityWorld().getServer();
+            if (server != null) {
+                EncounterManager.getInstance().advanceTurn(server, encounter.getEncounterId());
+            }
         }
     }
 

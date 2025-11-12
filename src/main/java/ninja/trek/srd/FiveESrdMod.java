@@ -1,9 +1,11 @@
 package ninja.trek.srd;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import ninja.trek.srd.registry.ModBlocks;
 import ninja.trek.srd.registry.ModDataComponents;
 import ninja.trek.srd.registry.ModEntities;
+import ninja.trek.srd.combat.EncounterManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +31,11 @@ public class FiveESrdMod implements ModInitializer {
 
 		// Register server-side packet receivers
 		ninja.trek.srd.network.ServerPacketHandlers.register();
+
+		// Resync encounter/combat state for players who join while a battle is active
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
+			EncounterManager.getInstance(server).syncPlayerEncounterState(server, handler.player)
+		);
 
 		LOGGER.info("5E SRD mod initialized successfully!");
 	}
