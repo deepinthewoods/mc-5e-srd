@@ -11,6 +11,12 @@ base {
 }
 
 repositories {
+	// Local repository for vendored dependencies
+	maven {
+		name = 'VendoredDependencies'
+		url = file('gradle-deps')
+	}
+
 	// Add repositories to retrieve artifacts from in here.
 	// You should only use this when depending on other mods because
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
@@ -69,6 +75,20 @@ jar {
 
 	from("LICENSE") {
 		rename { "${it}_${inputs.properties.archivesName}"}
+	}
+}
+
+// Task to vendor all dependencies into gradle-deps folder
+task vendorDependencies(type: Copy) {
+	description = 'Copies all dependencies to gradle-deps for offline builds'
+
+	from configurations.compileClasspath
+	from configurations.runtimeClasspath
+	into 'gradle-deps/vendored-jars'
+
+	doLast {
+		println "Dependencies vendored to gradle-deps/vendored-jars"
+		println "Note: This doesn't include buildscript dependencies (like Fabric Loom)"
 	}
 }
 

@@ -23,6 +23,7 @@ public class ModCreativeTabs {
             .entries((parameters, output) -> {
                 // Add all mod items to the creative tab
                 output.add(ModBlocks.ENCOUNTER_BLOCK);
+                output.add(ModItems.CHARACTER_CREATION_TOME);
                 // TODO: Add spawn eggs when implemented
             })
             .build()

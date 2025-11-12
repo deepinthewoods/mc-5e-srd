@@ -152,12 +152,33 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
 - ⏳ Movement validation on server (needs integration with combat system)
 - ⏳ Encounter sync when player joins ongoing combat
 
-### Phase 3: UI & Multiplayer
+### Phase 3: UI & Multiplayer - 🔄 IN PROGRESS
+
+#### Completed
+- ✅ **Character Creation GUI** (`client/gui/CharacterCreationScreen.java`)
+  - Multi-step character creation wizard (Race → Class → Ability Scores → Appearance → Name → Review)
+  - Race selection (Human, Dwarf) with racial bonuses
+  - Class selection (Fighter)
+  - Standard array ability score assignment
+  - Appearance customization (body, legs, arms, head mesh indices)
+  - Character name input
+  - Review screen with final stats display
+  - Network integration for character creation
+
+- ✅ **Character Creation Item** (`item/CharacterCreationItem.java`)
+  - "Character Creation Tome" item to open the GUI
+  - Added to creative inventory tab
+
+- ✅ **Character Creation Network** (`network/payloads/CreateCharacterPayload.java`)
+  - Client-to-Server character creation packet
+  - Server-side character entity spawning
+  - Full character data transmission (name, race, class, stats, appearance)
+
+#### Remaining
 - ⏳ Action hotbar UI
 - ⏳ Turn indicator UI
 - ⏳ Combat HUD overlay
 - ⏳ End turn button
-- ⏳ Character creation GUI
 
 ### Phase 4: Combat Actions & AI
 - ⏳ Attack roll calculation with 5e rules
@@ -196,9 +217,12 @@ src/main/java/ninja/trek/srd/
 │   ├── EncounterManager.java           # Encounter singleton
 │   ├── EncounterState.java             # Turn order management
 │   └── InitiativeTracker.java          # Initiative tracking
+├── item/
+│   └── CharacterCreationItem.java      # Item to open character creation
 ├── network/
 │   ├── ServerPacketHandlers.java       # Server-side packet handling
 │   └── payloads/
+│       ├── CreateCharacterPayload.java # C2S: Create character request
 │       ├── EndTurnPayload.java         # C2S: End turn request
 │       ├── SyncCombatStatePayload.java # S2C: Combat state sync
 │       ├── SyncEncounterStatePayload.java # S2C: Encounter sync
@@ -210,6 +234,7 @@ src/main/java/ninja/trek/srd/
 │   ├── ModCreativeTabs.java            # Creative tabs
 │   ├── ModDataComponents.java          # Data component registry
 │   ├── ModEntities.java                # Entity registry
+│   ├── ModItems.java                   # Item registry
 │   └── ModNetworking.java              # Network packet registry
 └── util/
     └── DiceRoller.java                 # Dice rolling utility
@@ -218,6 +243,8 @@ src/client/java/ninja/trek/srd/
 ├── FiveESrdModClient.java              # Client initialization
 ├── client/
 │   ├── ClientEncounterState.java       # Client-side state cache
+│   ├── gui/
+│   │   └── CharacterCreationScreen.java # Character creation GUI
 │   ├── model/
 │   │   └── CharacterModelLoader.java   # GLTF loader stub
 │   └── render/
@@ -236,6 +263,7 @@ src/client/java/ninja/trek/srd/
 - Basic AI decision-making is implemented with automatic turn execution
 - Network synchronization is fully implemented for turn-based combat
 - Client-side state tracking is in place and ready for UI integration
+- Character creation GUI is fully implemented with multi-step wizard
 - Rendering infrastructure is in place (awaiting GLTF implementation)
 
 ### Build Status
@@ -247,13 +275,12 @@ src/client/java/ninja/trek/srd/
 
 ### Next Steps (Priority Order)
 1. Test build in environment with network access (blocked by network limitations)
-2. Add character creation GUI
-3. Implement action hotbar and combat UI
-4. Add movement validation during combat
-5. Implement encounter sync for players joining ongoing combat
-6. Implement complete 5e attack and damage calculation
-7. Add full GLTF model loading with Assimp
-8. Add spell system foundation
+2. Implement action hotbar and combat UI
+3. Add movement validation during combat
+4. Implement encounter sync for players joining ongoing combat
+5. Implement complete 5e attack and damage calculation
+6. Add full GLTF model loading with Assimp
+7. Add spell system foundation
 
 ## Notes
 This implementation provides a solid foundation for a full-featured D&D 5e mod. The architecture is modular and extensible, following Minecraft and Fabric best practices. The turn-based combat system is designed to be server-authoritative and multiplayer-compatible from the start.
