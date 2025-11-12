@@ -62,8 +62,8 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
   - Synced entity data for appearance (using SynchedEntityData.Builder)
   - Turn management integration
   - Attribute calculation from 5e stats
-  - Entity data persistence using ReadView/WriteView API (Minecraft 1.21.6+)
-  - Type-safe serialization with Codecs
+  - Entity data persistence using CompoundTag with Codecs (Mojang mappings)
+  - Type-safe serialization with NbtOps
 
 - ✅ **CombatAIController** (`character/ai/CombatAIController.java`)
   - Basic combat AI implementation
@@ -190,21 +190,24 @@ src/client/java/ninja/trek/srd/
 
 ### API Verification (Minecraft 1.21.10 - Mojang Mappings)
 
-All methods have been verified against official Minecraft 1.21.10 Javadocs:
+**IMPORTANT**: This mod uses **official Mojang mappings** as configured in build.gradle (`loom.officialMojangMappings()`), NOT Yarn mappings. Method names and APIs differ between these mapping systems.
+
+All methods have been verified against official Minecraft 1.21.10 with Mojang mappings:
 
 #### Entity System
 - ✅ **Entity.defineSynchedData(SynchedEntityData.Builder)** - Correctly implemented
   - Uses Builder pattern introduced in 1.21.x
   - Replaces old defineSynchedData(SynchedEntityData) signature
 
-- ✅ **Entity Data Persistence** - Implemented using ReadView/WriteView API
-  - Uses `writeCustomData(WriteView)` instead of deprecated `addAdditionalSaveData(CompoundTag)`
-  - Uses `readCustomData(ReadView)` instead of deprecated `readAdditionalSaveData(CompoundTag)`
-  - Leverages Codecs for type-safe serialization (CharacterStats, Race, CharacterClass, CombatState)
-  - Primitive types use view.putInt()/getOptionalInt() for integers
-  - Complex types use view.put(key, Codec, value) and view.read(key, Codec)
-  - All reads have proper fallback defaults using Optional.orElse()
-  - API introduced in Minecraft 1.21.6+ (Yarn mappings)
+- ✅ **Entity Data Persistence** - Implemented using CompoundTag with Codecs
+  - Uses `addAdditionalSaveData(CompoundTag)` for saving entity data
+  - Uses `readAdditionalSaveData(CompoundTag)` for loading entity data
+  - Leverages Codecs with NbtOps for type-safe serialization (CharacterStats, Race, CharacterClass, CombatState)
+  - Uses `Codec.encodeStart(NbtOps.INSTANCE, value)` to encode complex types to NBT
+  - Uses `Codec.parse(NbtOps.INSTANCE, nbt)` to decode complex types from NBT
+  - Primitive types use standard CompoundTag methods (putInt/getInt)
+  - All reads have proper fallback defaults using DataResult.orElse()
+  - Standard Mojang mappings API for Minecraft 1.21.10
 
 #### Attribute System
 - ✅ **LivingEntity.getAttribute(Holder<Attribute>)** - Correctly used
@@ -228,13 +231,14 @@ All methods have been verified against official Minecraft 1.21.10 Javadocs:
 
 ### Fabric API Updates (1.21.6+ and 1.21.9+)
 
-This mod is built for Minecraft 1.21.10 and follows the latest Fabric API changes:
+This mod is built for Minecraft 1.21.10 with **Mojang mappings** and follows standard Minecraft APIs. Some Fabric API changes documented online refer to Yarn mappings, which use different method names.
 
-#### Minecraft 1.21.6+ Changes (Applicable)
-- ✅ **Entity Data Persistence**: Using new ReadView/WriteView API
-  - `writeCustomData(WriteView)` replaces `addAdditionalSaveData(CompoundTag)`
-  - `readCustomData(ReadView)` replaces `readAdditionalSaveData(CompoundTag)`
-  - Type-safe serialization with Codecs instead of manual NBT manipulation
+#### Mapping System Notes
+- ✅ **Using Mojang Mappings**: Configured in build.gradle with `loom.officialMojangMappings()`
+  - Uses official method names from Mojang (e.g., `addAdditionalSaveData`, `readAdditionalSaveData`)
+  - Yarn mappings use different names (e.g., `writeCustomData`, `readCustomData`)
+  - Always verify API documentation matches your mapping system
+  - This mod uses standard CompoundTag-based NBT serialization with Codecs and NbtOps
 
 #### Minecraft 1.21.6+ Changes (Not Yet Applicable)
 - **BlockRenderLayerMap**: No block rendering layers used yet

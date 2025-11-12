@@ -1,10 +1,11 @@
 package ninja.trek.srd.character.entity;
 
+import com.mojang.serialization.DataResult;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.network.syncher.EntityDataAccessor;
 import net.minecraft.network.syncher.EntityDataSerializers;
 import net.minecraft.network.syncher.SynchedEntityData;
-import net.minecraft.storage.ReadView;
-import net.minecraft.storage.WriteView;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.PathfinderMob;
 import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
@@ -253,62 +254,89 @@ public class CharacterEntity extends PathfinderMob {
     }
 
     /**
-     * Write custom character data to storage using the ReadView/WriteView API.
-     * This method uses Codecs for type-safe serialization.
+     * Save custom character data to NBT using Codecs.
+     * Uses the standard Mojang mappings API for entity persistence.
      *
-     * API: writeCustomData(WriteView) replaces addAdditionalSaveData(CompoundTag) in 1.21.6+
+     * @param tag The CompoundTag to write data to
      */
     @Override
-    protected void writeCustomData(WriteView view) {
-        super.writeCustomData(view);
+    protected void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
 
         // Write character stats using Codec
-        view.put("stats", CharacterStats.CODEC, this.stats);
+        CharacterStats.CODEC.encodeStart(NbtOps.INSTANCE, this.stats)
+            .resultOrPartial(error -> {})
+            .ifPresent(nbt -> tag.put("stats", nbt));
 
         // Write race using Codec
-        view.put("race", Race.CODEC, this.race);
+        Race.CODEC.encodeStart(NbtOps.INSTANCE, this.race)
+            .resultOrPartial(error -> {})
+            .ifPresent(nbt -> tag.put("race", nbt));
 
         // Write character class using Codec
-        view.put("character_class", CharacterClass.CODEC, this.characterClass);
+        CharacterClass.CODEC.encodeStart(NbtOps.INSTANCE, this.characterClass)
+            .resultOrPartial(error -> {})
+            .ifPresent(nbt -> tag.put("character_class", nbt));
 
         // Write level as primitive
-        view.putInt("level", this.level);
+        tag.putInt("level", this.level);
 
         // Write combat state using Codec
-        view.put("combat_state", CombatState.CODEC, this.combatState);
+        CombatState.CODEC.encodeStart(NbtOps.INSTANCE, this.combatState)
+            .resultOrPartial(error -> {})
+            .ifPresent(nbt -> tag.put("combat_state", nbt));
     }
 
     /**
-     * Read custom character data from storage using the ReadView/WriteView API.
-     * This method uses Codecs for type-safe deserialization with fallback defaults.
+     * Load custom character data from NBT using Codecs.
+     * Uses the standard Mojang mappings API for entity persistence.
      *
-     * API: readCustomData(ReadView) replaces readAdditionalSaveData(CompoundTag) in 1.21.6+
+     * @param tag The CompoundTag to read data from
      */
     @Override
-    protected void readCustomData(ReadView view) {
-        super.readCustomData(view);
+    protected void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
 
         // Read character stats with fallback to default
-        this.stats = view.read("stats", CharacterStats.CODEC)
-            .orElse(CharacterStats.createDefault());
+        if (tag.contains("stats")) {
+            this.stats = CharacterStats.CODEC.parse(NbtOps.INSTANCE, tag.get("stats"))
+                .resultOrPartial(error -> {})
+                .orElse(CharacterStats.createDefault());
+        } else {
+            this.stats = CharacterStats.createDefault();
+        }
 
         // Read race with fallback to HUMAN
-        this.race = view.read("race", Race.CODEC)
-            .orElse(Race.HUMAN);
+        if (tag.contains("race")) {
+            this.race = Race.CODEC.parse(NbtOps.INSTANCE, tag.get("race"))
+                .resultOrPartial(error -> {})
+                .orElse(Race.HUMAN);
+        } else {
+            this.race = Race.HUMAN;
+        }
 
         // Read character class with fallback to FIGHTER
-        this.characterClass = view.read("character_class", CharacterClass.CODEC)
-            .orElse(CharacterClass.FIGHTER);
+        if (tag.contains("character_class")) {
+            this.characterClass = CharacterClass.CODEC.parse(NbtOps.INSTANCE, tag.get("character_class"))
+                .resultOrPartial(error -> {})
+                .orElse(CharacterClass.FIGHTER);
+        } else {
+            this.characterClass = CharacterClass.FIGHTER;
+        }
 
         // Read level with fallback to 1
-        this.level = view.getOptionalInt("level")
-            .orElse(1);
+        this.level = tag.contains("level") ? tag.getInt("level") : 1;
 
         // Read combat state with fallback to default
         int maxHp = calculateMaxHitPoints();
         int ac = calculateArmorClass();
-        this.combatState = view.read("combat_state", CombatState.CODEC)
-            .orElse(CombatState.createDefault(maxHp, ac));
+        if (tag.contains("combat_state")) {
+            this.combatState = CombatState.CODEC.parse(NbtOps.INSTANCE, tag.get("combat_state"))
+                .resultOrPartial(error -> {})
+                .orElse(CombatState.createDefault(maxHp, ac));
+        } else {
+            this.combatState = CombatState.createDefault(maxHp, ac);
+        }
 
         // Update Minecraft attributes after loading data
         updateMinecraftAttributes();
