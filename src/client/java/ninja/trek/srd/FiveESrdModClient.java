@@ -5,6 +5,7 @@ import net.fabricmc.fabric.api.client.rendering.v1.EntityRendererRegistry;
 import net.fabricmc.fabric.api.event.player.UseItemCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.ActionResult;
+import ninja.trek.srd.client.gui.ActionHotbarOverlay;
 import ninja.trek.srd.client.gui.CharacterCreationScreen;
 import ninja.trek.srd.client.render.CharacterEntityRenderer;
 import ninja.trek.srd.registry.ModEntities;
@@ -35,9 +36,11 @@ public class FiveESrdModClient implements ClientModInitializer {
 			return ActionResult.PASS;
 		});
 
+		// Register combat HUD overlay + bindings
+		ActionHotbarOverlay.register();
+
 		// TODO: Register model loader for character parts
-		// TODO: Register HUD overlays for combat UI
-		// TODO: Register keybindings for actions
+		// TODO: Register additional keybindings (e.g., targeting, end turn)
 
 		FiveESrdMod.LOGGER.info("5E SRD client initialized successfully!");
 	}
