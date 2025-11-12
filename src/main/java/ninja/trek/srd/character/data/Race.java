@@ -80,4 +80,17 @@ public enum Race implements StringRepresentable {
     public boolean hasDarkvision() {
         return hasDarkvision;
     }
+
+    /**
+     * Deserialize Race from string name.
+     * API: Used by Entity.readAdditionalSaveData(CompoundTag) - Minecraft 1.21.10
+     */
+    public static Race fromSerializedName(String name) {
+        for (Race race : values()) {
+            if (race.getSerializedName().equals(name)) {
+                return race;
+            }
+        }
+        return HUMAN; // default fallback
+    }
 }

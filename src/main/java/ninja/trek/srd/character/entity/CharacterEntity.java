@@ -251,8 +251,93 @@ public class CharacterEntity extends PathfinderMob {
         this.combatState = combatState;
     }
 
-    // TODO: Implement entity persistence using Minecraft 1.21.10 API
-    // The NBT save/load methods have changed significantly in 1.21.10
-    // For now, entity data will not persist across world reloads
-    // This will be implemented once the correct API is identified
+    /**
+     * Save character data to NBT.
+     * API: Entity.addAdditionalSaveData(CompoundTag) - Minecraft 1.21.10
+     */
+    @Override
+    protected void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+
+        // Save character data
+        tag.putString("Race", race.getSerializedName());
+        tag.putString("Class", characterClass.getSerializedName());
+        tag.putInt("Level", level);
+
+        // Save stats
+        CompoundTag statsTag = new CompoundTag();
+        statsTag.putInt("STR", stats.strength());
+        statsTag.putInt("DEX", stats.dexterity());
+        statsTag.putInt("CON", stats.constitution());
+        statsTag.putInt("INT", stats.intelligence());
+        statsTag.putInt("WIS", stats.wisdom());
+        statsTag.putInt("CHA", stats.charisma());
+        tag.put("Stats", statsTag);
+
+        // Save combat state
+        CompoundTag combatTag = new CompoundTag();
+        combatTag.putBoolean("InCombat", combatState.inCombat());
+        combatTag.putInt("Initiative", combatState.initiative());
+        combatTag.putInt("RemainingMovement", combatState.remainingMovement());
+        combatTag.putBoolean("HasAction", combatState.hasAction());
+        combatTag.putBoolean("HasBonusAction", combatState.hasBonusAction());
+        combatTag.putBoolean("HasReaction", combatState.hasReaction());
+        combatTag.putInt("ArmorClass", combatState.armorClass());
+        combatTag.putInt("CurrentHP", combatState.currentHitPoints());
+        combatTag.putInt("MaxHP", combatState.maxHitPoints());
+        tag.put("Combat", combatTag);
+    }
+
+    /**
+     * Load character data from NBT.
+     * API: Entity.readAdditionalSaveData(CompoundTag) - Minecraft 1.21.10
+     */
+    @Override
+    protected void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+
+        // Load character data
+        if (tag.contains("Race")) {
+            this.race = Race.fromSerializedName(tag.getString("Race"));
+        }
+        if (tag.contains("Class")) {
+            this.characterClass = CharacterClass.fromSerializedName(tag.getString("Class"));
+        }
+        if (tag.contains("Level")) {
+            this.level = tag.getInt("Level");
+        }
+
+        // Load stats
+        if (tag.contains("Stats")) {
+            CompoundTag statsTag = tag.getCompound("Stats");
+            this.stats = new CharacterStats(
+                statsTag.getInt("STR"),
+                statsTag.getInt("DEX"),
+                statsTag.getInt("CON"),
+                statsTag.getInt("INT"),
+                statsTag.getInt("WIS"),
+                statsTag.getInt("CHA")
+            );
+        }
+
+        // Load combat state
+        if (tag.contains("Combat")) {
+            CompoundTag combatTag = tag.getCompound("Combat");
+            this.combatState = new CombatState(
+                combatTag.getBoolean("InCombat"),
+                combatTag.getInt("Initiative"),
+                combatTag.getInt("RemainingMovement"),
+                combatTag.getBoolean("HasAction"),
+                combatTag.getBoolean("HasBonusAction"),
+                combatTag.getBoolean("HasReaction"),
+                combatTag.getInt("ArmorClass"),
+                combatTag.getInt("CurrentHP"),
+                combatTag.getInt("MaxHP"),
+                null  // turnStartPosition is not persisted
+            );
+        }
+
+        // Update Minecraft attributes based on loaded data
+        updateMinecraftAttributes();
+    }
 }

@@ -46,4 +46,17 @@ public enum CharacterClass implements StringRepresentable {
     public int getProficiencyBonus(int level) {
         return Math.floorDiv(level - 1, 4) + 2;
     }
+
+    /**
+     * Deserialize CharacterClass from string name.
+     * API: Used by Entity.readAdditionalSaveData(CompoundTag) - Minecraft 1.21.10
+     */
+    public static CharacterClass fromSerializedName(String name) {
+        for (CharacterClass charClass : values()) {
+            if (charClass.getSerializedName().equals(name)) {
+                return charClass;
+            }
+        }
+        return FIGHTER; // default fallback
+    }
 }
