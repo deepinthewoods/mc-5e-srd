@@ -1,6 +1,6 @@
 {
 	"schemaVersion": 1,
-	"id": "5e-srd",
+	"id": "fiveesrd",
 	"version": "${version}",
 	"name": "5E SRD",
 	"description": "This is an example description! Tell everyone what your mod is about!",
@@ -12,7 +12,7 @@
 		"sources": "https://github.com/FabricMC/fabric-example-mod"
 	},
 	"license": "CC0-1.0",
-	"icon": "assets/5e-srd/icon.png",
+	"icon": "assets/fiveesrd/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [
@@ -23,9 +23,9 @@
 		]
 	},
 	"mixins": [
-		"5e-srd.mixins.json",
+		"fiveesrd.mixins.json",
 		{
-			"config": "5e-srd.client.mixins.json",
+			"config": "fiveesrd.client.mixins.json",
 			"environment": "client"
 		}
 	],

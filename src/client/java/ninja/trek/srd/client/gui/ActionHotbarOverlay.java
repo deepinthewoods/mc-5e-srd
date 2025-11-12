@@ -79,7 +79,7 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
     private static final List<ActionButtonDefinition> ALL_BUTTONS;
     private static final Map<UseActionPayload.ActionType, ActionButtonDefinition> BUTTON_LOOKUP;
     private static final KeyBinding END_TURN_KEY = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-        "key.5e-srd.actionhotbar.end_turn",
+        "key.fiveesrd.actionhotbar.end_turn",
         InputUtil.Type.KEYSYM,
         GLFW.GLFW_KEY_R,
         KEYBIND_CATEGORY
@@ -825,7 +825,7 @@ public final class ActionHotbarOverlay implements HudRenderCallback {
         int defaultKey
     ) {
         KeyBinding keyBinding = KeyBindingHelper.registerKeyBinding(new KeyBinding(
-            "key.5e-srd.actionhotbar." + actionType.name().toLowerCase(Locale.ROOT),
+            "key.fiveesrd.actionhotbar." + actionType.name().toLowerCase(Locale.ROOT),
             InputUtil.Type.KEYSYM,
             defaultKey,
             KEYBIND_CATEGORY
