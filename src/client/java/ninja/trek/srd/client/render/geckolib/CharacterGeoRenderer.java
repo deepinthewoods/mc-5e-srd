@@ -1,5 +1,6 @@
 package ninja.trek.srd.client.render.geckolib;
 
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
 import net.minecraft.client.render.entity.EntityRendererFactory;
 import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.util.math.MatrixStack;
@@ -32,12 +33,14 @@ public class CharacterGeoRenderer extends GeoEntityRenderer<CharacterEntity, Cha
         super(context, new CharacterGeoModel());
         this.shadowRadius = 0.5f;
 
-        // TODO: Re-enable render layers once API is confirmed
-        // Add equipment layer renderer (Phase 6)
+        // TODO: Re-enable equipment layer renderer once GeckoLib 5 API is fully documented
+        // The addRenderLayer method signature has changed in GeckoLib 5
+        // Equipment layers will be added in a future update
         // addRenderLayer(new EquipmentLayerRenderer(this));
 
-        // Add held item layer renderer (Phase 7)
-        // addRenderLayer(new HeldItemLayerRenderer(this, context.getItemInHandRenderer()));
+        // TODO: Re-enable held item layer renderer once API is confirmed
+        // context.getItemInHandRenderer() is not available in current API
+        // addRenderLayer(new HeldItemLayerRenderer(this, itemRenderer));
     }
 
     @Override
@@ -75,19 +78,17 @@ public class CharacterGeoRenderer extends GeoEntityRenderer<CharacterEntity, Cha
         poseStack.scale(scale, scale, scale);
     }
 
-    // Bone retargeting is now handled in updateRenderState or preRender
-    // postRender signature has changed in GeckoLib 5 and may not be the right place for this
-    // Commenting out for now to fix compilation
-    /*
     @Override
-    public void postRender(CharacterGeoRenderState renderState, MatrixStack poseStack, BakedGeoModel model,
-                           float partialTick) {
-        super.postRender(renderState, poseStack, model, partialTick);
+    public void preApplyRenderLayers(CharacterGeoRenderState renderState, MatrixStack poseStack,
+                                     BakedGeoModel model, OrderedRenderCommandQueue renderQueue,
+                                     CameraRenderState cameraState, int packedLight, int packedOverlay,
+                                     int renderColor, boolean reRender) {
+        super.preApplyRenderLayers(renderState, poseStack, model, renderQueue, cameraState,
+                                   packedLight, packedOverlay, renderColor, reRender);
 
-        // Apply bone retargeting adjustments
+        // Apply bone retargeting adjustments before rendering layers
         applyBoneRetargeting(renderState, model);
     }
-    */
 
     /**
      * Apply bone retargeting to adapt animations to different race proportions.

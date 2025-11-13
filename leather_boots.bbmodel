@@ -1,0 +1,259 @@
+{
+	"meta": {
+		"format_version": "4.5",
+		"model_format": "free",
+		"box_uv": false
+	},
+	"name": "leather_boots",
+	"model_identifier": "geometry.equipment.leather_boots",
+	"visible_box": [1, 1, 0],
+	"variable_placeholders": "",
+	"variable_placeholder_buttons": [],
+	"timeline_setups": [],
+	"unhandled_root_fields": {},
+	"resolution": {
+		"width": 64,
+		"height": 64
+	},
+	"elements": [
+		{
+			"name": "shin_right_armor",
+			"box_uv": false,
+			"rescale": false,
+			"locked": false,
+			"from": [-4.5, 0, -2.5],
+			"to": [0, 4, 2.5],
+			"autouv": 0,
+			"color": 4,
+			"origin": [-2, 4, 0],
+			"faces": {
+				"north": {"uv": [0, 0, 4.5, 4], "texture": 0},
+				"east": {"uv": [4.5, 0, 9.5, 4], "texture": 0},
+				"south": {"uv": [9.5, 0, 14, 4], "texture": 0},
+				"west": {"uv": [14, 0, 19, 4], "texture": 0},
+				"up": {"uv": [0, 4, 4.5, 9], "texture": 0},
+				"down": {"uv": [4.5, 4, 9, 9], "texture": 0}
+			},
+			"type": "cube",
+			"uuid": "shin_right_armor001"
+		},
+		{
+			"name": "foot_right_armor",
+			"box_uv": false,
+			"rescale": false,
+			"locked": false,
+			"from": [-4.5, -2, -3],
+			"to": [0, 0, 4.5],
+			"autouv": 0,
+			"color": 4,
+			"origin": [-2, 0, 0],
+			"faces": {
+				"north": {"uv": [0, 9, 4.5, 11], "texture": 0},
+				"east": {"uv": [4.5, 9, 12, 11], "texture": 0},
+				"south": {"uv": [12, 9, 16.5, 11], "texture": 0},
+				"west": {"uv": [16.5, 9, 24, 11], "texture": 0},
+				"up": {"uv": [9, 4, 13.5, 11.5], "texture": 0},
+				"down": {"uv": [13.5, 4, 18, 11.5], "texture": 0}
+			},
+			"type": "cube",
+			"uuid": "foot_right_armor001"
+		},
+		{
+			"name": "shin_left_armor",
+			"box_uv": false,
+			"rescale": false,
+			"locked": false,
+			"from": [0, 0, -2.5],
+			"to": [4.5, 4, 2.5],
+			"autouv": 0,
+			"color": 5,
+			"origin": [2, 4, 0],
+			"faces": {
+				"north": {"uv": [0, 11.5, 4.5, 15.5], "texture": 0},
+				"east": {"uv": [4.5, 11.5, 9.5, 15.5], "texture": 0},
+				"south": {"uv": [9.5, 11.5, 14, 15.5], "texture": 0},
+				"west": {"uv": [14, 11.5, 19, 15.5], "texture": 0},
+				"up": {"uv": [18, 4, 22.5, 9], "texture": 0},
+				"down": {"uv": [22.5, 4, 27, 9], "texture": 0}
+			},
+			"type": "cube",
+			"uuid": "shin_left_armor001"
+		},
+		{
+			"name": "foot_left_armor",
+			"box_uv": false,
+			"rescale": false,
+			"locked": false,
+			"from": [0, -2, -3],
+			"to": [4.5, 0, 4.5],
+			"autouv": 0,
+			"color": 5,
+			"origin": [2, 0, 0],
+			"faces": {
+				"north": {"uv": [0, 15.5, 4.5, 17.5], "texture": 0},
+				"east": {"uv": [4.5, 15.5, 12, 17.5], "texture": 0},
+				"south": {"uv": [12, 15.5, 16.5, 17.5], "texture": 0},
+				"west": {"uv": [16.5, 15.5, 24, 17.5], "texture": 0},
+				"up": {"uv": [0, 17.5, 4.5, 25], "texture": 0},
+				"down": {"uv": [4.5, 17.5, 9, 25], "texture": 0}
+			},
+			"type": "cube",
+			"uuid": "foot_left_armor001"
+		}
+	],
+	"outliner": [
+		{
+			"name": "root",
+			"origin": [0, 0, 0],
+			"color": 0,
+			"uuid": "root",
+			"export": true,
+			"mirror_uv": false,
+			"isOpen": true,
+			"locked": false,
+			"visibility": true,
+			"autouv": 0,
+			"children": [
+				{
+					"name": "body",
+					"origin": [0, 12, 0],
+					"color": 0,
+					"uuid": "body",
+					"export": true,
+					"mirror_uv": false,
+					"isOpen": true,
+					"locked": false,
+					"visibility": true,
+					"autouv": 0,
+					"children": [
+						{
+							"name": "torso_lower",
+							"origin": [0, 12, 0],
+							"color": 0,
+							"uuid": "torso_lower",
+							"export": true,
+							"mirror_uv": false,
+							"isOpen": true,
+							"locked": false,
+							"visibility": true,
+							"autouv": 0,
+							"children": [
+								{
+									"name": "leg_right",
+									"origin": [-2, 12, 0],
+									"color": 0,
+									"uuid": "leg_right",
+									"export": true,
+									"mirror_uv": false,
+									"isOpen": true,
+									"locked": false,
+									"visibility": true,
+									"autouv": 0,
+									"children": [
+										{
+											"name": "shin_right",
+											"origin": [-2, 4, 0],
+											"color": 0,
+											"uuid": "shin_right",
+											"export": true,
+											"mirror_uv": false,
+											"isOpen": true,
+											"locked": false,
+											"visibility": true,
+											"autouv": 0,
+											"children": [
+												"shin_right_armor001",
+												{
+													"name": "foot_right",
+													"origin": [-2, 0, 0],
+													"color": 0,
+													"uuid": "foot_right",
+													"export": true,
+													"mirror_uv": false,
+													"isOpen": true,
+													"locked": false,
+													"visibility": true,
+													"autouv": 0,
+													"children": [
+														"foot_right_armor001"
+													]
+												}
+											]
+										}
+									]
+								},
+								{
+									"name": "leg_left",
+									"origin": [2, 12, 0],
+									"color": 0,
+									"uuid": "leg_left",
+									"export": true,
+									"mirror_uv": false,
+									"isOpen": true,
+									"locked": false,
+									"visibility": true,
+									"autouv": 0,
+									"children": [
+										{
+											"name": "shin_left",
+											"origin": [2, 4, 0],
+											"color": 0,
+											"uuid": "shin_left",
+											"export": true,
+											"mirror_uv": false,
+											"isOpen": true,
+											"locked": false,
+											"visibility": true,
+											"autouv": 0,
+											"children": [
+												"shin_left_armor001",
+												{
+													"name": "foot_left",
+													"origin": [2, 0, 0],
+													"color": 0,
+													"uuid": "foot_left",
+													"export": true,
+													"mirror_uv": false,
+													"isOpen": true,
+													"locked": false,
+													"visibility": true,
+													"autouv": 0,
+													"children": [
+														"foot_left_armor001"
+													]
+												}
+											]
+										}
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"textures": [
+		{
+			"path": "",
+			"name": "leather_boots.png",
+			"folder": "equipment",
+			"namespace": "",
+			"id": "0",
+			"particle": false,
+			"render_mode": "default",
+			"render_sides": "auto",
+			"frame_time": 1,
+			"frame_order_type": "loop",
+			"frame_order": "",
+			"frame_interpolate": false,
+			"visible": true,
+			"mode": "bitmap",
+			"saved": false,
+			"uuid": "texture0",
+			"relative_path": "",
+			"source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAASSURBVHhe7cExAQAAAMKg9U9tCy+gAAAAAJ4GdEAAAaFNGx4AAAAASUVORK5CYII="
+		}
+	],
+	"animations": []
+}
