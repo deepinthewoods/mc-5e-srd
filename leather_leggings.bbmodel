@@ -1,0 +1,181 @@
+{
+	"meta": {
+		"format_version": "4.5",
+		"model_format": "free",
+		"box_uv": false
+	},
+	"name": "leather_leggings",
+	"model_identifier": "geometry.equipment.leather_leggings",
+	"visible_box": [1, 1, 0],
+	"variable_placeholders": "",
+	"variable_placeholder_buttons": [],
+	"timeline_setups": [],
+	"unhandled_root_fields": {},
+	"resolution": {
+		"width": 64,
+		"height": 64
+	},
+	"elements": [
+		{
+			"name": "belt_armor",
+			"box_uv": false,
+			"rescale": false,
+			"locked": false,
+			"from": [-4.5, 12, -2.5],
+			"to": [4.5, 18, 2.5],
+			"autouv": 0,
+			"color": 1,
+			"origin": [0, 12, 0],
+			"faces": {
+				"north": {"uv": [0, 0, 9, 6], "texture": 0},
+				"east": {"uv": [9, 0, 14, 6], "texture": 0},
+				"south": {"uv": [14, 0, 23, 6], "texture": 0},
+				"west": {"uv": [23, 0, 28, 6], "texture": 0},
+				"up": {"uv": [0, 6, 9, 11], "texture": 0},
+				"down": {"uv": [9, 6, 18, 11], "texture": 0}
+			},
+			"type": "cube",
+			"uuid": "belt_armor001"
+		},
+		{
+			"name": "thigh_right_armor",
+			"box_uv": false,
+			"rescale": false,
+			"locked": false,
+			"from": [-4.5, 4, -2.5],
+			"to": [0, 12, 2.5],
+			"autouv": 0,
+			"color": 4,
+			"origin": [-2, 12, 0],
+			"faces": {
+				"north": {"uv": [0, 11, 4.5, 19], "texture": 0},
+				"east": {"uv": [4.5, 11, 9.5, 19], "texture": 0},
+				"south": {"uv": [9.5, 11, 14, 19], "texture": 0},
+				"west": {"uv": [14, 11, 19, 19], "texture": 0},
+				"up": {"uv": [18, 6, 22.5, 11], "texture": 0},
+				"down": {"uv": [22.5, 6, 27, 11], "texture": 0}
+			},
+			"type": "cube",
+			"uuid": "thigh_right_armor001"
+		},
+		{
+			"name": "thigh_left_armor",
+			"box_uv": false,
+			"rescale": false,
+			"locked": false,
+			"from": [0, 4, -2.5],
+			"to": [4.5, 12, 2.5],
+			"autouv": 0,
+			"color": 5,
+			"origin": [2, 12, 0],
+			"faces": {
+				"north": {"uv": [0, 19, 4.5, 27], "texture": 0},
+				"east": {"uv": [4.5, 19, 9.5, 27], "texture": 0},
+				"south": {"uv": [9.5, 19, 14, 27], "texture": 0},
+				"west": {"uv": [14, 19, 19, 27], "texture": 0},
+				"up": {"uv": [27, 6, 31.5, 11], "texture": 0},
+				"down": {"uv": [0, 27, 4.5, 32], "texture": 0}
+			},
+			"type": "cube",
+			"uuid": "thigh_left_armor001"
+		}
+	],
+	"outliner": [
+		{
+			"name": "root",
+			"origin": [0, 0, 0],
+			"color": 0,
+			"uuid": "root",
+			"export": true,
+			"mirror_uv": false,
+			"isOpen": true,
+			"locked": false,
+			"visibility": true,
+			"autouv": 0,
+			"children": [
+				{
+					"name": "body",
+					"origin": [0, 12, 0],
+					"color": 0,
+					"uuid": "body",
+					"export": true,
+					"mirror_uv": false,
+					"isOpen": true,
+					"locked": false,
+					"visibility": true,
+					"autouv": 0,
+					"children": [
+						{
+							"name": "torso_lower",
+							"origin": [0, 12, 0],
+							"color": 0,
+							"uuid": "torso_lower",
+							"export": true,
+							"mirror_uv": false,
+							"isOpen": true,
+							"locked": false,
+							"visibility": true,
+							"autouv": 0,
+							"children": [
+								"belt_armor001",
+								{
+									"name": "leg_right",
+									"origin": [-2, 12, 0],
+									"color": 0,
+									"uuid": "leg_right",
+									"export": true,
+									"mirror_uv": false,
+									"isOpen": true,
+									"locked": false,
+									"visibility": true,
+									"autouv": 0,
+									"children": [
+										"thigh_right_armor001"
+									]
+								},
+								{
+									"name": "leg_left",
+									"origin": [2, 12, 0],
+									"color": 0,
+									"uuid": "leg_left",
+									"export": true,
+									"mirror_uv": false,
+									"isOpen": true,
+									"locked": false,
+									"visibility": true,
+									"autouv": 0,
+									"children": [
+										"thigh_left_armor001"
+									]
+								}
+							]
+						}
+					]
+				}
+			]
+		}
+	],
+	"textures": [
+		{
+			"path": "",
+			"name": "leather_leggings.png",
+			"folder": "equipment",
+			"namespace": "",
+			"id": "0",
+			"particle": false,
+			"render_mode": "default",
+			"render_sides": "auto",
+			"frame_time": 1,
+			"frame_order_type": "loop",
+			"frame_order": "",
+			"frame_interpolate": false,
+			"visible": true,
+			"mode": "bitmap",
+			"saved": false,
+			"uuid": "texture0",
+			"relative_path": "",
+			"source": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAASSURBVHhe7cExAQAAAMKg9U9tCy+gAAAAAJ4GdEAAAaFNGx4AAAAASUVORK5CYII="
+		}
+	],
+	"animations": []
+}

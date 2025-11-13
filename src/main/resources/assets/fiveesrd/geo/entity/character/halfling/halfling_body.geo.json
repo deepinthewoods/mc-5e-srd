@@ -231,6 +231,142 @@
 					"pivot": [1.5, 8, 0]
 				}
 			]
+		},
+		{
+			"description": {
+				"identifier": "geometry.character.halfling.head_variant_1",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 1.5,
+				"visible_bounds_height": 2,
+				"visible_bounds_offset": [0, 0.6, 0]
+			},
+			"bones": [
+				{
+					"name": "root",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "body",
+					"parent": "root",
+					"pivot": [0, 8, 0]
+				},
+				{
+					"name": "head",
+					"parent": "body",
+					"pivot": [0, 19.5, 0],
+					"cubes": [
+						{
+							"origin": [-4, 19.5, -4],
+							"size": [8, 8, 8],
+							"uv": [0, 0],
+							"comment": "Larger head variant - cheerful appearance"
+						}
+					]
+				}
+			]
+		},
+		{
+			"description": {
+				"identifier": "geometry.character.halfling.head_variant_2",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 1.5,
+				"visible_bounds_height": 2,
+				"visible_bounds_offset": [0, 0.6, 0]
+			},
+			"bones": [
+				{
+					"name": "root",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "body",
+					"parent": "root",
+					"pivot": [0, 8, 0]
+				},
+				{
+					"name": "head",
+					"parent": "body",
+					"pivot": [0, 19.5, 0],
+					"cubes": [
+						{
+							"origin": [-3, 19.5, -3],
+							"size": [6, 6, 6],
+							"uv": [0, 0],
+							"comment": "Compact head variant - youthful look"
+						}
+					]
+				}
+			]
+		},
+		{
+			"description": {
+				"identifier": "geometry.character.halfling.body_variant_1",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 1.7,
+				"visible_bounds_height": 2,
+				"visible_bounds_offset": [0, 0.6, 0]
+			},
+			"bones": [
+				{
+					"name": "root",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "body",
+					"parent": "root",
+					"pivot": [0, 8, 0]
+				},
+				{
+					"name": "torso_upper",
+					"parent": "body",
+					"pivot": [0, 13, 0],
+					"cubes": [
+						{
+							"origin": [-3.5, 13, -2],
+							"size": [7, 7, 4],
+							"uv": [16, 16],
+							"comment": "Stout body variant - well-fed appearance"
+						}
+					]
+				}
+			]
+		},
+		{
+			"description": {
+				"identifier": "geometry.character.halfling.body_variant_2",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 1.3,
+				"visible_bounds_height": 2,
+				"visible_bounds_offset": [0, 0.6, 0]
+			},
+			"bones": [
+				{
+					"name": "root",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "body",
+					"parent": "root",
+					"pivot": [0, 8, 0]
+				},
+				{
+					"name": "torso_upper",
+					"parent": "body",
+					"pivot": [0, 13, 0],
+					"cubes": [
+						{
+							"origin": [-2.5, 13, -1],
+							"size": [5, 6, 2],
+							"uv": [16, 16],
+							"comment": "Nimble body variant - slim and agile"
+						}
+					]
+				}
+			]
 		}
 	]
 }

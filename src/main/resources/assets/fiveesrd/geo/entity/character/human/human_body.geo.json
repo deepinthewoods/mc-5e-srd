@@ -231,6 +231,142 @@
 					"pivot": [2, 12, 0]
 				}
 			]
+		},
+		{
+			"description": {
+				"identifier": "geometry.character.human.head_variant_1",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 2,
+				"visible_bounds_height": 3,
+				"visible_bounds_offset": [0, 1, 0]
+			},
+			"bones": [
+				{
+					"name": "root",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "body",
+					"parent": "root",
+					"pivot": [0, 12, 0]
+				},
+				{
+					"name": "head",
+					"parent": "body",
+					"pivot": [0, 28, 0],
+					"cubes": [
+						{
+							"origin": [-4.5, 28, -4.5],
+							"size": [9, 9, 9],
+							"uv": [0, 0],
+							"comment": "Larger head variant"
+						}
+					]
+				}
+			]
+		},
+		{
+			"description": {
+				"identifier": "geometry.character.human.head_variant_2",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 2,
+				"visible_bounds_height": 3,
+				"visible_bounds_offset": [0, 1, 0]
+			},
+			"bones": [
+				{
+					"name": "root",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "body",
+					"parent": "root",
+					"pivot": [0, 12, 0]
+				},
+				{
+					"name": "head",
+					"parent": "body",
+					"pivot": [0, 28, 0],
+					"cubes": [
+						{
+							"origin": [-3.5, 28, -3.5],
+							"size": [7, 7, 7],
+							"uv": [0, 0],
+							"comment": "Smaller head variant"
+						}
+					]
+				}
+			]
+		},
+		{
+			"description": {
+				"identifier": "geometry.character.human.body_variant_1",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 2.2,
+				"visible_bounds_height": 3,
+				"visible_bounds_offset": [0, 1, 0]
+			},
+			"bones": [
+				{
+					"name": "root",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "body",
+					"parent": "root",
+					"pivot": [0, 12, 0]
+				},
+				{
+					"name": "torso_upper",
+					"parent": "body",
+					"pivot": [0, 18, 0],
+					"cubes": [
+						{
+							"origin": [-5, 18, -2.5],
+							"size": [10, 12, 5],
+							"uv": [16, 16],
+							"comment": "Muscular body variant - wider torso"
+						}
+					]
+				}
+			]
+		},
+		{
+			"description": {
+				"identifier": "geometry.character.human.body_variant_2",
+				"texture_width": 64,
+				"texture_height": 64,
+				"visible_bounds_width": 1.8,
+				"visible_bounds_height": 3,
+				"visible_bounds_offset": [0, 1, 0]
+			},
+			"bones": [
+				{
+					"name": "root",
+					"pivot": [0, 0, 0]
+				},
+				{
+					"name": "body",
+					"parent": "root",
+					"pivot": [0, 12, 0]
+				},
+				{
+					"name": "torso_upper",
+					"parent": "body",
+					"pivot": [0, 18, 0],
+					"cubes": [
+						{
+							"origin": [-3.5, 18, -2],
+							"size": [7, 9, 4],
+							"uv": [16, 16],
+							"comment": "Slender body variant - narrower torso"
+						}
+					]
+				}
+			]
 		}
 	]
 }
