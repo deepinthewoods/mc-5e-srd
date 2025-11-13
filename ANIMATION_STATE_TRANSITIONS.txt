@@ -1,0 +1,190 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║           ANIMATION STATE MACHINE - STATE TRANSITION DIAGRAM               ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+PRIORITY LEVELS:
+┌──────────────────────────────────────────────────────────────────────────┐
+│ Priority 1: ACTION (Highest)                                             │
+│   - ATTACKING, CASTING, BLOCKING, DODGING, CHANNELING, DEATH, USING_ITEM│
+│   - Generally cannot be interrupted (except BLOCKING, CHANNELING)        │
+│                                                                          │
+│ Priority 2: LOCOMOTION                                                   │
+│   - WALKING, RUNNING, JUMPING, FALLING, SWIMMING                        │
+│   - Can be interrupted by Priority 1                                     │
+│                                                                          │
+│ Priority 3: IDLE (Lowest)                                                │
+│   - IDLE                                                                 │
+│   - Can be interrupted by anything                                       │
+└──────────────────────────────────────────────────────────────────────────┘
+
+STATE TRANSITION RULES:
+┌──────────────────────────────────────────────────────────────────────────┐
+│ ALLOWED TRANSITIONS:                                                     │
+│   ✓ Higher Priority → Lower Priority (always)                           │
+│   ✓ Lower Priority → Higher Priority (always)                           │
+│   ✓ Same Priority → Same Priority (if current is interruptible)         │
+│   ✓ Any State → Death (highest priority override)                       │
+│                                                                          │
+│ BLOCKED TRANSITIONS:                                                     │
+│   ✗ Action (non-interruptible) → Any State (must complete)              │
+│   ✗ Action → Lower Priority (must complete or be interrupted)           │
+└──────────────────────────────────────────────────────────────────────────┘
+
+DETAILED STATE GRAPH:
+
+                            ┌──────────┐
+                            │  DEATH   │ ◄─── (Unconscious/Dead)
+                            └──────────┘
+                                 │
+                                 │ (Heal/Revive)
+                                 ↓
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    PRIORITY 1: ACTIONS                          │
+    │                                                                 │
+    │  ┌──────────┐   ┌─────────┐   ┌──────────┐   ┌──────────┐    │
+    │  │ATTACKING │   │ CASTING │   │ DODGING  │   │USING_ITEM│    │
+    │  │(0.6s)    │   │ (1.0s)  │   │ (0.4s)   │   │ (0.8s)   │    │
+    │  │Can't Move│   │Can't Mov│   │Can't Mov │   │Can't Move│    │
+    │  └──────────┘   └─────────┘   └──────────┘   └──────────┘    │
+    │                                                                 │
+    │  ┌──────────┐   ┌───────────┐                                 │
+    │  │ BLOCKING │   │CHANNELING │                                 │
+    │  │(Loop)    │   │(Loop)     │                                 │
+    │  │Can Move! │   │Can Move!  │                                 │
+    │  │Interrup. │   │Interrupt. │                                 │
+    │  └──────────┘   └───────────┘                                 │
+    │                                                                 │
+    │              All actions transition back to IDLE               │
+    │              or LOCOMOTION when complete                       │
+    └─────────────────────────────────────────────────────────────────┘
+                                 │
+                                 │ (Movement starts)
+                                 ↓
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                  PRIORITY 2: LOCOMOTION                         │
+    │                                                                 │
+    │  ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌─────────┐          │
+    │  │ WALKING │  │ RUNNING │  │ JUMPING │  │ FALLING │  ┌──────┐│
+    │  │ (Loop)  │◄─┤ (Loop)  │  │ (0.4s)  │  │ (Loop)  │  │SWIM  ││
+    │  │         │  │         │  │         │  │         │  │(Loop)││
+    │  └─────────┘  └─────────┘  └─────────┘  └─────────┘  └──────┘│
+    │       ▲            ▲                                            │
+    │       └────────────┴─── All interruptible by Actions           │
+    │                                                                 │
+    │              Transitions based on movement state               │
+    └─────────────────────────────────────────────────────────────────┘
+                                 │
+                                 │ (No movement)
+                                 ↓
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                    PRIORITY 3: IDLE                             │
+    │                                                                 │
+    │                         ┌──────────┐                           │
+    │                         │   IDLE   │                           │
+    │                         │  (Loop)  │                           │
+    │                         │Interrupt.│                           │
+    │                         └──────────┘                           │
+    │                                                                 │
+    │           Default state, can be interrupted by anything        │
+    └─────────────────────────────────────────────────────────────────┘
+
+TRANSITION TIMES:
+═══════════════════════════════════════════════════════════════════════════
+State               → State               Transition Time   Interruptible?
+───────────────────────────────────────────────────────────────────────────
+IDLE               → WALKING              0.2s              Yes
+WALKING            → RUNNING              0.2s              Yes
+WALKING            → IDLE                 0.2s              Yes
+IDLE               → ATTACKING            0.5s              No (once started)
+ATTACKING          → IDLE                 0.3s              No
+IDLE               → CASTING              1.0s              No
+CASTING            → IDLE                 0.3s              No
+WALKING            → BLOCKING             0.3s              Yes
+BLOCKING           → WALKING              0.3s              Yes
+IDLE               → CHANNELING           0.3s              Yes
+CHANNELING         → IDLE                 0.3s              Yes
+Any State          → DEATH                1.5s              N/A
+═══════════════════════════════════════════════════════════════════════════
+
+COMMON TRANSITION SEQUENCES:
+
+1. BASIC COMBAT:
+   IDLE (player presses attack) → [0.5s] → ATTACKING (0.6s animation)
+   → [0.3s] → IDLE
+
+2. WALKING TO ATTACK:
+   WALKING (player attacks) → [0.5s] → ATTACKING (movement stops, 0.6s)
+   → [0.3s] → IDLE → [0.2s] → WALKING
+
+3. ATTACK COMBO (QUEUED):
+   IDLE → [0.5s] → ATTACKING(1) (0.6s) → [0.1s] → ATTACKING(2) (0.6s)
+   → [0.1s] → ATTACKING(3) (0.6s) → [0.3s] → IDLE
+
+4. SPELL CASTING:
+   IDLE (start cast) → [1.0s] → CASTING (1.0s animation) → [0.3s] → IDLE
+
+5. CHANNELING WHILE MOVING:
+   IDLE → [0.3s] → CHANNELING (loop) + WALKING (blended, can move)
+   → (stop channel) → [0.3s] → WALKING
+
+6. DEFENSIVE STANCE:
+   WALKING → [0.3s] → BLOCKING (loop, can still move)
+   → (release) → [0.3s] → WALKING
+
+7. INTERRUPTED TRANSITION (ATTACK → BLOCK):
+   WALKING → [0.5s] → ATTACKING (0.3s elapsed)
+   → (try to block) → REJECTED (attack must complete)
+   → ATTACKING continues → [0.3s] → IDLE → [0.3s] → BLOCKING
+
+8. DEATH:
+   ATTACKING (hit by fatal damage) → DEATH (1.5s) → (stays in death state)
+
+ANIMATION QUEUEING:
+═══════════════════════════════════════════════════════════════════════════
+Action Queue (FIFO):
+  [Attack] → [Attack] → [Attack]
+   Playing   Queued     Queued
+
+When Attack(1) completes:
+  [Attack] → [Attack]
+   Playing   Queued
+
+When Attack(2) completes:
+  [Attack]
+   Playing
+
+When Attack(3) completes:
+  (return to IDLE or LOCOMOTION based on movement)
+═══════════════════════════════════════════════════════════════════════════
+
+SPECIAL CASES:
+
+✓ Walking while Blocking:
+  BLOCKING state allows movement, so character can walk while blocking.
+  Both animations blend together.
+
+✓ Walking while Channeling:
+  CHANNELING state allows movement, character can move while channeling.
+  Both animations blend together.
+
+✗ Walking while Attacking:
+  ATTACKING does NOT allow movement, character is locked in place.
+  Movement is blocked until attack completes.
+
+✗ Attacking while Casting:
+  Both are Priority 1 and non-interruptible.
+  Second action is queued or rejected based on configuration.
+
+✓ Death overrides everything:
+  DEATH has implicit highest priority.
+  Any state → DEATH when unconscious/dead.
+
+═══════════════════════════════════════════════════════════════════════════
+Legend:
+  →     = Transition
+  [Xs]  = Transition time
+  (Xs)  = Animation duration
+  Loop  = Looping animation
+  ✓     = Allowed
+  ✗     = Blocked
+═══════════════════════════════════════════════════════════════════════════

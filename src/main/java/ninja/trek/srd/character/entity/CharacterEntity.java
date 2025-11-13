@@ -59,6 +59,17 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
     // Size scale for retargeting (0.5 - 3.0, default 1.0)
     private float sizeScale = 1.0f;
 
+    // Track if layer configuration needs syncing (dirty flag)
+    private boolean layerConfigDirty = true;
+
+    // Animation state tracking (client-side)
+    private boolean isAttacking = false;
+    private boolean isCasting = false;
+    private boolean isBlocking = false;
+    private boolean isChanneling = false;
+    private long attackStartTime = 0;
+    private long castStartTime = 0;
+
     public CharacterEntity(EntityType<? extends PathAwareEntity> entityType, World level) {
         super(entityType, level);
         // Initialize with defaults
@@ -411,11 +422,15 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
 
     // GeckoLib implementation
 
-    // Animation definitions
+    // Animation definitions with priority-based state machine
     private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("idle");
     private static final RawAnimation WALK = RawAnimation.begin().thenLoop("walk");
     private static final RawAnimation RUN = RawAnimation.begin().thenLoop("run");
     private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("attack");
+    private static final RawAnimation CAST = RawAnimation.begin().thenPlay("cast");
+    private static final RawAnimation BLOCK = RawAnimation.begin().thenLoop("block");
+    private static final RawAnimation CHANNEL = RawAnimation.begin().thenLoop("channel");
+    private static final RawAnimation DEATH = RawAnimation.begin().thenPlay("death");
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
@@ -424,15 +439,53 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
     }
 
     /**
-     * Main animation controller that determines which animation to play.
+     * Main animation controller with priority-based state machine.
+     * Priority levels:
+     * 1. Action animations (attacks, casts, special abilities) - cannot be interrupted
+     * 2. Locomotion (walk, run, jump) - can be interrupted by actions
+     * 3. Idle - can be interrupted by anything
      */
     private PlayState animationController(AnimationTest<?> animTest) {
-        // Priority 1: Attack animations
-        if (this.handSwingProgress > 0) {
-            return animTest.setAndContinue(ATTACK);
+        // Priority 1: Death animation (highest priority, cannot be interrupted)
+        if (this.isDead() || this.combatState.isUnconscious()) {
+            return animTest.setAndContinue(DEATH);
         }
 
-        // Priority 2: Locomotion animations
+        // Priority 2: Action animations (attacks, casts, blocks, channels)
+        // These cannot be interrupted except by higher priority actions
+
+        // Check for channeling (continuous spell)
+        if (isChanneling) {
+            return animTest.setAndContinue(CHANNEL);
+        }
+
+        // Check for blocking
+        if (isBlocking) {
+            return animTest.setAndContinue(BLOCK);
+        }
+
+        // Check for casting
+        if (isCasting) {
+            // Auto-complete cast after duration
+            if (getCastElapsedTime() >= 1000) {  // 1 second cast time
+                completeCast();
+            } else {
+                return animTest.setAndContinue(CAST);
+            }
+        }
+
+        // Check for attacking
+        if (isAttacking || this.handSwingProgress > 0) {
+            // Auto-complete attack after duration
+            if (getAttackElapsedTime() >= 600) {  // 0.6 second attack animation
+                completeAttack();
+            } else {
+                return animTest.setAndContinue(ATTACK);
+            }
+        }
+
+        // Priority 3: Locomotion animations
+        // Can be interrupted by action animations
         if (animTest.isMoving()) {
             if (this.isSprinting()) {
                 return animTest.setAndContinue(RUN);
@@ -441,7 +494,7 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
             }
         }
 
-        // Priority 3: Idle animation
+        // Priority 4: Idle animation (lowest priority)
         return animTest.setAndContinue(IDLE);
     }
 
@@ -475,6 +528,7 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
 
     public void setLayerConfiguration(LayerConfiguration layerConfiguration) {
         this.layerConfiguration = layerConfiguration;
+        this.layerConfigDirty = true;
     }
 
     public float getSizeScale() {
@@ -483,6 +537,148 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
 
     public void setSizeScale(float sizeScale) {
         this.sizeScale = Math.max(0.5f, Math.min(3.0f, sizeScale));
+    }
+
+    /**
+     * Mark layer configuration as dirty, requiring a sync to clients.
+     * Call this whenever you modify the layer configuration directly.
+     */
+    public void markLayerConfigDirty() {
+        this.layerConfigDirty = true;
+    }
+
+    /**
+     * Called when a player starts tracking this entity.
+     * Send initial layer configuration sync to the player.
+     */
+    @Override
+    public void onStartedTrackingBy(net.minecraft.server.network.ServerPlayerEntity player) {
+        super.onStartedTrackingBy(player);
+
+        // Send full layer configuration to the new tracking player
+        if (!this.getEntityWorld().isClient()) {
+            ninja.trek.srd.network.LayerConfigSyncManager.syncFullConfigurationToPlayer(this, player);
+        }
+    }
+
+    // Animation action trigger methods
+
+    /**
+     * Start an attack animation.
+     * @return true if attack was started, false if it couldn't be (e.g., already attacking)
+     */
+    public boolean startAttack() {
+        if (isAttacking) {
+            return false;
+        }
+        isAttacking = true;
+        attackStartTime = System.currentTimeMillis();
+        return true;
+    }
+
+    /**
+     * Start a spell casting animation.
+     * @return true if casting was started, false if it couldn't be
+     */
+    public boolean startCast() {
+        if (isCasting) {
+            return false;
+        }
+        isCasting = true;
+        castStartTime = System.currentTimeMillis();
+        return true;
+    }
+
+    /**
+     * Start a channeled spell animation.
+     * @return true if channeling was started, false if it couldn't be
+     */
+    public boolean startChannel() {
+        if (isChanneling) {
+            return false;
+        }
+        isChanneling = true;
+        return true;
+    }
+
+    /**
+     * Stop channeling.
+     */
+    public void stopChannel() {
+        isChanneling = false;
+    }
+
+    /**
+     * Start blocking.
+     * @return true if blocking was started, false if it couldn't be
+     */
+    public boolean startBlock() {
+        if (isBlocking) {
+            return false;
+        }
+        isBlocking = true;
+        return true;
+    }
+
+    /**
+     * Stop blocking.
+     */
+    public void stopBlock() {
+        isBlocking = false;
+    }
+
+    /**
+     * Complete the current attack.
+     */
+    public void completeAttack() {
+        isAttacking = false;
+        attackStartTime = 0;
+    }
+
+    /**
+     * Complete the current cast.
+     */
+    public void completeCast() {
+        isCasting = false;
+        castStartTime = 0;
+    }
+
+    // Animation state getters
+
+    public boolean isAttacking() {
+        return isAttacking;
+    }
+
+    public boolean isCasting() {
+        return isCasting;
+    }
+
+    public boolean isBlocking() {
+        return isBlocking;
+    }
+
+    public boolean isChanneling() {
+        return isChanneling;
+    }
+
+    /**
+     * Get the time elapsed since attack started (in milliseconds).
+     */
+    public long getAttackElapsedTime() {
+        if (!isAttacking) {
+            return 0;
+        }
+        return System.currentTimeMillis() - attackStartTime;
+    }
+
+    /**
+     * Get the time elapsed since cast started (in milliseconds).
+     */
+    public long getCastElapsedTime() {
+        if (!isCasting) {
+            return 0;
+        }
+        return System.currentTimeMillis() - castStartTime;
     }
 
     // TODO: Implement entity persistence using Minecraft 1.21.10 API

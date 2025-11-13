@@ -41,6 +41,18 @@ public class ClientPacketHandlers {
             ClientPacketHandlers::handleTurnEnd
         );
 
+        // Handle SyncLayerConfig packets (GeckoLib)
+        ClientPlayNetworking.registerGlobalReceiver(
+            SyncLayerConfigPayload.ID,
+            ClientPacketHandlers::handleSyncLayerConfig
+        );
+
+        // Handle UpdateLayerConfig packets (GeckoLib)
+        ClientPlayNetworking.registerGlobalReceiver(
+            UpdateLayerConfigPayload.ID,
+            ClientPacketHandlers::handleUpdateLayerConfig
+        );
+
         FiveESrdMod.LOGGER.info("Client packet handlers registered successfully!");
     }
 
@@ -126,5 +138,80 @@ public class ClientPacketHandlers {
 
             ActionHotbarOverlay.notifyTurnEnd(payload.encounterId(), payload.entityId());
         });
+    }
+
+    /**
+     * Handle SyncLayerConfig packet from server (GeckoLib Phase 7.4).
+     * This performs a full sync of the entity's layer configuration.
+     */
+    private static void handleSyncLayerConfig(SyncLayerConfigPayload payload, ClientPlayNetworking.Context context) {
+        // Execute on client thread
+        context.client().execute(() -> {
+            FiveESrdMod.LOGGER.debug("Received full layer config sync for entity: {}", payload.entityId());
+
+            // Find the entity in the client world
+            net.minecraft.client.world.ClientWorld world = context.client().world;
+            if (world == null) {
+                FiveESrdMod.LOGGER.warn("Cannot sync layer config: client world is null");
+                return;
+            }
+
+            // Find entity by UUID
+            ninja.trek.srd.character.entity.CharacterEntity character = findCharacterEntity(world, payload.entityId());
+            if (character != null) {
+                // Apply the configuration to the entity
+                payload.applyToConfig(character.getLayerConfiguration());
+                FiveESrdMod.LOGGER.debug("Applied full layer config to entity {}", payload.entityId());
+            } else {
+                FiveESrdMod.LOGGER.debug("Entity {} not found or not a CharacterEntity, config will be applied when entity loads", payload.entityId());
+            }
+        });
+    }
+
+    /**
+     * Handle UpdateLayerConfig packet from server (GeckoLib Phase 7.4).
+     * This performs an incremental update of a specific field.
+     */
+    private static void handleUpdateLayerConfig(UpdateLayerConfigPayload payload, ClientPlayNetworking.Context context) {
+        // Execute on client thread
+        context.client().execute(() -> {
+            FiveESrdMod.LOGGER.debug("Received layer config update for entity: {} (type: {})",
+                payload.entityId(), payload.updateType());
+
+            // Find the entity in the client world
+            net.minecraft.client.world.ClientWorld world = context.client().world;
+            if (world == null) {
+                FiveESrdMod.LOGGER.warn("Cannot update layer config: client world is null");
+                return;
+            }
+
+            // Find entity by UUID
+            ninja.trek.srd.character.entity.CharacterEntity character = findCharacterEntity(world, payload.entityId());
+            if (character != null) {
+                // Apply the update to the entity's configuration
+                payload.applyToConfig(character.getLayerConfiguration());
+                FiveESrdMod.LOGGER.debug("Applied layer config update to entity {}", payload.entityId());
+            } else {
+                FiveESrdMod.LOGGER.debug("Entity {} not found or not a CharacterEntity", payload.entityId());
+            }
+        });
+    }
+
+    /**
+     * Helper method to find a CharacterEntity by UUID in the client world.
+     */
+    private static ninja.trek.srd.character.entity.CharacterEntity findCharacterEntity(
+        net.minecraft.client.world.ClientWorld world,
+        java.util.UUID entityId
+    ) {
+        // Iterate through all entities in the world to find one with matching UUID
+        for (net.minecraft.entity.Entity entity : world.getEntities()) {
+            if (entity instanceof ninja.trek.srd.character.entity.CharacterEntity character) {
+                if (character.getUuid().equals(entityId)) {
+                    return character;
+                }
+            }
+        }
+        return null;
     }
 }

@@ -49,6 +49,17 @@ public class ModNetworking {
             TurnEndPayload.ID,
             TurnEndPayload.CODEC
         );
+
+        // GeckoLib Layer Configuration Sync
+        PayloadTypeRegistry.playS2C().register(
+            SyncLayerConfigPayload.ID,
+            SyncLayerConfigPayload.CODEC
+        );
+
+        PayloadTypeRegistry.playS2C().register(
+            UpdateLayerConfigPayload.ID,
+            UpdateLayerConfigPayload.CODEC
+        );
     }
 
     /**
