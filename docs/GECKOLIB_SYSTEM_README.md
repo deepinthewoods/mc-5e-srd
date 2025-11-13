@@ -2,7 +2,7 @@
 
 ## Overview
 
-This is the complete documentation suite for migrating the 5e SRD mod to a GeckoLib-based animation system with bone retargeting and modular character layers.
+This is the complete documentation suite for building a GeckoLib-based animation system with bone retargeting and modular character layers.
 
 ## What This System Provides
 
@@ -159,7 +159,7 @@ This is the complete documentation suite for migrating the 5e SRD mod to a Gecko
 
 | Phase | Name | Estimated Time | Key Deliverables |
 |-------|------|----------------|------------------|
-| **0** | Preparation & Cleanup | 1-2 days | Old system removed, GeckoLib added |
+| **0** | Setup & Foundation | 1 day | GeckoLib added, structure created |
 | **1** | Core Skeleton & Data | 2-3 days | Skeleton profiles, data structures |
 | **2** | Basic Model & Rendering | 3-5 days | One race rendering with GeckoLib |
 | **3** | Animation System | 4-6 days | Animations playing in-game |
@@ -299,7 +299,7 @@ Global scaling (0.5x to 3.0x) with adaptive walk speed:
 
 ## Contributors
 
-This documentation was created to support the 5e SRD mod's migration to a modern animation system.
+This documentation was created to support building a modern animation system for the 5e SRD mod.
 
 ## License
 

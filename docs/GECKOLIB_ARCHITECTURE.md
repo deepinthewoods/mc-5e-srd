@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document describes the complete architecture for migrating from the current custom GLTF system to a GeckoLib-based animation system with bone retargeting, modular layering, and runtime character assembly.
+This document describes the complete architecture for a GeckoLib-based animation system with bone retargeting, modular layering, and runtime character assembly.
 
 ## Design Goals
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides a phased implementation plan for migrating to the GeckoLib-based animation and bone retargeting system with modular layers.
+This document provides a phased implementation plan for building the GeckoLib-based animation and bone retargeting system with modular layers.
 
 ## Prerequisites
 
@@ -50,29 +50,17 @@ dependencies {
 
 ## Implementation Phases
 
-### Phase 0: Preparation & Cleanup (1-2 days)
+### Phase 0: Setup & Foundation (1 day)
 
-**Goal**: Remove old system and set up GeckoLib foundation
+**Goal**: Set up GeckoLib foundation and project structure
 
 #### Tasks:
 
-1. **Backup Current System**
-   ```bash
-   git checkout -b backup/old-animation-system
-   git push origin backup/old-animation-system
-   ```
-
-2. **Remove Old Animation Code**
-   - Delete `/src/client/java/ninja/trek/srd/client/model/CharacterModelLoader.java`
-   - Delete `/src/client/java/ninja/trek/srd/client/render/CharacterEntityRenderer.java`
-   - Delete `/src/client/java/ninja/trek/srd/client/render/CharacterRenderState.java`
-   - Keep entity code intact (CharacterEntity.java)
-
-3. **Add GeckoLib Dependency**
+1. **Add GeckoLib Dependency**
    - Update `build.gradle` as shown above
    - Run `./gradlew build` to verify dependency resolution
 
-4. **Create Package Structure**
+2. **Create Package Structure**
    ```
    src/main/java/ninja/trek/srd/
    ├── client/
@@ -128,10 +116,32 @@ dependencies {
                └── armor/
    ```
 
+3. **Create Resource Structure**
+   ```
+   src/main/resources/assets/fiveesrd/
+   ├── geo/
+   │   └── entity/
+   │       └── character/
+   │           ├── base/
+   │           ├── dwarf/
+   │           ├── elf/
+   │           ├── human/
+   │           └── halfling/
+   ├── animations/
+   │   └── entity/
+   │       └── character/
+   └── textures/
+       └── entity/
+           └── character/
+               ├── base/
+               ├── clothing/
+               └── armor/
+   ```
+
 **Deliverables**:
-- ✅ Old system removed
 - ✅ GeckoLib dependency added and working
-- ✅ Directory structure created
+- ✅ Package structure created
+- ✅ Resource directory structure created
 - ✅ Clean build with no errors
 
 ---
