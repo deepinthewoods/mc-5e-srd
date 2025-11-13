@@ -17,6 +17,12 @@ repositories {
 		url = file('gradle-deps')
 	}
 
+	// GeckoLib repository
+	maven {
+		name = "GeckoLib"
+		url = "https://dl.cloudsmith.io/public/geckolib3/geckolib/maven/"
+	}
+
 	// Add repositories to retrieve artifacts from in here.
 	// You should only use this when depending on other mods because
 	// Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
@@ -46,7 +52,11 @@ dependencies {
 	// Fabric API. This is technically optional, but you probably want it anyway.
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	// LWJGL Assimp for 3D model loading
+	// GeckoLib for advanced entity animations
+	modImplementation "software.bernie.geckolib:geckolib-fabric-1.21:4.6.1"
+	include "software.bernie.geckolib:geckolib-fabric-1.21:4.6.1"
+
+	// LWJGL Assimp for 3D model loading (legacy system, will be deprecated)
 	implementation 'org.lwjgl:lwjgl-assimp:3.3.3'
 	runtimeOnly "org.lwjgl:lwjgl-assimp:3.3.3:natives-windows"
 
