@@ -3,8 +3,8 @@ package ninja.trek.srd.client.model.geckolib;
 import net.minecraft.util.Identifier;
 import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.character.entity.CharacterEntity;
-import ninja.trek.srd.character.layer.LayerConfiguration;
 import software.bernie.geckolib.model.GeoModel;
+import software.bernie.geckolib.renderer.base.GeoRenderState;
 
 /**
  * GeckoLib model for CharacterEntity.
@@ -15,26 +15,21 @@ import software.bernie.geckolib.model.GeoModel;
 public class CharacterGeoModel extends GeoModel<CharacterEntity> {
 
     @Override
-    public Identifier getModelResource(CharacterEntity entity) {
-        // Select model based on race
-        String raceName = entity.getRace().getName().toLowerCase();
-
-        // For now, use a single base model per race
-        // In Phase 5, this will support body part variants
+    public Identifier getModelResource(GeoRenderState renderState) {
+        // In GeckoLib 5, we can't access entity-specific data in model methods
+        // Use a default model for all characters
+        // TODO: Implement custom RenderState to store race information
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "geo/entity/character/" + raceName + "/" + raceName + "_body.geo.json");
+            "geckolib/models/entity/character/human/human_body.geo.json");
     }
 
     @Override
-    public Identifier getTextureResource(CharacterEntity entity) {
-        // Get skin texture from layer configuration
-        LayerConfiguration config = entity.getLayerConfiguration();
-        String skinTexture = config.getSkinTexture();
-        String raceName = entity.getRace().getName().toLowerCase();
-
-        // Path to race-specific skin texture
+    public Identifier getTextureResource(GeoRenderState renderState) {
+        // In GeckoLib 5, we can't access entity-specific data here
+        // Use a default texture for now - dynamic textures will need a different approach
+        // TODO: Implement custom RenderState to store texture information
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "textures/entity/character/base/" + raceName + "_" + skinTexture + ".png");
+            "textures/entity/character/base/human_default.png");
     }
 
     @Override
@@ -42,6 +37,6 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
         // All humanoids share the same base animations
         // Bone retargeting adapts them to different proportions
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "animations/entity/character/locomotion.animation.json");
+            "geckolib/animations/entity/character/locomotion.animation.json");
     }
 }

@@ -2,7 +2,7 @@ package ninja.trek.srd.client.render.animation;
 
 import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.character.skeleton.SkeletonProfile;
-import software.bernie.geckolib.animation.AnimationState;
+import software.bernie.geckolib.animatable.processing.AnimationTest;
 import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.animation.RawAnimation;
 
@@ -32,43 +32,18 @@ public class CharacterAnimationController {
      * Main animation predicate that determines which animation to play.
      * Called by GeckoLib every frame.
      */
-    public PlayState predicate(AnimationState<CharacterEntity> state) {
-        CharacterEntity entity = state.getAnimatable();
+    public <E extends CharacterEntity> PlayState predicate(AnimationTest<E> animTest) {
+        // In GeckoLib 5, AnimationTest provides movement data but not the entity itself
+        // Simplified animation logic without entity-specific data
 
-        // Get the target skeleton profile based on entity's race
-        SkeletonProfile targetProfile = SkeletonProfile.getByRaceName(
-            entity.getRace().getName()
-        );
-
-        // Calculate animation speed for retargeting
-        boolean isMoving = state.isMoving();
-        float animSpeed = retargeting.calculateAnimationSpeed(
-            targetProfile,
-            1.0f, // Size scale (TODO: add size scaling to CharacterEntity)
-            isMoving
-        );
-
-        // Priority 1: Attack animations
-        if (entity.handSwingProgress > 0) {
-            state.getController().setAnimation(ATTACK);
-            return PlayState.CONTINUE;
+        // Priority 1: Locomotion animations based on movement
+        if (animTest.isMoving()) {
+            // TODO: Detect sprinting from AnimationTest if available
+            return animTest.setAndContinue(WALK);
         }
 
-        // Priority 2: Locomotion animations
-        if (isMoving) {
-            if (entity.isSprinting()) {
-                state.getController().setAnimation(RUN);
-                state.getController().setAnimationSpeed(animSpeed * 1.5); // Run is faster
-            } else {
-                state.getController().setAnimation(WALK);
-                state.getController().setAnimationSpeed(animSpeed);
-            }
-            return PlayState.CONTINUE;
-        }
-
-        // Priority 3: Idle animation
-        state.getController().setAnimation(IDLE);
-        return PlayState.CONTINUE;
+        // Priority 2: Idle animation
+        return animTest.setAndContinue(IDLE);
     }
 
     /**

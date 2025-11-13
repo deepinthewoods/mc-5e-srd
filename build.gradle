@@ -53,8 +53,8 @@ dependencies {
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	// GeckoLib for advanced entity animations
-	modImplementation "software.bernie.geckolib:geckolib-fabric-1.21:4.6.1"
-	include "software.bernie.geckolib:geckolib-fabric-1.21:4.6.1"
+	modImplementation "software.bernie.geckolib:geckolib-fabric-1.21.10:5.3-alpha-3"
+	include "software.bernie.geckolib:geckolib-fabric-1.21.10:5.3-alpha-3"
 
 	// LWJGL Assimp for 3D model loading (legacy system, will be deprecated)
 	implementation 'org.lwjgl:lwjgl-assimp:3.3.3'

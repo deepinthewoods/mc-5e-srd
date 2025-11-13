@@ -16,8 +16,11 @@ import ninja.trek.srd.combat.*;
 import ninja.trek.srd.util.DiceRoller;
 import software.bernie.geckolib.animatable.GeoEntity;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
-import software.bernie.geckolib.animation.AnimatableManager;
-import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animatable.manager.AnimatableManager;
+import software.bernie.geckolib.animatable.processing.AnimationController;
+import software.bernie.geckolib.animatable.processing.AnimationTest;
+import software.bernie.geckolib.animation.PlayState;
+import software.bernie.geckolib.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
 /**
@@ -408,10 +411,37 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
 
     // GeckoLib implementation
 
+    // Animation definitions
+    private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("idle");
+    private static final RawAnimation WALK = RawAnimation.begin().thenLoop("walk");
+    private static final RawAnimation RUN = RawAnimation.begin().thenLoop("run");
+    private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("attack");
+
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "movement", 0,
-            new ninja.trek.srd.client.render.animation.CharacterAnimationController()::predicate));
+        controllers.add(new AnimationController<>("movement", 0, this::animationController));
+    }
+
+    /**
+     * Main animation controller that determines which animation to play.
+     */
+    private PlayState animationController(AnimationTest<?> animTest) {
+        // Priority 1: Attack animations
+        if (this.handSwingProgress > 0) {
+            return animTest.setAndContinue(ATTACK);
+        }
+
+        // Priority 2: Locomotion animations
+        if (animTest.isMoving()) {
+            if (this.isSprinting()) {
+                return animTest.setAndContinue(RUN);
+            } else {
+                return animTest.setAndContinue(WALK);
+            }
+        }
+
+        // Priority 3: Idle animation
+        return animTest.setAndContinue(IDLE);
     }
 
     @Override
