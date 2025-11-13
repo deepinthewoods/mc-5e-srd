@@ -9,6 +9,7 @@ import ninja.trek.srd.client.gui.ActionHotbarOverlay;
 import ninja.trek.srd.client.gui.CharacterCreationScreen;
 import ninja.trek.srd.client.model.CharacterModelLoader;
 import ninja.trek.srd.client.render.CharacterEntityRenderer;
+import ninja.trek.srd.client.render.geckolib.CharacterGeoRenderer;
 import ninja.trek.srd.registry.ModEntities;
 import ninja.trek.srd.registry.ModItems;
 
@@ -21,8 +22,11 @@ public class FiveESrdModClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		FiveESrdMod.LOGGER.info("Initializing 5E SRD client...");
 
-		// Register entity renderers
-		EntityRendererRegistry.register(ModEntities.CHARACTER, CharacterEntityRenderer::new);
+		// Register entity renderers (GeckoLib-based)
+		EntityRendererRegistry.register(ModEntities.CHARACTER, CharacterGeoRenderer::new);
+
+		// Note: CharacterEntityRenderer (old GLTF system) is deprecated
+		// Will be removed in future version once all models are converted to GeckoLib
 
 		// Register client-side packet receivers
 		ninja.trek.srd.network.ClientPacketHandlers.register();

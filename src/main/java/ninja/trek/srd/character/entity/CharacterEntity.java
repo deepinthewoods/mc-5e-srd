@@ -11,13 +11,20 @@ import net.minecraft.entity.attribute.EntityAttributes;
 import net.minecraft.world.World;
 import net.minecraft.util.math.Vec3d;
 import ninja.trek.srd.character.data.*;
+import ninja.trek.srd.character.layer.LayerConfiguration;
 import ninja.trek.srd.combat.*;
 import ninja.trek.srd.util.DiceRoller;
+import software.bernie.geckolib.animatable.GeoEntity;
+import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
+import software.bernie.geckolib.animation.AnimatableManager;
+import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.util.GeckoLibUtil;
 
 /**
  * Base entity for D&D 5e characters with full character sheet data.
+ * Implements GeoEntity for GeckoLib-based rendering and animation.
  */
-public class CharacterEntity extends PathAwareEntity {
+public class CharacterEntity extends PathAwareEntity implements GeoEntity {
 
     // Synced entity data
     private static final TrackedData<Integer> DATA_BODY_INDEX =
@@ -39,6 +46,15 @@ public class CharacterEntity extends PathAwareEntity {
     private boolean playerControlled = false;
     private ninja.trek.srd.character.ai.CombatAIController aiController;
     private Weapon equippedWeapon;
+
+    // GeckoLib animation cache
+    private final AnimatableInstanceCache animationCache = GeckoLibUtil.createInstanceCache(this);
+
+    // Layer configuration for rendering
+    private LayerConfiguration layerConfiguration = new LayerConfiguration();
+
+    // Size scale for retargeting (0.5 - 3.0, default 1.0)
+    private float sizeScale = 1.0f;
 
     public CharacterEntity(EntityType<? extends PathAwareEntity> entityType, World level) {
         super(entityType, level);
@@ -388,6 +404,37 @@ public class CharacterEntity extends PathAwareEntity {
             // and call the appropriate methods to advance the turn
             aiController.tick();
         }
+    }
+
+    // GeckoLib implementation
+
+    @Override
+    public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
+        controllers.add(new AnimationController<>(this, "movement", 0,
+            new ninja.trek.srd.client.render.animation.CharacterAnimationController()::predicate));
+    }
+
+    @Override
+    public AnimatableInstanceCache getAnimatableInstanceCache() {
+        return this.animationCache;
+    }
+
+    // Layer configuration getters/setters
+
+    public LayerConfiguration getLayerConfiguration() {
+        return layerConfiguration;
+    }
+
+    public void setLayerConfiguration(LayerConfiguration layerConfiguration) {
+        this.layerConfiguration = layerConfiguration;
+    }
+
+    public float getSizeScale() {
+        return sizeScale;
+    }
+
+    public void setSizeScale(float sizeScale) {
+        this.sizeScale = Math.max(0.5f, Math.min(3.0f, sizeScale));
     }
 
     // TODO: Implement entity persistence using Minecraft 1.21.10 API
