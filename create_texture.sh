@@ -1,0 +1,15 @@
+#!/bin/bash
+# Create a basic 64x64 PNG texture with a simple gradient
+# This is a base64-encoded simple beige/skin-toned 64x64 PNG
+
+base64 -d << 'EOF' > /home/user/mc-5e-srd/src/main/resources/assets/fiveesrd/textures/entity/character/base/human_default.png
+iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABGdBTUEAALGPC/xhBQAAAAFzUkdC
+AK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAZiS0dE
+AP8A/wD/oL2nkwAAAAlwSFlzAAAN1wAADdcBQiibeAAAACpJREFUeNrt0LENAAAAMDCT/r6HgQ
+8iYHLNzGwPAAAAAAAAAAAAAADgNyeBAAHhX5WLAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDI1LTAx
+LTA3VDE4OjIwOjE4KzAwOjAwkNaZOwAAACV0RVh0ZGF0ZTptb2RpZnkAMjAyNS0wMS0wN1QxOD
+oyMDoxOCswMDowMOGLIYcAAAAodEVYdGRhdGU6dGltZXN0YW1wADIwMjUtMDEtMDdUMTg6MjA6
+MTgrMDA6MDByPRHiAAAAAElFTkSuQmCC
+EOF
+
+echo "Created human_default.png"
