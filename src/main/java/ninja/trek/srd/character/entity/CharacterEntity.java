@@ -419,7 +419,8 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>("movement", 0, this::animationController));
+        controllers.add(new AnimationController<>("movement", 0, this::animationController)
+            .setAnimationSpeed(this::getAnimationSpeed));
     }
 
     /**
@@ -442,6 +443,23 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
 
         // Priority 3: Idle animation
         return animTest.setAndContinue(IDLE);
+    }
+
+    /**
+     * Calculate animation speed based on race and size scale.
+     * Used for locomotion animations to match stride length.
+     */
+    private double getAnimationSpeed(AnimationTest<?> animTest) {
+        // Get the skeleton profile for this race
+        ninja.trek.srd.character.skeleton.SkeletonProfile profile =
+            ninja.trek.srd.character.skeleton.SkeletonProfile.getByRaceName(race.getName());
+
+        // Use the leg length ratio to scale animation speed
+        float legRatio = profile.getLegLengthRatio();
+
+        // Combine with global size scale
+        // Larger creatures walk faster, smaller creatures walk slower
+        return legRatio * sizeScale;
     }
 
     @Override
