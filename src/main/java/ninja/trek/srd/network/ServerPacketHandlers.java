@@ -3,17 +3,18 @@ package ninja.trek.srd.network;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.entity.Entity;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.text.Text;
 import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.character.entity.CharacterEntity;
-import ninja.trek.srd.combat.CombatState;
-import ninja.trek.srd.combat.EncounterManager;
-import ninja.trek.srd.combat.EncounterState;
+import ninja.trek.srd.combat.*;
 import ninja.trek.srd.network.payloads.CreateCharacterPayload;
 import ninja.trek.srd.network.payloads.EndTurnPayload;
 import ninja.trek.srd.network.payloads.SyncCombatStatePayload;
 import ninja.trek.srd.network.payloads.TurnEndPayload;
 import ninja.trek.srd.network.payloads.TurnStartPayload;
 import ninja.trek.srd.network.payloads.UseActionPayload;
+import ninja.trek.srd.util.DiceRoller;
 
 import java.util.UUID;
 
@@ -49,7 +50,8 @@ public class ServerPacketHandlers {
         // Execute on server thread
         context.server().execute(() -> {
             // Validate that it's the player's turn
-            EncounterState encounter = EncounterManager.getInstance(context.server()).getEncounterForEntity(player.getUuid());
+            EncounterManager manager = EncounterManager.getInstance(context.server());
+            EncounterState encounter = manager.getEncounterForEntity(player.getUuid());
             if (encounter == null) {
                 FiveESrdMod.LOGGER.warn("Player {} tried to use action but is not in combat", player.getName().getString());
                 return;
@@ -61,13 +63,189 @@ public class ServerPacketHandlers {
                 return;
             }
 
-            // TODO: Implement specific action logic based on payload.actionType()
-            // For now, just log the action
-            FiveESrdMod.LOGGER.info("Player {} used action: {}", player.getName().getString(), payload.actionType());
+            // Get the acting entity (could be player or a character entity)
+            Entity actingEntity = context.server().getOverworld().getEntity(player.getUuid());
+            if (actingEntity == null) {
+                FiveESrdMod.LOGGER.error("Could not find acting entity for player {}", player.getName().getString());
+                return;
+            }
 
-            // TODO: Update combat state and sync to clients
-            // This will be implemented when we add the full action system
+            // Execute action based on type
+            switch (payload.actionType()) {
+                case ATTACK -> handleAttackAction(payload, actingEntity, encounter, manager, context.server());
+                case DASH -> handleDashAction(actingEntity, encounter, manager, context.server());
+                case DISENGAGE -> handleDisengageAction(actingEntity, encounter, manager, context.server());
+                case DODGE -> handleDodgeAction(actingEntity, encounter, manager, context.server());
+                default -> FiveESrdMod.LOGGER.warn("Unimplemented action type: {}", payload.actionType());
+            }
         });
+    }
+
+    /**
+     * Handle an attack action.
+     */
+    private static void handleAttackAction(UseActionPayload payload, Entity attacker, EncounterState encounter,
+                                           EncounterManager manager, net.minecraft.server.MinecraftServer server) {
+        // Only CharacterEntity can perform attacks (for now)
+        if (!(attacker instanceof CharacterEntity attackerCharacter)) {
+            FiveESrdMod.LOGGER.warn("Non-character entity tried to attack: {}", attacker.getType());
+            return;
+        }
+
+        // Check if attacker has an action available
+        CombatState attackerState = attackerCharacter.getCombatState();
+        if (!attackerState.hasAction()) {
+            FiveESrdMod.LOGGER.warn("Character {} tried to attack but has no action available", attackerCharacter.getName().getString());
+            return;
+        }
+
+        // Get target entity
+        if (payload.targetEntityId().isEmpty()) {
+            FiveESrdMod.LOGGER.warn("Attack action requires a target");
+            return;
+        }
+
+        UUID targetId = payload.targetEntityId().get();
+        Entity targetEntity = server.getOverworld().getEntity(targetId);
+        if (!(targetEntity instanceof CharacterEntity target)) {
+            FiveESrdMod.LOGGER.warn("Invalid attack target: {}", targetId);
+            return;
+        }
+
+        // Perform the attack using 5e rules
+        DiceRoller roller = new DiceRoller();
+        CombatResolver resolver = new CombatResolver(roller);
+
+        Weapon weapon = attackerCharacter.getEquippedWeapon();
+        AttackResult result = resolver.performAttack(
+            weapon,
+            attackerCharacter.getStats(),
+            attackerCharacter.getLevel(),
+            target.getCombatState().armorClass(),
+            true,  // TODO: Check weapon proficiency based on class
+            false, // TODO: Check for advantage
+            false  // TODO: Check for disadvantage
+        );
+
+        FiveESrdMod.LOGGER.info("Attack result: {}", result.description());
+
+        // Consume the action
+        attackerCharacter.setCombatState(attackerState.useAction());
+
+        // Apply damage if hit
+        if (result.isHit()) {
+            CombatState targetState = target.getCombatState();
+            CombatState newTargetState = targetState.takeDamage(result.damageDealt());
+            target.setCombatState(newTargetState);
+
+            // Broadcast damage to all clients
+            manager.syncCombatState(server, targetId, newTargetState);
+
+            // Check for death
+            if (newTargetState.currentHitPoints() <= 0) {
+                handleEntityDeath(target, encounter, manager, server);
+            }
+        }
+
+        // Broadcast attack result as a chat message to encounter participants
+        Text attackMessage = Text.literal(result.description());
+        for (UUID participantId : encounter.getParticipants()) {
+            Entity participant = server.getOverworld().getEntity(participantId);
+            if (participant instanceof ServerPlayerEntity playerEntity) {
+                playerEntity.sendMessage(attackMessage, false);
+            }
+        }
+    }
+
+    /**
+     * Handle Dash action (double movement for this turn).
+     */
+    private static void handleDashAction(Entity entity, EncounterState encounter,
+                                         EncounterManager manager, net.minecraft.server.MinecraftServer server) {
+        if (!(entity instanceof CharacterEntity character)) {
+            return;
+        }
+
+        CombatState state = character.getCombatState();
+        if (!state.hasAction()) {
+            FiveESrdMod.LOGGER.warn("Character {} tried to Dash but has no action available", character.getName().getString());
+            return;
+        }
+
+        // Double remaining movement
+        int currentMovement = state.remainingMovement();
+        CombatState newState = state.useAction().withRemainingMovement(currentMovement * 2);
+        character.setCombatState(newState);
+
+        FiveESrdMod.LOGGER.info("Character {} used Dash action", character.getName().getString());
+    }
+
+    /**
+     * Handle Disengage action (movement doesn't provoke opportunity attacks).
+     */
+    private static void handleDisengageAction(Entity entity, EncounterState encounter,
+                                              EncounterManager manager, net.minecraft.server.MinecraftServer server) {
+        if (!(entity instanceof CharacterEntity character)) {
+            return;
+        }
+
+        CombatState state = character.getCombatState();
+        if (!state.hasAction()) {
+            FiveESrdMod.LOGGER.warn("Character {} tried to Disengage but has no action available", character.getName().getString());
+            return;
+        }
+
+        // TODO: Add a flag to CombatState to track disengaged status
+        // For now, just consume the action
+        character.setCombatState(state.useAction());
+
+        FiveESrdMod.LOGGER.info("Character {} used Disengage action", character.getName().getString());
+    }
+
+    /**
+     * Handle Dodge action (attacks against you have disadvantage).
+     */
+    private static void handleDodgeAction(Entity entity, EncounterState encounter,
+                                          EncounterManager manager, net.minecraft.server.MinecraftServer server) {
+        if (!(entity instanceof CharacterEntity character)) {
+            return;
+        }
+
+        CombatState state = character.getCombatState();
+        if (!state.hasAction()) {
+            FiveESrdMod.LOGGER.warn("Character {} tried to Dodge but has no action available", character.getName().getString());
+            return;
+        }
+
+        // TODO: Add a flag to CombatState to track dodging status
+        // For now, just consume the action
+        character.setCombatState(state.useAction());
+
+        FiveESrdMod.LOGGER.info("Character {} used Dodge action", character.getName().getString());
+    }
+
+    /**
+     * Handle entity death in combat.
+     */
+    private static void handleEntityDeath(CharacterEntity deadEntity, EncounterState encounter,
+                                          EncounterManager manager, net.minecraft.server.MinecraftServer server) {
+        FiveESrdMod.LOGGER.info("Character {} has fallen unconscious/died", deadEntity.getName().getString());
+
+        // TODO: Implement proper death saving throws and unconscious state
+        // For now, just remove from encounter and kill the entity
+        manager.removeFromEncounter(server, encounter.getEncounterId(), deadEntity.getUuid());
+
+        // Broadcast death message
+        Text deathMessage = Text.literal(deadEntity.getName().getString() + " has fallen!");
+        for (UUID participantId : encounter.getParticipants()) {
+            Entity participant = server.getOverworld().getEntity(participantId);
+            if (participant instanceof ServerPlayerEntity playerEntity) {
+                playerEntity.sendMessage(deathMessage, false);
+            }
+        }
+
+        // Check if encounter should end
+        // TODO: Implement proper encounter end conditions
     }
 
     /**

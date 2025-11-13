@@ -4,10 +4,14 @@ import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.ai.goal.Goal;
 import net.minecraft.entity.ai.goal.ActiveTargetGoal;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.text.Text;
+import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.character.entity.CharacterEntity;
-import ninja.trek.srd.combat.EncounterManager;
+import ninja.trek.srd.combat.*;
+import ninja.trek.srd.util.DiceRoller;
 
 import java.util.EnumSet;
+import java.util.UUID;
 
 /**
  * AI controller for character entities during combat.
@@ -89,17 +93,112 @@ public class CombatAIController extends Goal {
     }
 
     /**
-     * Perform a basic melee attack.
+     * Perform a basic melee attack using 5e rules.
      */
     private void performAttack(LivingEntity target) {
-        // TODO: Implement proper 5e attack roll and damage calculation
-        if (character.getEntityWorld() instanceof net.minecraft.server.world.ServerWorld serverWorld) {
-            character.tryAttack(serverWorld, target);
+        // Only attack CharacterEntity targets (for now)
+        if (!(target instanceof CharacterEntity targetCharacter)) {
+            FiveESrdMod.LOGGER.warn("AI tried to attack non-character entity: {}", target.getType());
+            return;
         }
 
-        // Use action
-        var combatState = character.getCombatState();
+        // Check if has action available
+        CombatState combatState = character.getCombatState();
+        if (!combatState.hasAction()) {
+            FiveESrdMod.LOGGER.warn("AI {} tried to attack but has no action", character.getName().getString());
+            return;
+        }
+
+        // Perform 5e attack
+        DiceRoller roller = new DiceRoller();
+        CombatResolver resolver = new CombatResolver(roller);
+
+        Weapon weapon = character.getEquippedWeapon();
+        AttackResult result = resolver.performAttack(
+            weapon,
+            character.getStats(),
+            character.getLevel(),
+            targetCharacter.getCombatState().armorClass(),
+            true,  // AI is assumed proficient with their weapon
+            false, // No advantage
+            false  // No disadvantage
+        );
+
+        FiveESrdMod.LOGGER.info("AI Attack result: {}", result.description());
+
+        // Consume the action
         character.setCombatState(combatState.useAction());
+
+        // Apply damage if hit
+        if (result.isHit()) {
+            CombatState targetState = targetCharacter.getCombatState();
+            CombatState newTargetState = targetState.takeDamage(result.damageDealt());
+            targetCharacter.setCombatState(newTargetState);
+
+            // Check for death
+            if (newTargetState.currentHitPoints() <= 0) {
+                handleTargetDeath(targetCharacter);
+            }
+        }
+
+        // Broadcast attack result
+        broadcastAttackResult(result);
+    }
+
+    /**
+     * Handle target death after AI attack.
+     */
+    private void handleTargetDeath(CharacterEntity deadTarget) {
+        EncounterState encounter = EncounterManager.getInstance()
+            .getEncounterForEntity(character.getUuid());
+
+        if (encounter == null) {
+            return;
+        }
+
+        var server = character.getEntityWorld().getServer();
+        if (server != null) {
+            EncounterManager.getInstance().removeFromEncounter(
+                server,
+                encounter.getEncounterId(),
+                deadTarget.getUuid()
+            );
+
+            // Broadcast death message
+            Text deathMessage = Text.literal(deadTarget.getName().getString() + " has been defeated!");
+            for (UUID participantId : encounter.getParticipants()) {
+                var participant = server.getOverworld().getEntity(participantId);
+                if (participant instanceof net.minecraft.server.network.ServerPlayerEntity playerEntity) {
+                    playerEntity.sendMessage(deathMessage, false);
+                }
+            }
+        }
+    }
+
+    /**
+     * Broadcast attack result to all participants.
+     */
+    private void broadcastAttackResult(AttackResult result) {
+        EncounterState encounter = EncounterManager.getInstance()
+            .getEncounterForEntity(character.getUuid());
+
+        if (encounter == null) {
+            return;
+        }
+
+        var server = character.getEntityWorld().getServer();
+        if (server != null) {
+            Text attackMessage = Text.literal(
+                character.getName().getString() + ": " + result.description()
+            );
+
+            for (UUID participantId : encounter.getParticipants()) {
+                var participant = server.getOverworld().getEntity(participantId);
+                if (participant instanceof net.minecraft.server.network.ServerPlayerEntity playerEntity) {
+                    playerEntity.sendMessage(attackMessage, false);
+                }
+            }
+        }
     }
 
     /**
