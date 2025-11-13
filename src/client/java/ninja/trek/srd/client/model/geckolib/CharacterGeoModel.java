@@ -3,15 +3,19 @@ package ninja.trek.srd.client.model.geckolib;
 import net.minecraft.util.Identifier;
 import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.character.entity.CharacterEntity;
+import ninja.trek.srd.character.layer.LayerConfiguration;
 import ninja.trek.srd.client.render.geckolib.CharacterGeoRenderState;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.base.GeoRenderState;
 
 /**
  * GeckoLib model for CharacterEntity.
  * Handles dynamic model, texture, and animation resource loading based on race and configuration.
+ * Supports body part variants through selective bone visibility.
  *
- * Based on IMPLEMENTATION_PLAN.md Phase 2 specification.
+ * Based on IMPLEMENTATION_PLAN.md Phase 2 and Phase 5 specifications.
  */
 public class CharacterGeoModel extends GeoModel<CharacterEntity> {
 
@@ -47,5 +51,94 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
         // Bone retargeting adapts them to different proportions
         return Identifier.of(FiveESrdMod.MOD_ID,
             "animations/entity/character/locomotion.animation.json");
+    }
+
+    @Override
+    public void applyMolangQueries(CharacterEntity animatable, double currentTick) {
+        super.applyMolangQueries(animatable, currentTick);
+    }
+
+    @Override
+    public void setCustomAnimations(CharacterEntity entity, long instanceId, GeoRenderState renderState) {
+        super.setCustomAnimations(entity, instanceId, renderState);
+
+        if (renderState instanceof CharacterGeoRenderState state) {
+            BakedGeoModel model = getBakedModel(getModelResource(state));
+            LayerConfiguration config = state.layerConfiguration;
+
+            // Apply body part variants visibility
+            applyBodyPartVariants(model, config);
+
+            // Apply visibility rules (e.g., helmet hides hair)
+            applyVisibilityRules(model, config);
+        }
+    }
+
+    /**
+     * Show/hide body part variants based on layer configuration.
+     * Each body part (head, body, arms, legs) can have multiple variants.
+     */
+    private void applyBodyPartVariants(BakedGeoModel model, LayerConfiguration config) {
+        // Head variants
+        showOnlyVariant(model, "head", config.getHeadVariant(), 10);
+
+        // Body variants
+        showOnlyVariant(model, "body", config.getBodyVariant(), 10);
+
+        // Arms variants
+        showOnlyVariant(model, "arms", config.getArmsVariant(), 10);
+
+        // Legs variants
+        showOnlyVariant(model, "legs", config.getLegsVariant(), 10);
+    }
+
+    /**
+     * Show only the specified variant for a body part, hide all others.
+     *
+     * @param model The baked model
+     * @param partName Base name of the body part (e.g., "head", "body")
+     * @param activeVariant The variant index to show (0-based)
+     * @param maxVariants Maximum number of variants to check
+     */
+    private void showOnlyVariant(BakedGeoModel model, String partName, int activeVariant, int maxVariants) {
+        for (int i = 0; i < maxVariants; i++) {
+            String variantName = partName + "_variant_" + i;
+            GeoBone bone = model.getBone(variantName).orElse(null);
+
+            if (bone != null) {
+                // Show only the active variant, hide all others
+                bone.setHidden(i != activeVariant);
+            }
+        }
+
+        // Also check for non-variant base bone (used as variant 0)
+        GeoBone baseBone = model.getBone(partName).orElse(null);
+        if (baseBone != null && activeVariant != 0) {
+            // If there's a base bone and we're not using variant 0, hide it
+            baseBone.setHidden(true);
+        }
+    }
+
+    /**
+     * Apply visibility rules based on equipment and configuration.
+     */
+    private void applyVisibilityRules(BakedGeoModel model, LayerConfiguration config) {
+        // Hide hair if helmet is equipped or explicitly hidden
+        GeoBone hair = model.getBone("hair").orElse(null);
+        if (hair != null) {
+            hair.setHidden(!config.isShowHair());
+        }
+
+        // Hide ears if helmet is equipped or explicitly hidden
+        GeoBone ears = model.getBone("ears").orElse(null);
+        if (ears != null) {
+            ears.setHidden(!config.isShowEars());
+        }
+
+        // Hide cape if not visible
+        GeoBone cape = model.getBone("cape").orElse(null);
+        if (cape != null) {
+            cape.setHidden(!config.isShowCape());
+        }
     }
 }
