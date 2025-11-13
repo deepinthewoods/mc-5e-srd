@@ -91,6 +91,22 @@ public record CharacterStats(
                 wisdom,
                 charisma
             );
+            case ELF -> new CharacterStats(
+                strength,
+                dexterity + 2,
+                constitution,
+                intelligence,
+                wisdom,
+                charisma
+            );
+            case HALFLING -> new CharacterStats(
+                strength,
+                dexterity + 2,
+                constitution,
+                intelligence,
+                wisdom,
+                charisma
+            );
         };
     }
 }

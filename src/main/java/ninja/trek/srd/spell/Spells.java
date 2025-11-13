@@ -39,16 +39,17 @@ public class Spells {
             if (target == null) return false;
 
             // Fire Bolt: 1d10 fire damage
-            int damage = DiceRoller.roll(10);
+            DiceRoller roller = new DiceRoller(world.getRandom());
+            int damage = roller.roll(10);
 
             // Create damage source
             DamageSource damageSource = new DamageSource(
                     world.getRegistryManager()
-                            .get(RegistryKeys.DAMAGE_TYPE)
-                            .entryOf(DamageTypes.ON_FIRE)
+                            .getOrThrow(RegistryKeys.DAMAGE_TYPE)
+                            .getEntry(DamageTypes.ON_FIRE.getValue()).orElseThrow()
             );
 
-            target.damage(damageSource, damage);
+            target.damage(world, damageSource, (float)damage);
             return true;
         }
 
@@ -75,16 +76,17 @@ public class Spells {
             if (target == null) return false;
 
             // Shocking Grasp: 1d8 lightning damage
-            int damage = DiceRoller.roll(8);
+            DiceRoller roller = new DiceRoller(world.getRandom());
+            int damage = roller.roll(8);
 
             // Create damage source
             DamageSource damageSource = new DamageSource(
                     world.getRegistryManager()
-                            .get(RegistryKeys.DAMAGE_TYPE)
-                            .entryOf(DamageTypes.LIGHTNING_BOLT)
+                            .getOrThrow(RegistryKeys.DAMAGE_TYPE)
+                            .getEntry(DamageTypes.LIGHTNING_BOLT.getValue()).orElseThrow()
             );
 
-            target.damage(damageSource, damage);
+            target.damage(world, damageSource, (float)damage);
             // TODO: Target can't take reactions until start of next turn
             return true;
         }
@@ -115,20 +117,21 @@ public class Spells {
             // Magic Missile: 3 darts at 1st level, +1 dart per spell level above 1st
             int darts = 3 + (spellLevel - 1);
             int totalDamage = 0;
+            DiceRoller roller = new DiceRoller(world.getRandom());
 
             for (int i = 0; i < darts; i++) {
                 // Each dart: 1d4 + 1 force damage
-                totalDamage += DiceRoller.roll(4) + 1;
+                totalDamage += roller.roll(4) + 1;
             }
 
             // Create damage source
             DamageSource damageSource = new DamageSource(
                     world.getRegistryManager()
-                            .get(RegistryKeys.DAMAGE_TYPE)
-                            .entryOf(DamageTypes.MAGIC)
+                            .getOrThrow(RegistryKeys.DAMAGE_TYPE)
+                            .getEntry(DamageTypes.MAGIC.getValue()).orElseThrow()
             );
 
-            target.damage(damageSource, totalDamage);
+            target.damage(world, damageSource, (float)totalDamage);
             return true;
         }
 
@@ -155,7 +158,8 @@ public class Spells {
             if (target == null) return false;
 
             // Cure Wounds: 1d8 + spellcasting modifier per spell level
-            int healing = DiceRoller.rollMultiple(spellLevel, 8);
+            DiceRoller roller = new DiceRoller(world.getRandom());
+            int healing = roller.rollMultiple(spellLevel, 8);
             // TODO: Add spellcasting modifier (WIS/CHA depending on class)
 
             float currentHealth = target.getHealth();
@@ -216,20 +220,21 @@ public class Spells {
             // Scorching Ray: 3 rays at 2nd level, +1 ray per spell level above 2nd
             int rays = 3 + (spellLevel - 2);
             int totalDamage = 0;
+            DiceRoller roller = new DiceRoller(world.getRandom());
 
             for (int i = 0; i < rays; i++) {
                 // Each ray: 2d6 fire damage
-                totalDamage += DiceRoller.rollMultiple(2, 6);
+                totalDamage += roller.rollMultiple(2, 6);
             }
 
             // Create damage source
             DamageSource damageSource = new DamageSource(
                     world.getRegistryManager()
-                            .get(RegistryKeys.DAMAGE_TYPE)
-                            .entryOf(DamageTypes.ON_FIRE)
+                            .getOrThrow(RegistryKeys.DAMAGE_TYPE)
+                            .getEntry(DamageTypes.ON_FIRE.getValue()).orElseThrow()
             );
 
-            target.damage(damageSource, totalDamage);
+            target.damage(world, damageSource, (float)totalDamage);
             return true;
         }
 

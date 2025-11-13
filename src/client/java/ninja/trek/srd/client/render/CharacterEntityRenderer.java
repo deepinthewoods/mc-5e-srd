@@ -55,8 +55,8 @@ public class CharacterEntityRenderer extends EntityRenderer<CharacterEntity, Cha
         state.appearance = entity.getAppearance();
 
         // Extract animation data
-        state.limbAngle = entity.limbAngle;
-        state.limbDistance = entity.limbDistance;
+        state.limbAngle = entity.limbAnimator.getAnimationProgress(partialTick);
+        state.limbDistance = entity.limbAnimator.getAmplitude(partialTick);
         state.handSwingProgress = entity.handSwingProgress;
         state.yaw = entity.getYaw();
         state.pitch = entity.getPitch();

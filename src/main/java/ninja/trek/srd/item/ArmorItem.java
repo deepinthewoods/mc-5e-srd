@@ -6,7 +6,7 @@ import net.minecraft.item.tooltip.TooltipType;
 import net.minecraft.text.Text;
 import ninja.trek.srd.equipment.ArmorType;
 
-import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Item representing a piece of armor from the 5e SRD.
@@ -24,19 +24,19 @@ public class ArmorItem extends Item {
     }
 
     @Override
-    public void appendTooltip(ItemStack stack, TooltipContext context, List<Text> tooltip, TooltipType type) {
-        super.appendTooltip(stack, context, tooltip, type);
+    public void appendTooltip(ItemStack stack, TooltipContext context, net.minecraft.component.type.TooltipDisplayComponent displayComponent, Consumer<Text> tooltip, TooltipType type) {
+        super.appendTooltip(stack, context, displayComponent, tooltip, type);
 
         // Add armor information
-        tooltip.add(Text.literal("AC: " + armorType.getBaseAC()));
-        tooltip.add(Text.literal("Type: " + armorType.getCategory().name()));
+        tooltip.accept(Text.literal("AC: " + armorType.getBaseAC()));
+        tooltip.accept(Text.literal("Type: " + armorType.getCategory().name()));
 
         if (armorType.hasStealthDisadvantage()) {
-            tooltip.add(Text.literal("§cStealth Disadvantage"));
+            tooltip.accept(Text.literal("§cStealth Disadvantage"));
         }
 
         if (armorType.hasStrengthRequirement()) {
-            tooltip.add(Text.literal("§eStrength Requirement"));
+            tooltip.accept(Text.literal("§eStrength Requirement"));
         }
     }
 }
