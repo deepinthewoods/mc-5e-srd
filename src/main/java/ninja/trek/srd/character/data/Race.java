@@ -5,7 +5,7 @@ import net.minecraft.util.StringIdentifiable;
 
 /**
  * Represents playable races from the 5e SRD.
- * Initial implementation includes Human and Dwarf.
+ * Includes Human, Dwarf, Elf, and Halfling.
  */
 public enum Race implements StringIdentifiable {
     HUMAN(
@@ -25,6 +25,24 @@ public enum Race implements StringIdentifiable {
         1,  // dwarf arms
         2,  // dwarf head
         true // darkvision 60ft
+    ),
+    ELF(
+        "elf",
+        6,  // 30 feet = 6 blocks
+        2,  // elf body (tall, slender)
+        2,  // elf legs
+        2,  // elf arms
+        4,  // elf head (pointed ears)
+        true // darkvision 60ft
+    ),
+    HALFLING(
+        "halfling",
+        5,  // 25 feet = 5 blocks (slow speed)
+        3,  // halfling body (small)
+        3,  // halfling legs (short)
+        3,  // halfling arms
+        6,  // halfling head (small, child-like features)
+        false // no darkvision
     );
 
     public static final Codec<Race> CODEC = StringIdentifiable.createCodec(Race::values);
