@@ -407,8 +407,8 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
 - ✅ **Combat Action Execution** (updated `network/ServerPacketHandlers.java`)
   - Attack action with full 5e resolution
   - Dash action (doubles movement)
-  - Disengage action (prevents opportunity attacks - placeholder)
-  - Dodge action (gives disadvantage to attackers - placeholder)
+  - Disengage action (prevents opportunity attacks)
+  - Dodge action (gives disadvantage to attackers)
   - Action economy validation and resource consumption
 
 - ✅ **AI Combat Enhancement** (updated `character/ai/CombatAIController.java`)
@@ -416,12 +416,31 @@ This document tracks the implementation progress of the D&D 5e SRD Fabric mod as
   - Broadcasts attack results to all participants
   - Handles target death and encounter cleanup
   - Automatic turn execution for NPCs
+  - **Advanced AI tactics:**
+    - Target prioritization (low HP, close proximity)
+    - HP-based decision making (retreat when low health)
+    - Tactical action usage (Dash to close distance, Disengage to retreat, Dodge for defense)
+    - Weapon range awareness
+
+- ✅ **Disengage Action Implementation** (updated `combat/CombatState.java`, `network/ServerPacketHandlers.java`, `combat/OpportunityAttackHandler.java`)
+  - Added `isDisengaged` flag to CombatState
+  - Prevents opportunity attacks when moving
+  - Cleared at the start of each turn
+  - AI uses Disengage when retreating from melee while low on HP
+
+- ✅ **Dodge Action Implementation** (updated `combat/CombatState.java`, `network/ServerPacketHandlers.java`)
+  - Added `isDodging` flag to CombatState
+  - Gives attackers disadvantage on attack rolls
+  - Cleared at the start of each turn
+  - AI uses Dodge as defensive option when low on HP
+
+- ✅ **Critical Hit Detection for Death Saves** (updated `combat/CombatState.java`, all attack handlers)
+  - Critical hits against unconscious targets now count as 2 failed death saves
+  - Properly implemented in regular attacks, opportunity attacks, and AI attacks
+  - Follows 5e SRD rules for critical hits on unconscious creatures
 
 #### Remaining
-- ⏳ Advanced AI tactics (positioning, target prioritization, ability usage)
-- ⏳ Disengage flag in CombatState (currently just consumes action)
-- ⏳ Dodge flag in CombatState (currently just consumes action)
-- ⏳ Critical hit detection for opportunity attacks (2 death save failures)
+- None - Phase 4 fully completed!
 
 
 
@@ -623,13 +642,15 @@ src/client/java/ninja/trek/srd/
 
 4. ~~Implement complete 5e attack and damage calculation~~ ✅ COMPLETED (Phase 4)
 
-5. Add full GLTF model loading with Assimp (Phase 5)
+5. ~~Implement advanced AI tactics~~ ✅ COMPLETED (Phase 4)
 
-6. Add spell system foundation (Phase 5)
+6. ~~Add Disengage/Dodge status effects to CombatState~~ ✅ COMPLETED (Phase 4)
 
-7. Implement advanced AI tactics (Phase 4 polish)
+7. ~~Implement critical hit detection for death saves~~ ✅ COMPLETED (Phase 4)
 
-8. Add Disengage/Dodge status effects to CombatState (Phase 4 polish)
+8. Add full GLTF model loading with Assimp (Phase 5)
+
+9. Add spell system foundation (Phase 5)
 
 ## Notes
 

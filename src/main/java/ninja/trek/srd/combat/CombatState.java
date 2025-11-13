@@ -19,7 +19,9 @@ public record CombatState(
     int currentHitPoints,
     int maxHitPoints,
     boolean isUnconscious,
-    DeathSaves deathSaves
+    DeathSaves deathSaves,
+    boolean isDisengaged,
+    boolean isDodging
 ) {
     public static final Codec<CombatState> CODEC = RecordCodecBuilder.create(instance ->
         instance.group(
@@ -34,7 +36,9 @@ public record CombatState(
             Codec.INT.fieldOf("current_hit_points").forGetter(CombatState::currentHitPoints),
             Codec.INT.fieldOf("max_hit_points").forGetter(CombatState::maxHitPoints),
             Codec.BOOL.fieldOf("is_unconscious").forGetter(CombatState::isUnconscious),
-            DeathSaves.CODEC.fieldOf("death_saves").forGetter(CombatState::deathSaves)
+            DeathSaves.CODEC.fieldOf("death_saves").forGetter(CombatState::deathSaves),
+            Codec.BOOL.fieldOf("is_disengaged").forGetter(CombatState::isDisengaged),
+            Codec.BOOL.fieldOf("is_dodging").forGetter(CombatState::isDodging)
         ).apply(instance, CombatState::new)
     );
 
@@ -54,7 +58,9 @@ public record CombatState(
             maxHp,
             maxHp,
             false,
-            DeathSaves.createDefault()
+            DeathSaves.createDefault(),
+            false,
+            false
         );
     }
 
@@ -74,7 +80,9 @@ public record CombatState(
             this.currentHitPoints,
             this.maxHitPoints,
             this.isUnconscious,
-            this.deathSaves
+            this.deathSaves,
+            false,  // Clear Disengage at start of new turn
+            false   // Clear Dodge at start of new turn
         );
     }
 
@@ -94,7 +102,9 @@ public record CombatState(
             this.currentHitPoints,
             this.maxHitPoints,
             this.isUnconscious,
-            this.deathSaves
+            this.deathSaves,
+            this.isDisengaged,
+            this.isDodging
         );
     }
 
@@ -114,7 +124,9 @@ public record CombatState(
             this.currentHitPoints,
             this.maxHitPoints,
             this.isUnconscious,
-            this.deathSaves
+            this.deathSaves,
+            this.isDisengaged,
+            this.isDodging
         );
     }
 
@@ -134,7 +146,9 @@ public record CombatState(
             this.currentHitPoints,
             this.maxHitPoints,
             this.isUnconscious,
-            this.deathSaves
+            this.deathSaves,
+            this.isDisengaged,
+            this.isDodging
         );
     }
 
@@ -154,7 +168,9 @@ public record CombatState(
             this.currentHitPoints,
             this.maxHitPoints,
             this.isUnconscious,
-            this.deathSaves
+            this.deathSaves,
+            this.isDisengaged,
+            this.isDodging
         );
     }
 
@@ -164,14 +180,32 @@ public record CombatState(
      * If already unconscious, each hit counts as a failed death save.
      */
     public CombatState takeDamage(int damage) {
+        return takeDamage(damage, false);
+    }
+
+    /**
+     * Take damage with critical hit handling.
+     * If damage reduces HP to 0, entity becomes unconscious.
+     * If already unconscious, each hit counts as a failed death save.
+     * Critical hits against unconscious targets count as 2 failed death saves.
+     *
+     * @param damage The amount of damage to take
+     * @param isCritical Whether the damage was from a critical hit
+     * @return New combat state with damage applied
+     */
+    public CombatState takeDamage(int damage, boolean isCritical) {
         int newHp = Math.max(0, this.currentHitPoints - damage);
         boolean nowUnconscious = newHp == 0;
 
         // If already unconscious and taking damage, add death save failures
         DeathSaves newDeathSaves = this.deathSaves;
         if (this.isUnconscious && damage > 0) {
-            // TODO: Check if damage was from a critical hit (2 failures instead of 1)
-            newDeathSaves = newDeathSaves.addFailure();
+            // Critical hits against unconscious targets count as 2 failed death saves
+            if (isCritical) {
+                newDeathSaves = newDeathSaves.addFailures(2);
+            } else {
+                newDeathSaves = newDeathSaves.addFailure();
+            }
         } else if (nowUnconscious && !this.isUnconscious) {
             // Just became unconscious, reset death saves
             newDeathSaves = DeathSaves.createDefault();
@@ -195,7 +229,9 @@ public record CombatState(
             newHp,
             this.maxHitPoints,
             nowUnconscious,
-            newDeathSaves
+            newDeathSaves,
+            this.isDisengaged,
+            this.isDodging
         );
     }
 
@@ -220,7 +256,9 @@ public record CombatState(
             newHp,
             this.maxHitPoints,
             stillUnconscious,
-            newDeathSaves
+            newDeathSaves,
+            this.isDisengaged,
+            this.isDodging
         );
     }
 
@@ -261,7 +299,9 @@ public record CombatState(
             this.currentHitPoints,
             this.maxHitPoints,
             this.isUnconscious,
-            newDeathSaves
+            newDeathSaves,
+            this.isDisengaged,
+            this.isDodging
         );
     }
 
@@ -285,7 +325,9 @@ public record CombatState(
             this.currentHitPoints,
             this.maxHitPoints,
             this.isUnconscious,
-            this.deathSaves.stabilize()
+            this.deathSaves.stabilize(),
+            this.isDisengaged,
+            this.isDodging
         );
     }
 
@@ -300,5 +342,51 @@ public record CombatState(
         // Otherwise, check if within remaining movement range
         double distanceFromStart = this.turnStartPosition.distanceTo(targetPos);
         return distanceFromStart <= this.remainingMovement;
+    }
+
+    /**
+     * Set the disengaged flag.
+     * Used when the Disengage action is taken to prevent opportunity attacks.
+     */
+    public CombatState setDisengaged(boolean disengaged) {
+        return new CombatState(
+            this.inCombat,
+            this.initiative,
+            this.turnStartPosition,
+            this.remainingMovement,
+            this.hasAction,
+            this.hasBonusAction,
+            this.hasReaction,
+            this.armorClass,
+            this.currentHitPoints,
+            this.maxHitPoints,
+            this.isUnconscious,
+            this.deathSaves,
+            disengaged,
+            this.isDodging
+        );
+    }
+
+    /**
+     * Set the dodging flag.
+     * Used when the Dodge action is taken to give attackers disadvantage.
+     */
+    public CombatState setDodging(boolean dodging) {
+        return new CombatState(
+            this.inCombat,
+            this.initiative,
+            this.turnStartPosition,
+            this.remainingMovement,
+            this.hasAction,
+            this.hasBonusAction,
+            this.hasReaction,
+            this.armorClass,
+            this.currentHitPoints,
+            this.maxHitPoints,
+            this.isUnconscious,
+            this.deathSaves,
+            this.isDisengaged,
+            dodging
+        );
     }
 }
