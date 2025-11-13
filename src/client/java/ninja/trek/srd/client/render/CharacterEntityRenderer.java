@@ -63,6 +63,7 @@ public class CharacterEntityRenderer extends EntityRenderer<CharacterEntity, Cha
         state.bodyYaw = entity.bodyYaw;
     }
 
+    @Override
     public void render(
             CharacterRenderState state,
             MatrixStack matrices,

@@ -2,8 +2,8 @@ package ninja.trek.srd.client.render.geckolib.layer;
 
 import net.minecraft.client.render.OverlayTexture;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.VertexConsumerProvider;
+import net.minecraft.client.render.command.OrderedRenderCommandQueue;
+import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Identifier;
 import ninja.trek.srd.FiveESrdMod;
@@ -14,7 +14,7 @@ import ninja.trek.srd.client.render.geckolib.CharacterGeoRenderState;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.renderer.layer.GeoRenderLayer;
-import software.bernie.geckolib.renderer.GeoRenderer;
+import software.bernie.geckolib.renderer.base.GeoRenderer;
 
 /**
  * Equipment layer renderer for character entities.
@@ -22,19 +22,20 @@ import software.bernie.geckolib.renderer.GeoRenderer;
  *
  * Based on IMPLEMENTATION_PLAN.md Phase 6 specification.
  */
-public class EquipmentLayerRenderer extends GeoRenderLayer<CharacterEntity, CharacterGeoRenderState> {
+public class EquipmentLayerRenderer extends GeoRenderLayer<CharacterEntity, Void, CharacterGeoRenderState> {
 
     // Inflation offset to prevent Z-fighting with base body
     private static final float ARMOR_INFLATION = 0.05f;
 
-    public EquipmentLayerRenderer(GeoRenderer<CharacterEntity, CharacterGeoRenderState> renderer) {
+    public EquipmentLayerRenderer(GeoRenderer<CharacterEntity, Void, CharacterGeoRenderState> renderer) {
         super(renderer);
     }
 
     @Override
-    public void render(MatrixStack poseStack, VertexConsumerProvider bufferSource,
-                       int packedLight, CharacterGeoRenderState renderState,
-                       float partialTick, float limbSwing, float limbSwingAmount) {
+    public void preRender(CharacterGeoRenderState renderState, MatrixStack poseStack, BakedGeoModel bakedModel,
+                          OrderedRenderCommandQueue renderQueue, CameraRenderState cameraState,
+                          int packedLight, int packedOverlay, int renderColor, boolean reRender) {
+        super.preRender(renderState, poseStack, bakedModel, renderQueue, cameraState, packedLight, packedOverlay, renderColor, reRender);
 
         LayerConfiguration config = renderState.layerConfiguration;
 
@@ -46,7 +47,7 @@ public class EquipmentLayerRenderer extends GeoRenderLayer<CharacterEntity, Char
         // Render each equipment piece
         for (EquipmentLayerSlot slot : EquipmentLayerSlot.values()) {
             if (config.hasEquipmentInSlot(slot)) {
-                renderEquipmentPiece(poseStack, bufferSource, packedLight, renderState, slot, partialTick);
+                renderEquipmentPiece(poseStack, packedLight, renderState, slot);
             }
         }
     }
@@ -54,9 +55,8 @@ public class EquipmentLayerRenderer extends GeoRenderLayer<CharacterEntity, Char
     /**
      * Render a single equipment piece.
      */
-    private void renderEquipmentPiece(MatrixStack poseStack, VertexConsumerProvider bufferSource,
-                                       int packedLight, CharacterGeoRenderState renderState,
-                                       EquipmentLayerSlot slot, float partialTick) {
+    private void renderEquipmentPiece(MatrixStack poseStack, int packedLight, CharacterGeoRenderState renderState,
+                                       EquipmentLayerSlot slot) {
 
         String equipmentModel = renderState.layerConfiguration.getEquipmentModel(slot);
         if (equipmentModel == null) {

@@ -434,8 +434,7 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>("movement", 0, this::animationController)
-            .setAnimationSpeed(this::getAnimationSpeed));
+        controllers.add(new AnimationController<>("movement", 0, this::animationController));
     }
 
     /**

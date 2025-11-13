@@ -145,7 +145,8 @@ public class DynamicTextureComposer {
             Identifier composedId = generateComposedTextureId();
 
             // Register the composed texture
-            NativeImageBackedTexture texture = new NativeImageBackedTexture(compositeImage);
+            // In 1.21.10, NativeImageBackedTexture constructor requires a Supplier<String> for error reporting
+            NativeImageBackedTexture texture = new NativeImageBackedTexture(() -> composedId.toString(), compositeImage);
             textureManager.registerTexture(composedId, texture);
 
             LOGGER.debug("Successfully composed texture: {}", composedId);
@@ -190,9 +191,9 @@ public class DynamicTextureComposer {
 
         for (int y = 0; y < height; y++) {
             for (int x = 0; x < width; x++) {
-                int layerColor = layer.getColor(x, y);
+                int layerColor = layer.getColorArgb(x, y);
 
-                // Extract ABGR components
+                // Extract ARGB components (note: getColorArgb returns ARGB format)
                 int layerAlpha = (layerColor >> 24) & 0xFF;
 
                 // Skip fully transparent pixels
@@ -200,39 +201,39 @@ public class DynamicTextureComposer {
                     continue;
                 }
 
-                int baseColor = base.getColor(x, y);
+                int baseColor = base.getColorArgb(x, y);
 
                 // Alpha blending
                 if (layerAlpha == 255) {
                     // Fully opaque - just copy
-                    base.setColor(x, y, layerColor);
+                    base.setColorArgb(x, y, layerColor);
                 } else {
                     // Semi-transparent - blend
                     int blended = alphaBlend(baseColor, layerColor);
-                    base.setColor(x, y, blended);
+                    base.setColorArgb(x, y, blended);
                 }
             }
         }
     }
 
     /**
-     * Perform alpha blending between two ABGR colors.
+     * Perform alpha blending between two ARGB colors.
      *
-     * @param bottom Bottom layer color (ABGR)
-     * @param top Top layer color (ABGR)
-     * @return Blended color (ABGR)
+     * @param bottom Bottom layer color (ARGB)
+     * @param top Top layer color (ARGB)
+     * @return Blended color (ARGB)
      */
     private int alphaBlend(int bottom, int top) {
-        // Extract components (ABGR format)
+        // Extract components (ARGB format: alpha, red, green, blue)
         int topA = (top >> 24) & 0xFF;
-        int topB = (top >> 16) & 0xFF;
+        int topR = (top >> 16) & 0xFF;
         int topG = (top >> 8) & 0xFF;
-        int topR = top & 0xFF;
+        int topB = top & 0xFF;
 
         int bottomA = (bottom >> 24) & 0xFF;
-        int bottomB = (bottom >> 16) & 0xFF;
+        int bottomR = (bottom >> 16) & 0xFF;
         int bottomG = (bottom >> 8) & 0xFF;
-        int bottomR = bottom & 0xFF;
+        int bottomB = bottom & 0xFF;
 
         // Alpha blending formula
         float alpha = topA / 255.0f;
@@ -249,8 +250,8 @@ public class DynamicTextureComposer {
         outB = Math.min(255, Math.max(0, outB));
         outA = Math.min(255, Math.max(0, outA));
 
-        // Pack back to ABGR
-        return (outA << 24) | (outB << 16) | (outG << 8) | outR;
+        // Pack back to ARGB
+        return (outA << 24) | (outR << 16) | (outG << 8) | outB;
     }
 
     /**

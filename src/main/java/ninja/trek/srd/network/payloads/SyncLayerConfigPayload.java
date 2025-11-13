@@ -140,27 +140,58 @@ public record SyncLayerConfigPayload(
         }
     };
 
-    public static final PacketCodec<RegistryByteBuf, SyncLayerConfigPayload> CODEC = PacketCodec.tuple(
-        Uuids.PACKET_CODEC, SyncLayerConfigPayload::entityId,
-        PacketCodecs.VAR_INT, SyncLayerConfigPayload::bodyVariant,
-        PacketCodecs.VAR_INT, SyncLayerConfigPayload::legsVariant,
-        PacketCodecs.VAR_INT, SyncLayerConfigPayload::armsVariant,
-        PacketCodecs.VAR_INT, SyncLayerConfigPayload::headVariant,
-        NULLABLE_STRING_CODEC, SyncLayerConfigPayload::helmetModel,
-        NULLABLE_STRING_CODEC, SyncLayerConfigPayload::chestArmorModel,
-        NULLABLE_STRING_CODEC, SyncLayerConfigPayload::legArmorModel,
-        NULLABLE_STRING_CODEC, SyncLayerConfigPayload::bootArmorModel,
-        NULLABLE_STRING_CODEC, SyncLayerConfigPayload::capeModel,
-        NULLABLE_STRING_CODEC, SyncLayerConfigPayload::mainHandModel,
-        NULLABLE_STRING_CODEC, SyncLayerConfigPayload::offHandModel,
-        PacketCodecs.STRING, SyncLayerConfigPayload::skinTexture,
-        PacketCodecs.STRING, SyncLayerConfigPayload::clothingTexture,
-        STRING_MAP_CODEC, SyncLayerConfigPayload::armorTextures,
-        PacketCodecs.BOOLEAN, SyncLayerConfigPayload::showHair,
-        PacketCodecs.BOOLEAN, SyncLayerConfigPayload::showEars,
-        PacketCodecs.BOOLEAN, SyncLayerConfigPayload::showCape,
-        SyncLayerConfigPayload::new
-    );
+    public static final PacketCodec<RegistryByteBuf, SyncLayerConfigPayload> CODEC = new PacketCodec<>() {
+        @Override
+        public SyncLayerConfigPayload decode(RegistryByteBuf buf) {
+            UUID entityId = Uuids.PACKET_CODEC.decode(buf);
+            int bodyVariant = PacketCodecs.VAR_INT.decode(buf);
+            int legsVariant = PacketCodecs.VAR_INT.decode(buf);
+            int armsVariant = PacketCodecs.VAR_INT.decode(buf);
+            int headVariant = PacketCodecs.VAR_INT.decode(buf);
+            String helmetModel = NULLABLE_STRING_CODEC.decode(buf);
+            String chestArmorModel = NULLABLE_STRING_CODEC.decode(buf);
+            String legArmorModel = NULLABLE_STRING_CODEC.decode(buf);
+            String bootArmorModel = NULLABLE_STRING_CODEC.decode(buf);
+            String capeModel = NULLABLE_STRING_CODEC.decode(buf);
+            String mainHandModel = NULLABLE_STRING_CODEC.decode(buf);
+            String offHandModel = NULLABLE_STRING_CODEC.decode(buf);
+            String skinTexture = PacketCodecs.STRING.decode(buf);
+            String clothingTexture = PacketCodecs.STRING.decode(buf);
+            Map<String, String> armorTextures = STRING_MAP_CODEC.decode(buf);
+            boolean showHair = PacketCodecs.BOOLEAN.decode(buf);
+            boolean showEars = PacketCodecs.BOOLEAN.decode(buf);
+            boolean showCape = PacketCodecs.BOOLEAN.decode(buf);
+
+            return new SyncLayerConfigPayload(
+                entityId, bodyVariant, legsVariant, armsVariant, headVariant,
+                helmetModel, chestArmorModel, legArmorModel, bootArmorModel, capeModel,
+                mainHandModel, offHandModel, skinTexture, clothingTexture, armorTextures,
+                showHair, showEars, showCape
+            );
+        }
+
+        @Override
+        public void encode(RegistryByteBuf buf, SyncLayerConfigPayload payload) {
+            Uuids.PACKET_CODEC.encode(buf, payload.entityId);
+            PacketCodecs.VAR_INT.encode(buf, payload.bodyVariant);
+            PacketCodecs.VAR_INT.encode(buf, payload.legsVariant);
+            PacketCodecs.VAR_INT.encode(buf, payload.armsVariant);
+            PacketCodecs.VAR_INT.encode(buf, payload.headVariant);
+            NULLABLE_STRING_CODEC.encode(buf, payload.helmetModel);
+            NULLABLE_STRING_CODEC.encode(buf, payload.chestArmorModel);
+            NULLABLE_STRING_CODEC.encode(buf, payload.legArmorModel);
+            NULLABLE_STRING_CODEC.encode(buf, payload.bootArmorModel);
+            NULLABLE_STRING_CODEC.encode(buf, payload.capeModel);
+            NULLABLE_STRING_CODEC.encode(buf, payload.mainHandModel);
+            NULLABLE_STRING_CODEC.encode(buf, payload.offHandModel);
+            PacketCodecs.STRING.encode(buf, payload.skinTexture);
+            PacketCodecs.STRING.encode(buf, payload.clothingTexture);
+            STRING_MAP_CODEC.encode(buf, payload.armorTextures);
+            PacketCodecs.BOOLEAN.encode(buf, payload.showHair);
+            PacketCodecs.BOOLEAN.encode(buf, payload.showEars);
+            PacketCodecs.BOOLEAN.encode(buf, payload.showCape);
+        }
+    };
 
     @Override
     public Id<? extends CustomPayload> getId() {
