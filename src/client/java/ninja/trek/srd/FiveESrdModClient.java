@@ -7,6 +7,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.ActionResult;
 import ninja.trek.srd.client.gui.ActionHotbarOverlay;
 import ninja.trek.srd.client.gui.CharacterCreationScreen;
+import ninja.trek.srd.client.model.CharacterModelLoader;
 import ninja.trek.srd.client.render.CharacterEntityRenderer;
 import ninja.trek.srd.registry.ModEntities;
 import ninja.trek.srd.registry.ModItems;
@@ -39,7 +40,9 @@ public class FiveESrdModClient implements ClientModInitializer {
 		// Register combat HUD overlay + bindings
 		ActionHotbarOverlay.register();
 
-		// TODO: Register model loader for character parts
+		// Register model loader for character parts
+		CharacterModelLoader.init();
+
 		// TODO: Register additional keybindings (e.g., targeting, end turn)
 
 		FiveESrdMod.LOGGER.info("5E SRD client initialized successfully!");

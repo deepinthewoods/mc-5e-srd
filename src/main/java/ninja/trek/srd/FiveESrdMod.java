@@ -6,6 +6,7 @@ import ninja.trek.srd.registry.ModBlocks;
 import ninja.trek.srd.registry.ModDataComponents;
 import ninja.trek.srd.registry.ModEntities;
 import ninja.trek.srd.combat.EncounterManager;
+import ninja.trek.srd.spell.Spells;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +29,7 @@ public class FiveESrdMod implements ModInitializer {
 		ModEntities.initialize();
 		ninja.trek.srd.registry.ModCreativeTabs.initialize();
 		ninja.trek.srd.registry.ModNetworking.initialize();
+		Spells.init();
 
 		// Register server-side packet receivers
 		ninja.trek.srd.network.ServerPacketHandlers.register();
