@@ -20,7 +20,7 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
         // Use a default model for all characters
         // TODO: Implement custom RenderState to store race information
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "geckolib/models/entity/character/human/human_body.geo.json");
+            "geo/entity/character/human/human_body.geo.json");
     }
 
     @Override
@@ -37,6 +37,6 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
         // All humanoids share the same base animations
         // Bone retargeting adapts them to different proportions
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "geckolib/animations/entity/character/locomotion.animation.json");
+            "animations/entity/character/locomotion.animation.json");
     }
 }
