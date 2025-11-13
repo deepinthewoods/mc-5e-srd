@@ -113,7 +113,7 @@ public class ServerPacketHandlers {
         }
 
         // Perform the attack using 5e rules
-        DiceRoller roller = new DiceRoller();
+        DiceRoller roller = new DiceRoller(attackerCharacter.getEntityWorld().getRandom());
         CombatResolver resolver = new CombatResolver(roller);
 
         Weapon weapon = attackerCharacter.getEquippedWeapon();
@@ -149,8 +149,8 @@ public class ServerPacketHandlers {
 
         // Broadcast attack result as a chat message to encounter participants
         Text attackMessage = Text.literal(result.description());
-        for (UUID participantId : encounter.getParticipants()) {
-            Entity participant = server.getOverworld().getEntity(participantId);
+        for (var tracker : encounter.getTurnOrder()) {
+            Entity participant = server.getOverworld().getEntity(tracker.entityId());
             if (participant instanceof ServerPlayerEntity playerEntity) {
                 playerEntity.sendMessage(attackMessage, false);
             }
@@ -233,12 +233,12 @@ public class ServerPacketHandlers {
 
         // TODO: Implement proper death saving throws and unconscious state
         // For now, just remove from encounter and kill the entity
-        manager.removeFromEncounter(server, encounter.getEncounterId(), deadEntity.getUuid());
+        manager.removeCombatant(deadEntity.getUuid());
 
         // Broadcast death message
         Text deathMessage = Text.literal(deadEntity.getName().getString() + " has fallen!");
-        for (UUID participantId : encounter.getParticipants()) {
-            Entity participant = server.getOverworld().getEntity(participantId);
+        for (var tracker : encounter.getTurnOrder()) {
+            Entity participant = server.getOverworld().getEntity(tracker.entityId());
             if (participant instanceof ServerPlayerEntity playerEntity) {
                 playerEntity.sendMessage(deathMessage, false);
             }

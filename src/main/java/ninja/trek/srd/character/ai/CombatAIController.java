@@ -110,7 +110,7 @@ public class CombatAIController extends Goal {
         }
 
         // Perform 5e attack
-        DiceRoller roller = new DiceRoller();
+        DiceRoller roller = new DiceRoller(character.getEntityWorld().getRandom());
         CombatResolver resolver = new CombatResolver(roller);
 
         Weapon weapon = character.getEquippedWeapon();
@@ -158,16 +158,12 @@ public class CombatAIController extends Goal {
 
         var server = character.getEntityWorld().getServer();
         if (server != null) {
-            EncounterManager.getInstance().removeFromEncounter(
-                server,
-                encounter.getEncounterId(),
-                deadTarget.getUuid()
-            );
+            EncounterManager.getInstance().removeCombatant(deadTarget.getUuid());
 
             // Broadcast death message
             Text deathMessage = Text.literal(deadTarget.getName().getString() + " has been defeated!");
-            for (UUID participantId : encounter.getParticipants()) {
-                var participant = server.getOverworld().getEntity(participantId);
+            for (var tracker : encounter.getTurnOrder()) {
+                var participant = server.getOverworld().getEntity(tracker.entityId());
                 if (participant instanceof net.minecraft.server.network.ServerPlayerEntity playerEntity) {
                     playerEntity.sendMessage(deathMessage, false);
                 }
@@ -192,8 +188,8 @@ public class CombatAIController extends Goal {
                 character.getName().getString() + ": " + result.description()
             );
 
-            for (UUID participantId : encounter.getParticipants()) {
-                var participant = server.getOverworld().getEntity(participantId);
+            for (var tracker : encounter.getTurnOrder()) {
+                var participant = server.getOverworld().getEntity(tracker.entityId());
                 if (participant instanceof net.minecraft.server.network.ServerPlayerEntity playerEntity) {
                     playerEntity.sendMessage(attackMessage, false);
                 }

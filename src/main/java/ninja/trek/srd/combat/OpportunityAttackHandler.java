@@ -49,12 +49,12 @@ public class OpportunityAttackHandler {
         }
 
         // Check all other participants for opportunity attacks
-        for (UUID participantId : encounter.getParticipants()) {
-            if (participantId.equals(movingEntity.getUuid())) {
+        for (var tracker : encounter.getTurnOrder()) {
+            if (tracker.entityId().equals(movingEntity.getUuid())) {
                 continue; // Skip self
             }
 
-            Entity entity = server.getOverworld().getEntity(participantId);
+            Entity entity = server.getOverworld().getEntity(tracker.entityId());
             if (!(entity instanceof CharacterEntity attacker)) {
                 continue;
             }
@@ -90,7 +90,7 @@ public class OpportunityAttackHandler {
         Weapon weapon = attacker.getEquippedWeapon();
         double reach = weapon.getReach() + 0.5; // Add 0.5 for entity width
 
-        Vec3d attackerPos = attacker.getPos();
+        Vec3d attackerPos = new Vec3d(attacker.getX(), attacker.getY(), attacker.getZ());
 
         // Check if moving entity was in reach before
         double oldDistance = attackerPos.distanceTo(oldPosition);
@@ -124,7 +124,7 @@ public class OpportunityAttackHandler {
             attacker.getName().getString(), target.getName().getString());
 
         // Perform the attack
-        DiceRoller roller = new DiceRoller();
+        DiceRoller roller = new DiceRoller(attacker.getEntityWorld().getRandom());
         CombatResolver resolver = new CombatResolver(roller);
 
         Weapon weapon = attacker.getEquippedWeapon();
@@ -163,8 +163,8 @@ public class OpportunityAttackHandler {
             result.description()
         );
 
-        for (UUID participantId : encounter.getParticipants()) {
-            Entity participant = server.getOverworld().getEntity(participantId);
+        for (var tracker : encounter.getTurnOrder()) {
+            Entity participant = server.getOverworld().getEntity(tracker.entityId());
             if (participant instanceof ServerPlayerEntity playerEntity) {
                 playerEntity.sendMessage(opportunityMessage, false);
             }
@@ -179,19 +179,15 @@ public class OpportunityAttackHandler {
         FiveESrdMod.LOGGER.info("Character {} was killed by an opportunity attack!", deadEntity.getName().getString());
 
         // Remove from encounter
-        EncounterManager.getInstance().removeFromEncounter(
-            server,
-            encounter.getEncounterId(),
-            deadEntity.getUuid()
-        );
+        EncounterManager.getInstance().removeCombatant(deadEntity.getUuid());
 
         // Broadcast death message
         Text deathMessage = Text.literal(
             deadEntity.getName().getString() + " was struck down while fleeing!"
         );
 
-        for (UUID participantId : encounter.getParticipants()) {
-            Entity participant = server.getOverworld().getEntity(participantId);
+        for (var tracker : encounter.getTurnOrder()) {
+            Entity participant = server.getOverworld().getEntity(tracker.entityId());
             if (participant instanceof ServerPlayerEntity playerEntity) {
                 playerEntity.sendMessage(deathMessage, false);
             }

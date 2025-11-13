@@ -13,6 +13,7 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.combat.EncounterManager;
 import ninja.trek.srd.combat.InitiativeTracker;
+import ninja.trek.srd.combat.DeathSaves;
 import ninja.trek.srd.util.DiceRoller;
 
 import java.util.List;
@@ -94,7 +95,9 @@ public class EncounterBlock extends Block {
                     true,
                     combatState.armorClass(),
                     combatState.currentHitPoints(),
-                    combatState.maxHitPoints()
+                    combatState.maxHitPoints(),
+                    false,
+                    DeathSaves.createDefault()
                 ));
 
                 manager.syncCombatState(level.getServer(), character.getUuid(), character.getCombatState());
@@ -120,7 +123,9 @@ public class EncounterBlock extends Block {
                     true,
                     10 + (int) Math.round(player.getArmor()),
                     (int) Math.round(player.getHealth()),
-                    (int) Math.round(player.getMaxHealth())
+                    (int) Math.round(player.getMaxHealth()),
+                    false,
+                    DeathSaves.createDefault()
                 );
 
                 manager.syncCombatState(level.getServer(), player.getUuid(), combatState);
