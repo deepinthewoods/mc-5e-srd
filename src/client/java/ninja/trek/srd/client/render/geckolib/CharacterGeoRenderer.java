@@ -1,10 +1,13 @@
 package ninja.trek.srd.client.render.geckolib;
 
-import com.mojang.blaze3d.vertex.VertexConsumer;
 import net.minecraft.client.render.entity.EntityRendererFactory;
+import net.minecraft.client.render.state.CameraRenderState;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.EntityType;
 import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.client.model.geckolib.CharacterGeoModel;
+import software.bernie.geckolib.cache.object.BakedGeoModel;
+import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.GeoEntityRenderer;
 
 /**
@@ -15,14 +18,16 @@ import software.bernie.geckolib.renderer.GeoEntityRenderer;
  */
 public class CharacterGeoRenderer extends GeoEntityRenderer<CharacterEntity, CharacterGeoRenderState> {
 
-    public CharacterGeoRenderer(EntityRendererFactory.Context context) {
-        super(context, new CharacterGeoModel());
+    private final CharacterGeoModel model = new CharacterGeoModel();
+
+    public CharacterGeoRenderer(EntityRendererFactory.Context context, EntityType<? extends CharacterEntity> entityType) {
+        super(context, entityType);
         this.shadowRadius = 0.5f;
     }
 
     @Override
-    public CharacterGeoRenderState createRenderState() {
-        return new CharacterGeoRenderState();
+    public GeoModel<CharacterEntity> getGeoModel() {
+        return model;
     }
 
     @Override
@@ -42,10 +47,11 @@ public class CharacterGeoRenderer extends GeoEntityRenderer<CharacterEntity, Cha
     }
 
     @Override
-    public void preRender(MatrixStack poseStack, CharacterGeoRenderState state, int packedLight) {
-        super.preRender(poseStack, state, packedLight);
+    public void scaleModelForRender(CharacterGeoRenderState state, float widthScale, float heightScale,
+                                     MatrixStack poseStack, BakedGeoModel model, CameraRenderState cameraState) {
+        super.scaleModelForRender(state, widthScale, heightScale, poseStack, model, cameraState);
 
-        // Apply size scaling
+        // Apply custom size scaling
         float scale = state.sizeScale;
         poseStack.scale(scale, scale, scale);
     }

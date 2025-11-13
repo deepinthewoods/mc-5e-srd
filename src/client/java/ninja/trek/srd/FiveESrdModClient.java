@@ -23,7 +23,8 @@ public class FiveESrdModClient implements ClientModInitializer {
 		FiveESrdMod.LOGGER.info("Initializing 5E SRD client...");
 
 		// Register entity renderers (GeckoLib-based)
-		EntityRendererRegistry.register(ModEntities.CHARACTER, CharacterGeoRenderer::new);
+		EntityRendererRegistry.register(ModEntities.CHARACTER,
+			(context) -> new CharacterGeoRenderer(context, ModEntities.CHARACTER));
 
 		// Note: CharacterEntityRenderer (old GLTF system) is deprecated
 		// Will be removed in future version once all models are converted to GeckoLib

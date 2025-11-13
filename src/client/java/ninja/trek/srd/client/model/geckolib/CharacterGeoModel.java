@@ -5,6 +5,7 @@ import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.client.render.geckolib.CharacterGeoRenderState;
 import software.bernie.geckolib.model.GeoModel;
+import software.bernie.geckolib.renderer.base.GeoRenderState;
 
 /**
  * GeckoLib model for CharacterEntity.
@@ -12,23 +13,32 @@ import software.bernie.geckolib.model.GeoModel;
  *
  * Based on IMPLEMENTATION_PLAN.md Phase 2 specification.
  */
-public class CharacterGeoModel extends GeoModel<CharacterEntity, CharacterGeoRenderState> {
+public class CharacterGeoModel extends GeoModel<CharacterEntity> {
 
     @Override
-    public Identifier getModelResource(CharacterGeoRenderState renderState) {
+    public Identifier getModelResource(GeoRenderState renderState) {
         // Load race-specific model
-        String raceName = renderState.race.getName().toLowerCase();
+        if (renderState instanceof CharacterGeoRenderState state) {
+            String raceName = state.race.getName().toLowerCase();
+            return Identifier.of(FiveESrdMod.MOD_ID,
+                "geo/entity/character/" + raceName + "/" + raceName + "_body.geo.json");
+        }
+        // Fallback to human model
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "geo/entity/character/" + raceName + "/" + raceName + "_body.geo.json");
+            "geo/entity/character/human/human_body.geo.json");
     }
 
     @Override
-    public Identifier getTextureResource(CharacterGeoRenderState renderState) {
+    public Identifier getTextureResource(GeoRenderState renderState) {
         // Load race-specific default texture
-        // TODO: Support custom textures based on appearance configuration
-        String raceName = renderState.race.getName().toLowerCase();
+        if (renderState instanceof CharacterGeoRenderState state) {
+            String raceName = state.race.getName().toLowerCase();
+            return Identifier.of(FiveESrdMod.MOD_ID,
+                "textures/entity/character/base/" + raceName + "_default.png");
+        }
+        // Fallback to human texture
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "textures/entity/character/base/" + raceName + "_default.png");
+            "textures/entity/character/base/human_default.png");
     }
 
     @Override
