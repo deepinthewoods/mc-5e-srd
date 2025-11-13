@@ -97,7 +97,9 @@ public class EncounterBlock extends Block {
                     combatState.currentHitPoints(),
                     combatState.maxHitPoints(),
                     false,
-                    DeathSaves.createDefault()
+                    DeathSaves.createDefault(),
+                    false,
+                    false
                 ));
 
                 manager.syncCombatState(level.getServer(), character.getUuid(), character.getCombatState());
@@ -125,7 +127,9 @@ public class EncounterBlock extends Block {
                     (int) Math.round(player.getHealth()),
                     (int) Math.round(player.getMaxHealth()),
                     false,
-                    DeathSaves.createDefault()
+                    DeathSaves.createDefault(),
+                    false,
+                    false
                 );
 
                 manager.syncCombatState(level.getServer(), player.getUuid(), combatState);

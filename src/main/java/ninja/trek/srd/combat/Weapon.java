@@ -91,6 +91,18 @@ public record Weapon(
     }
 
     /**
+     * Returns the effective range of this weapon in blocks.
+     * For melee weapons, returns the reach.
+     * For ranged/thrown weapons, returns the normal range.
+     */
+    public double getRange() {
+        if (isRanged() && normalRange > 0) {
+            return normalRange;
+        }
+        return getReach();
+    }
+
+    /**
      * Returns a display string for the damage (e.g., "1d8+1 slashing").
      */
     public String getDamageString(boolean twoHanded) {
