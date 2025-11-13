@@ -32,13 +32,15 @@ public class OpportunityAttackHandler {
     public static void checkForOpportunityAttacks(CharacterEntity movingEntity, Vec3d oldPosition,
                                                   Vec3d newPosition, MinecraftServer server) {
         // Only check during combat
-        if (!movingEntity.getCombatState().inCombat()) {
+        CombatState movingState = movingEntity.getCombatState();
+        if (!movingState.inCombat()) {
             return;
         }
 
         // Don't trigger opportunity attacks if entity used Disengage action
-        // TODO: Add disengaged flag to CombatState
-        // For now, we'll implement basic opportunity attacks
+        if (movingState.isDisengaged()) {
+            return;
+        }
 
         // Get the encounter
         EncounterState encounter = EncounterManager.getInstance()
@@ -144,7 +146,7 @@ public class OpportunityAttackHandler {
         // Apply damage if hit
         if (result.isHit()) {
             CombatState targetState = target.getCombatState();
-            CombatState newTargetState = targetState.takeDamage(result.damageDealt());
+            CombatState newTargetState = targetState.takeDamage(result.damageDealt(), result.isCritical());
             target.setCombatState(newTargetState);
 
             // Sync to clients

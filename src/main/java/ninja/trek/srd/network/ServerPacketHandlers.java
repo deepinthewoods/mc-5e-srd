@@ -117,14 +117,19 @@ public class ServerPacketHandlers {
         CombatResolver resolver = new CombatResolver(roller);
 
         Weapon weapon = attackerCharacter.getEquippedWeapon();
+        CombatState targetState = target.getCombatState();
+
+        // Check if target is dodging (gives disadvantage to attackers)
+        boolean disadvantage = targetState.isDodging();
+
         AttackResult result = resolver.performAttack(
             weapon,
             attackerCharacter.getStats(),
             attackerCharacter.getLevel(),
-            target.getCombatState().armorClass(),
+            targetState.armorClass(),
             true,  // TODO: Check weapon proficiency based on class
             false, // TODO: Check for advantage
-            false  // TODO: Check for disadvantage
+            disadvantage
         );
 
         FiveESrdMod.LOGGER.info("Attack result: {}", result.description());
@@ -134,8 +139,7 @@ public class ServerPacketHandlers {
 
         // Apply damage if hit
         if (result.isHit()) {
-            CombatState targetState = target.getCombatState();
-            CombatState newTargetState = targetState.takeDamage(result.damageDealt());
+            CombatState newTargetState = targetState.takeDamage(result.damageDealt(), result.isCritical());
             target.setCombatState(newTargetState);
 
             // Broadcast damage to all clients
@@ -195,11 +199,21 @@ public class ServerPacketHandlers {
             return;
         }
 
-        // TODO: Add a flag to CombatState to track disengaged status
-        // For now, just consume the action
-        character.setCombatState(state.useAction());
+        // Set disengaged flag and consume action
+        CombatState newState = state.useAction().setDisengaged(true);
+        character.setCombatState(newState);
+        manager.syncCombatState(server, character.getUuid(), newState);
 
         FiveESrdMod.LOGGER.info("Character {} used Disengage action", character.getName().getString());
+
+        // Broadcast to encounter participants
+        Text message = Text.literal(character.getName().getString() + " takes the Disengage action!");
+        for (var tracker : encounter.getTurnOrder()) {
+            Entity participant = server.getOverworld().getEntity(tracker.entityId());
+            if (participant instanceof ServerPlayerEntity playerEntity) {
+                playerEntity.sendMessage(message, false);
+            }
+        }
     }
 
     /**
@@ -217,11 +231,21 @@ public class ServerPacketHandlers {
             return;
         }
 
-        // TODO: Add a flag to CombatState to track dodging status
-        // For now, just consume the action
-        character.setCombatState(state.useAction());
+        // Set dodging flag and consume action
+        CombatState newState = state.useAction().setDodging(true);
+        character.setCombatState(newState);
+        manager.syncCombatState(server, character.getUuid(), newState);
 
         FiveESrdMod.LOGGER.info("Character {} used Dodge action", character.getName().getString());
+
+        // Broadcast to encounter participants
+        Text message = Text.literal(character.getName().getString() + " takes the Dodge action!");
+        for (var tracker : encounter.getTurnOrder()) {
+            Entity participant = server.getOverworld().getEntity(tracker.entityId());
+            if (participant instanceof ServerPlayerEntity playerEntity) {
+                playerEntity.sendMessage(message, false);
+            }
+        }
     }
 
     /**
