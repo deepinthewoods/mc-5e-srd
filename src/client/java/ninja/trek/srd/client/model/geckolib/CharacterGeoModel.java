@@ -3,8 +3,8 @@ package ninja.trek.srd.client.model.geckolib;
 import net.minecraft.util.Identifier;
 import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.character.entity.CharacterEntity;
+import ninja.trek.srd.client.render.geckolib.CharacterGeoRenderState;
 import software.bernie.geckolib.model.GeoModel;
-import software.bernie.geckolib.renderer.base.GeoRenderState;
 
 /**
  * GeckoLib model for CharacterEntity.
@@ -12,24 +12,23 @@ import software.bernie.geckolib.renderer.base.GeoRenderState;
  *
  * Based on IMPLEMENTATION_PLAN.md Phase 2 specification.
  */
-public class CharacterGeoModel extends GeoModel<CharacterEntity> {
+public class CharacterGeoModel extends GeoModel<CharacterEntity, CharacterGeoRenderState> {
 
     @Override
-    public Identifier getModelResource(GeoRenderState renderState) {
-        // In GeckoLib 5, we can't access entity-specific data in model methods
-        // Use a default model for all characters
-        // TODO: Implement custom RenderState to store race information
+    public Identifier getModelResource(CharacterGeoRenderState renderState) {
+        // Load race-specific model
+        String raceName = renderState.race.getName().toLowerCase();
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "geo/entity/character/human/human_body.geo.json");
+            "geo/entity/character/" + raceName + "/" + raceName + "_body.geo.json");
     }
 
     @Override
-    public Identifier getTextureResource(GeoRenderState renderState) {
-        // In GeckoLib 5, we can't access entity-specific data here
-        // Use a default texture for now - dynamic textures will need a different approach
-        // TODO: Implement custom RenderState to store texture information
+    public Identifier getTextureResource(CharacterGeoRenderState renderState) {
+        // Load race-specific default texture
+        // TODO: Support custom textures based on appearance configuration
+        String raceName = renderState.race.getName().toLowerCase();
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "textures/entity/character/base/human_default.png");
+            "textures/entity/character/base/" + raceName + "_default.png");
     }
 
     @Override
