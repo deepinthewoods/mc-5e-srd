@@ -58,6 +58,10 @@ public class CharacterGeoRenderer extends GeoEntityRenderer<CharacterEntity, Cha
         state.isMoving = entity.limbAnimator.isLimbMoving();
         state.isSprinting = entity.isSprinting();
         state.isAttacking = entity.handSwingProgress > 0;
+
+        // Held items (Phase 7.1)
+        state.mainHandStack = entity.getMainHandStack();
+        state.offHandStack = entity.getOffHandStack();
     }
 
     @Override

@@ -2,6 +2,7 @@ package ninja.trek.srd.client.render.geckolib;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.minecraft.client.render.entity.state.LivingEntityRenderState;
+import net.minecraft.item.ItemStack;
 import ninja.trek.srd.character.data.CharacterAppearance;
 import ninja.trek.srd.character.data.Race;
 import ninja.trek.srd.character.layer.LayerConfiguration;
@@ -26,6 +27,10 @@ public class CharacterGeoRenderState extends LivingEntityRenderState implements 
     public boolean isMoving;
     public boolean isSprinting;
     public boolean isAttacking;
+
+    // Held items (Phase 7.1)
+    public ItemStack mainHandStack = ItemStack.EMPTY;
+    public ItemStack offHandStack = ItemStack.EMPTY;
 
     @Override
     public Map<DataTicket<?>, Object> getDataMap() {
