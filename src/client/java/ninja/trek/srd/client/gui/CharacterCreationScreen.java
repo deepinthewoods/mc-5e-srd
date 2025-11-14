@@ -43,6 +43,7 @@ public class CharacterCreationScreen extends Screen {
     private int armsIndex = 0;
     private int headIndex = 0;
     private String characterName = "";
+    private String currentTitle = "";
 
     // UI widgets
     private TextFieldWidget nameField;
@@ -379,7 +380,12 @@ public class CharacterCreationScreen extends Screen {
         int centerX = this.width / 2;
         int startY = this.height / 4;
 
-        // Step 2: Render step-specific text content (middle layer)
+        // Step 2: Render title text
+        if (!currentTitle.isEmpty()) {
+            drawCenteredText(context, currentTitle, centerX, 40);
+        }
+
+        // Step 3: Render step-specific text content (middle layer)
         switch (currentStep) {
             case RACE -> renderRaceInfo(context, centerX, startY);
             case CLASS -> renderClassInfo(context, centerX, startY);
@@ -389,7 +395,7 @@ public class CharacterCreationScreen extends Screen {
             case REVIEW -> renderReviewInfo(context, centerX, startY);
         }
 
-        // Step 3: Render widgets/buttons on top (top layer)
+        // Step 4: Render widgets/buttons on top (top layer)
         super.render(context, mouseX, mouseY, delta);
     }
 
@@ -489,13 +495,13 @@ public class CharacterCreationScreen extends Screen {
             text,
             x - this.textRenderer.getWidth(text) / 2,
             y,
-            0xFFFFFF,
+            0xFFFFFFFF,  // ARGB format (FF=opaque, FFFFFF=white) - required for 1.21.6+
             true
         );
     }
 
     private void addTitle(String title) {
-        // Title is rendered in render() method
+        this.currentTitle = title;
     }
 
     private String capitalize(String str) {
