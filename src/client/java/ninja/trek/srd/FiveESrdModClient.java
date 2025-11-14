@@ -7,8 +7,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.util.ActionResult;
 import ninja.trek.srd.client.gui.ActionHotbarOverlay;
 import ninja.trek.srd.client.gui.CharacterCreationScreen;
-import ninja.trek.srd.client.model.CharacterModelLoader;
-import ninja.trek.srd.client.render.CharacterEntityRenderer;
 import ninja.trek.srd.client.render.geckolib.CharacterGeoRenderer;
 import ninja.trek.srd.registry.ModEntities;
 import ninja.trek.srd.registry.ModItems;
@@ -45,8 +43,8 @@ public class FiveESrdModClient implements ClientModInitializer {
 		// Register combat HUD overlay + bindings
 		ActionHotbarOverlay.register();
 
-		// Register model loader for character parts
-		CharacterModelLoader.init();
+		// Note: CharacterModelLoader.init() removed - now using GeckoLib models instead
+		// The old GLTF-based model loader is no longer needed
 
 		// TODO: Register additional keybindings (e.g., targeting, end turn)
 
