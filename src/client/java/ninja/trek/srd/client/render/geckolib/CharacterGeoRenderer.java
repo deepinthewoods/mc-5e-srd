@@ -44,6 +44,11 @@ public class CharacterGeoRenderer extends GeoEntityRenderer<CharacterEntity, Cha
     }
 
     @Override
+    public CharacterGeoRenderState createRenderState(CharacterEntity entity, Void relatedObject) {
+        return new CharacterGeoRenderState();
+    }
+
+    @Override
     public GeoModel<CharacterEntity> getGeoModel() {
         return model;
     }
