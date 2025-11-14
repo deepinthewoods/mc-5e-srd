@@ -495,7 +495,7 @@ public class CharacterCreationScreen extends Screen {
             text,
             x - this.textRenderer.getWidth(text) / 2,
             y,
-            0xFFFFFF,
+            0xFFFFFFFF,  // ARGB format (FF=opaque, FFFFFF=white) - required for 1.21.6+
             true
         );
     }
