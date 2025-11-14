@@ -5,10 +5,14 @@ import ninja.trek.srd.FiveESrdMod;
 import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.character.layer.LayerConfiguration;
 import ninja.trek.srd.client.render.geckolib.CharacterGeoRenderState;
+import ninja.trek.srd.client.render.geckolib.DynamicTextureComposer;
 import software.bernie.geckolib.cache.object.BakedGeoModel;
 import software.bernie.geckolib.cache.object.GeoBone;
 import software.bernie.geckolib.model.GeoModel;
 import software.bernie.geckolib.renderer.base.GeoRenderState;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * GeckoLib model for CharacterEntity.
@@ -34,12 +38,35 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
 
     @Override
     public Identifier getTextureResource(GeoRenderState renderState) {
-        // Load race-specific default texture
+        // Load race-specific texture with optional dynamic compositing
         if (renderState instanceof CharacterGeoRenderState state) {
             String raceName = state.race.getName().toLowerCase();
-            return Identifier.of(FiveESrdMod.MOD_ID,
-                "textures/entity/character/base/" + raceName + "_default.png");
+            LayerConfiguration config = state.layerConfiguration;
+
+            // Get base skin texture
+            String skinTexture = config.getSkinTexture();
+            Identifier baseTexture = Identifier.of(FiveESrdMod.MOD_ID,
+                "textures/entity/character/base/" + raceName + "_" + skinTexture + ".png");
+
+            // Build list of clothing layers for compositing
+            List<Identifier> clothingLayers = new ArrayList<>();
+
+            // Add clothing texture if not default
+            String clothingTexture = config.getClothingTexture();
+            if (clothingTexture != null && !clothingTexture.equals("default")) {
+                clothingLayers.add(Identifier.of(FiveESrdMod.MOD_ID,
+                    "textures/entity/character/clothing/" + clothingTexture + ".png"));
+            }
+
+            // If no layers to composite, return base texture directly
+            if (clothingLayers.isEmpty()) {
+                return baseTexture;
+            }
+
+            // Compose texture dynamically (Phase 7.3)
+            return DynamicTextureComposer.getInstance().composeTexture(baseTexture, clothingLayers);
         }
+
         // Fallback to human texture
         return Identifier.of(FiveESrdMod.MOD_ID,
             "textures/entity/character/base/human_default.png");
@@ -49,6 +76,20 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
     public Identifier getAnimationResource(CharacterEntity entity) {
         // All humanoids share the same base animations
         // Bone retargeting adapts them to different proportions
+        //
+        // NOTE: Additional animation files exist for combat and magic:
+        // - combat.animation.json (Phase 8.1): Melee, ranged, and defensive animations
+        // - magic.animation.json (Phase 8.2): Spellcasting and channeling animations
+        //
+        // These are currently separate files with placeholder animations ready for BlockBench refinement.
+        // Full integration requires either:
+        // 1. Consolidating all animations into a single file, OR
+        // 2. Implementing multiple animation controllers for different animation types, OR
+        // 3. Using GeckoLib's animation file referencing system (if supported)
+        //
+        // For now, returning the main locomotion animation file which includes:
+        // - idle, walk, run (locomotion)
+        // - attack, cast, block, channel, death (basic actions)
         return Identifier.of(FiveESrdMod.MOD_ID,
             "animations/entity/character/locomotion.animation.json");
     }
