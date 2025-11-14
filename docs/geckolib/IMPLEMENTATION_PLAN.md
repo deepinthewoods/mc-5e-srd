@@ -708,43 +708,6 @@ private PlayState predicate(AnimationState<CharacterEntity> state) {
 
 ---
 
-### Phase 9: Optimization & Polish (3-4 days)
-
-**Goal**: Improve performance and add final touches
-
-#### Task 9.1: Animation Baking
-
-Pre-compute retargeted animations:
-- Bake at startup for common size scales
-- Cache in memory
-- Reduce runtime computation
-
-#### Task 9.2: Layer Culling
-
-Skip rendering hidden layers:
-- Don't render shirt under heavy armor
-- Don't render hair under helmet
-
-#### Task 9.3: LOD System (Optional)
-
-Implement level-of-detail:
-- Simpler models for distant entities
-- Reduced animation quality at distance
-- Disable minor layers (accessories)
-
-#### Task 9.4: Texture Atlas Optimization
-
-Combine similar textures:
-- Create texture atlases
-- Reduce texture switches
-- Improve batch rendering
-
-**Deliverables**:
-- ✅ Performance optimizations applied
-- ✅ Smooth 60 FPS with 50+ entities
-- ✅ Reduced memory usage
-- ✅ Final polish complete
-
 ---
 
 ### Phase 10: Testing & Documentation (2-3 days)
