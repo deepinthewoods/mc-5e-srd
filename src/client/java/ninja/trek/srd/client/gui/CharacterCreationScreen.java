@@ -373,12 +373,13 @@ public class CharacterCreationScreen extends Screen {
 
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
-        super.render(context, mouseX, mouseY, delta);
+        // Step 1: Render background first (bottom layer)
+        this.renderBackground(context, mouseX, mouseY, delta);
 
         int centerX = this.width / 2;
         int startY = this.height / 4;
 
-        // Render step-specific content
+        // Step 2: Render step-specific text content (middle layer)
         switch (currentStep) {
             case RACE -> renderRaceInfo(context, centerX, startY);
             case CLASS -> renderClassInfo(context, centerX, startY);
@@ -387,6 +388,9 @@ public class CharacterCreationScreen extends Screen {
             case NAME -> renderNameInfo(context, centerX, startY);
             case REVIEW -> renderReviewInfo(context, centerX, startY);
         }
+
+        // Step 3: Render widgets/buttons on top (top layer)
+        super.render(context, mouseX, mouseY, delta);
     }
 
     private void renderRaceInfo(DrawContext context, int centerX, int startY) {
