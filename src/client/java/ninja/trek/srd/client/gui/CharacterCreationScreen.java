@@ -375,7 +375,7 @@ public class CharacterCreationScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         // Step 1: Render background first (bottom layer)
-        this.renderBackground(context, mouseX, mouseY, delta);
+        this.renderInGameBackground(context);
 
         int centerX = this.width / 2;
         int startY = this.height / 4;
