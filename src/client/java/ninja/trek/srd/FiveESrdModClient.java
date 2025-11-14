@@ -24,9 +24,6 @@ public class FiveESrdModClient implements ClientModInitializer {
 		EntityRendererRegistry.register(ModEntities.CHARACTER,
 			(context) -> new CharacterGeoRenderer(context));
 
-		// Note: CharacterEntityRenderer (old GLTF system) is deprecated
-		// Will be removed in future version once all models are converted to GeckoLib
-
 		// Register client-side packet receivers
 		ninja.trek.srd.network.ClientPacketHandlers.register();
 
@@ -42,9 +39,6 @@ public class FiveESrdModClient implements ClientModInitializer {
 
 		// Register combat HUD overlay + bindings
 		ActionHotbarOverlay.register();
-
-		// Note: CharacterModelLoader.init() removed - now using GeckoLib models instead
-		// The old GLTF-based model loader is no longer needed
 
 		// TODO: Register additional keybindings (e.g., targeting, end turn)
 
