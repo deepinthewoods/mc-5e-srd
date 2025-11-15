@@ -447,23 +447,22 @@ public class CharacterCreationScreen extends Screen {
         drawPanelBorder(context, left, top, panelWidth, panelHeight, PREVIEW_BORDER_COLOR);
         context.drawText(this.textRenderer, PREVIEW_TITLE, left + 8, top + 8, 0xFFFFFFFF, false);
 
-        // Position the entity so it's centered vertically in the pane
-        // The entity's feet should be at the bottom with head visible at top
-        int entityX = left + panelWidth / 2;
-        int entityY = top + panelHeight - 30;  // Raised from -15 to -30 to show more of character
-        int renderSize = Math.max(30, (int)(panelHeight * 0.35f));  // Reduced from 0.75 to 0.35 to show more area
+        // Calculate rotation based on mouse position relative to panel center
+        int titleHeight = 20;  // Account for "Character Preview" title
+        int renderSize = (int)(panelHeight * 0.7f);  // Scale to fit most of the panel
 
-        float rotationX = entityX - mouseX;
-        float rotationY = (top + panelHeight / 2f) - mouseY;
+        int panelCenterX = left + panelWidth / 2;
+        int panelCenterY = top + panelHeight / 2;
+        float rotationX = panelCenterX - mouseX;
+        float rotationY = panelCenterY - mouseY;
 
-        // Debug: Draw a cross at the entity position to verify positioning
-        context.fill(entityX - 2, entityY - 10, entityX + 2, entityY + 10, 0xFFFF0000);
-        context.fill(entityX - 10, entityY - 2, entityX + 10, entityY + 2, 0xFFFF0000);
-
-        drawPreviewEntity(context, entityX, entityY, renderSize, rotationX, rotationY);
+        // Pass the full panel bounds for rendering
+        drawPreviewEntity(context, left, top + titleHeight, panelWidth, panelHeight - titleHeight,
+                         renderSize, rotationX, rotationY);
     }
 
-    private void drawPreviewEntity(DrawContext context, int x, int y, int size, float mouseX, float mouseY) {
+    private void drawPreviewEntity(DrawContext context, int panelLeft, int panelTop, int panelWidth, int panelHeight,
+                                   int size, float mouseX, float mouseY) {
         if (previewEntity == null) {
             return;
         }
@@ -475,16 +474,17 @@ public class CharacterCreationScreen extends Screen {
 
         // Use the correct signature for InventoryScreen.drawEntity in 1.21.10:
         // drawEntity(DrawContext, x1, y1, x2, y2, size, bodyYaw, entityYaw, entityPitch, LivingEntity)
+        // Use the full panel bounds so the entity isn't clipped
         InventoryScreen.drawEntity(
             context,
-            x - size / 2,  // x1 - left bound
-            y - size,      // y1 - top bound
-            x + size / 2,  // x2 - right bound
-            y,             // y2 - bottom bound
-            size,          // size/scale
-            0.0f,          // body yaw offset
-            yaw,           // entity yaw (left/right rotation)
-            pitch,         // entity pitch (up/down tilt) - removed negative sign
+            panelLeft,                      // x1 - left bound of panel
+            panelTop,                       // y1 - top bound of panel (after title)
+            panelLeft + panelWidth,         // x2 - right bound of panel
+            panelTop + panelHeight,         // y2 - bottom bound of panel
+            size,                           // size/scale
+            0.0f,                           // body yaw offset
+            yaw,                            // entity yaw (left/right rotation)
+            pitch,                          // entity pitch (up/down tilt)
             previewEntity
         );
     }
