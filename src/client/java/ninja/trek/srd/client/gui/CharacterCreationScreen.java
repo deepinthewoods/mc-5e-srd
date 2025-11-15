@@ -65,8 +65,6 @@ public class CharacterCreationScreen extends Screen {
 
     // Preview interaction state
     private boolean isDraggingPreview = false;
-    private double lastMouseX = 0;
-    private double lastMouseY = 0;
     private float previewYaw = 0.0f;
     private float previewPitch = 0.0f;
     private float previewZoom = 1.0f;
@@ -683,8 +681,6 @@ public class CharacterCreationScreen extends Screen {
         // Check if click is within preview panel
         if (click.button() == 0 && isMouseOverPreview(click.x(), click.y())) {
             isDraggingPreview = true;
-            lastMouseX = click.x();
-            lastMouseY = click.y();
             return true;
         }
         return super.mouseClicked(click, doubled);
@@ -702,18 +698,13 @@ public class CharacterCreationScreen extends Screen {
     @Override
     public boolean mouseDragged(Click click, double deltaX, double deltaY) {
         if (isDraggingPreview && click.button() == 0) {
-            // Update rotation based on drag delta
-            double dx = click.x() - lastMouseX;
-            double dy = click.y() - lastMouseY;
-
-            previewYaw += (float)dx * 0.5f;  // Horizontal drag rotates left/right
-            previewPitch += (float)dy * 0.5f;  // Vertical drag tilts up/down
+            // Update rotation based on drag delta (use provided deltaX/deltaY)
+            previewYaw += (float)deltaX * 0.5f;  // Horizontal drag rotates left/right
+            previewPitch += (float)deltaY * 0.5f;  // Vertical drag tilts up/down
 
             // Clamp pitch to prevent flipping
             previewPitch = Math.max(-45.0f, Math.min(45.0f, previewPitch));
 
-            lastMouseX = click.x();
-            lastMouseY = click.y();
             return true;
         }
         return super.mouseDragged(click, deltaX, deltaY);
