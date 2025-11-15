@@ -62,6 +62,14 @@ public class CharacterCreationScreen extends Screen {
     private CharacterEntity previewEntity;
     private boolean previewDirty = true;
 
+    // Preview interaction state
+    private boolean isDraggingPreview = false;
+    private double lastMouseX = 0;
+    private double lastMouseY = 0;
+    private float previewYaw = 0.0f;
+    private float previewPitch = 0.0f;
+    private float previewZoom = 1.0f;
+
     public CharacterCreationScreen() {
         super(Text.literal("Character Creation"));
         // Initialize available scores with standard array
@@ -447,31 +455,23 @@ public class CharacterCreationScreen extends Screen {
         drawPanelBorder(context, left, top, panelWidth, panelHeight, PREVIEW_BORDER_COLOR);
         context.drawText(this.textRenderer, PREVIEW_TITLE, left + 8, top + 8, 0xFFFFFFFF, false);
 
-        // Calculate rotation based on mouse position relative to panel center
+        // Use stored rotation and zoom values
         int titleHeight = 20;  // Account for "Character Preview" title
-        int renderSize = (int)(panelHeight * 0.32f);  // Zoomed out to show full character with space
-
-        int panelCenterX = left + panelWidth / 2;
-        int panelCenterY = top + panelHeight / 2;
-        float rotationX = panelCenterX - mouseX;
-        float rotationY = panelCenterY - mouseY;
+        int baseRenderSize = (int)(panelHeight * 0.32f);  // Base size to show full character
+        int renderSize = (int)(baseRenderSize * previewZoom);  // Apply zoom
 
         // Pass the full panel bounds for rendering
         drawPreviewEntity(context, left, top + titleHeight, panelWidth, panelHeight - titleHeight,
-                         renderSize, rotationX, rotationY);
+                         renderSize, previewYaw, previewPitch);
     }
 
     private void drawPreviewEntity(DrawContext context, int panelLeft, int panelTop, int panelWidth, int panelHeight,
-                                   int size, float mouseX, float mouseY) {
+                                   int size, float yaw, float pitch) {
         if (previewEntity == null) {
             return;
         }
 
-        // Calculate rotation based on mouse position
-        // Limit rotation to reasonable values
-        float yaw = Math.max(-30.0f, Math.min(30.0f, (float) Math.atan(mouseX / 40.0f) * 20.0f));
-        float pitch = Math.max(-15.0f, Math.min(15.0f, (float) Math.atan(mouseY / 40.0f) * 10.0f));
-
+        // Use the provided rotation angles directly
         // Use the correct signature for InventoryScreen.drawEntity in 1.21.10:
         // drawEntity(DrawContext, x1, y1, x2, y2, size, bodyYaw, entityYaw, entityPitch, LivingEntity)
         // Use the full panel bounds so the entity isn't clipped
@@ -675,6 +675,71 @@ public class CharacterCreationScreen extends Screen {
             return str;
         }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        // Check if click is within preview panel
+        if (button == 0 && isMouseOverPreview(mouseX, mouseY)) {
+            isDraggingPreview = true;
+            lastMouseX = mouseX;
+            lastMouseY = mouseY;
+            return true;
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0 && isDraggingPreview) {
+            isDraggingPreview = false;
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
+        if (isDraggingPreview && button == 0) {
+            // Update rotation based on drag delta
+            double dx = mouseX - lastMouseX;
+            double dy = mouseY - lastMouseY;
+
+            previewYaw += (float)dx * 0.5f;  // Horizontal drag rotates left/right
+            previewPitch += (float)dy * 0.5f;  // Vertical drag tilts up/down
+
+            // Clamp pitch to prevent flipping
+            previewPitch = Math.max(-45.0f, Math.min(45.0f, previewPitch));
+
+            lastMouseX = mouseX;
+            lastMouseY = mouseY;
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+    }
+
+    @Override
+    public boolean mouseScrolled(double mouseX, double mouseY, double horizontalAmount, double verticalAmount) {
+        if (isMouseOverPreview(mouseX, mouseY)) {
+            // Update zoom based on scroll
+            previewZoom += (float)verticalAmount * 0.1f;
+
+            // Clamp zoom to reasonable range
+            previewZoom = Math.max(0.5f, Math.min(2.0f, previewZoom));
+            return true;
+        }
+        return super.mouseScrolled(mouseX, mouseY, horizontalAmount, verticalAmount);
+    }
+
+    private boolean isMouseOverPreview(double mouseX, double mouseY) {
+        int panelWidth = PREVIEW_PANEL_WIDTH;
+        int availableHeight = Math.max(140, this.height - PREVIEW_MARGIN * 2);
+        int panelHeight = Math.min(PREVIEW_PANEL_HEIGHT, availableHeight);
+        int left = Math.max(PREVIEW_MARGIN, this.width - panelWidth - PREVIEW_MARGIN);
+        int top = (this.height - panelHeight) / 2;
+
+        return mouseX >= left && mouseX <= left + panelWidth &&
+               mouseY >= top && mouseY <= top + panelHeight;
     }
 
     @Override
