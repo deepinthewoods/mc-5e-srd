@@ -40,7 +40,7 @@ public class EncounterBlock extends Block {
     @Override
     public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
         super.onPlaced(world, pos, state, placer, itemStack);
-        if (!world.isClient) {
+        if (world instanceof ServerWorld) {
             world.scheduleBlockTick(pos, this, TICK_DELAY);
         }
     }
