@@ -29,11 +29,11 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
         if (renderState instanceof CharacterGeoRenderState state) {
             String raceName = state.race.getName().toLowerCase();
             return Identifier.of(FiveESrdMod.MOD_ID,
-                "geo/entity/character/" + raceName + "/" + raceName + "_body.geo.json");
+                "geo/entity/character/" + raceName + "/" + raceName + "_body");
         }
         // Fallback to human model
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "geo/entity/character/human/human_body.geo.json");
+            "geo/entity/character/human/human_body");
     }
 
     @Override
@@ -91,7 +91,7 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
         // - idle, walk, run (locomotion)
         // - attack, cast, block, channel, death (basic actions)
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "animations/entity/character/locomotion.animation.json");
+            "animations/entity/character/locomotion");
     }
 
     @Override
