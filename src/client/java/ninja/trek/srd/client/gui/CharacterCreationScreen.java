@@ -14,6 +14,8 @@ import ninja.trek.srd.character.data.CharacterStats;
 import ninja.trek.srd.character.data.Race;
 import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.registry.ModEntities;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -470,22 +472,45 @@ public class CharacterCreationScreen extends Screen {
             return;
         }
 
-        // Use the provided rotation angles directly
-        // Use the correct signature for InventoryScreen.drawEntity in 1.21.10:
-        // drawEntity(DrawContext, x1, y1, x2, y2, size, bodyYaw, entityYaw, entityPitch, LivingEntity)
-        // Use the full panel bounds so the entity isn't clipped
+        int x1 = panelLeft;
+        int y1 = panelTop;
+        int x2 = panelLeft + panelWidth;
+        int y2 = panelTop + panelHeight;
+
+        context.enableScissor(x1, y1, x2, y2);
+
+        float clampedPitch = Math.max(-45.0f, Math.min(45.0f, pitch));
+        previewEntity.setBodyYaw(180.0f + yaw * 0.5f);
+        previewEntity.setYaw(180.0f + yaw);
+        previewEntity.setHeadYaw(previewEntity.getYaw());
+        previewEntity.setPitch(clampedPitch);
+
+        Quaternionf rotation = new Quaternionf().rotateZ((float)Math.PI);
+        Quaternionf cameraAngle = new Quaternionf().rotateX((float)Math.toRadians(clampedPitch));
+        rotation.mul(cameraAngle);
+
+        float entityScale = previewEntity.getScale();
+        float renderScale = size / entityScale;
+        Vector3f translation = new Vector3f(
+            0.0f,
+            previewEntity.getHeight() / 2.0f + 0.0625f * entityScale,
+            0.0f
+        );
+
         InventoryScreen.drawEntity(
             context,
-            panelLeft,                      // x1 - left bound of panel
-            panelTop,                       // y1 - top bound of panel (after title)
-            panelLeft + panelWidth,         // x2 - right bound of panel
-            panelTop + panelHeight,         // y2 - bottom bound of panel
-            size,                           // size/scale
-            0.0f,                           // body yaw offset
-            yaw,                            // entity yaw (left/right rotation)
-            pitch,                          // entity pitch (up/down tilt)
+            x1,
+            y1,
+            x2,
+            y2,
+            renderScale,
+            translation,
+            rotation,
+            cameraAngle,
             previewEntity
         );
+
+        context.disableScissor();
     }
 
     private void drawPanelBorder(DrawContext context, int left, int top, int width, int height, int color) {
