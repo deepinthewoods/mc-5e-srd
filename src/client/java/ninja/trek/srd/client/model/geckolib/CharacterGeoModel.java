@@ -24,7 +24,7 @@ import java.util.List;
 public class CharacterGeoModel extends GeoModel<CharacterEntity> {
 
     @Override
-    public Identifier getModelLocation(GeoRenderState renderState) {
+    public Identifier getModelResource(GeoRenderState renderState) {
         // Load race-specific model
         if (renderState instanceof CharacterGeoRenderState state) {
             String raceName = state.race.getName().toLowerCase();
@@ -37,7 +37,7 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
     }
 
     @Override
-    public Identifier getTextureLocation(GeoRenderState renderState) {
+    public Identifier getTextureResource(GeoRenderState renderState) {
         // Load race-specific texture with optional dynamic compositing
         if (renderState instanceof CharacterGeoRenderState state) {
             String raceName = state.race.getName().toLowerCase();
@@ -108,7 +108,7 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
         super.setCustomAnimations(entity, instanceId, renderState);
 
         if (renderState instanceof CharacterGeoRenderState state) {
-            BakedGeoModel model = getBakedModel(getModelLocation(state));
+            BakedGeoModel model = getBakedModel(getModelResource(state));
             LayerConfiguration config = state.layerConfiguration;
 
             // Apply body part variants visibility
