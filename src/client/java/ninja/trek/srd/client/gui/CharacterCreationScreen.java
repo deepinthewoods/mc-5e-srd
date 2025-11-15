@@ -451,7 +451,7 @@ public class CharacterCreationScreen extends Screen {
         // The entity's feet should be at the bottom with head visible at top
         int entityX = left + panelWidth / 2;
         int entityY = top + panelHeight - 30;  // Raised from -15 to -30 to show more of character
-        int renderSize = Math.max(50, (int)(panelHeight * 0.75f));  // Scale based on height instead of width
+        int renderSize = Math.max(30, (int)(panelHeight * 0.35f));  // Reduced from 0.75 to 0.35 to show more area
 
         float rotationX = entityX - mouseX;
         float rotationY = (top + panelHeight / 2f) - mouseY;
