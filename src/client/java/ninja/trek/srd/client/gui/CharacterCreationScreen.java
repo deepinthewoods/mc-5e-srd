@@ -454,6 +454,10 @@ public class CharacterCreationScreen extends Screen {
         float rotationX = entityX - mouseX;
         float rotationY = (top + panelHeight / 2f) - mouseY;
 
+        // Debug: Draw a cross at the entity position to verify positioning
+        context.fill(entityX - 2, entityY - 10, entityX + 2, entityY + 10, 0xFFFF0000);
+        context.fill(entityX - 10, entityY - 2, entityX + 10, entityY + 2, 0xFFFF0000);
+
         drawPreviewEntity(context, entityX, entityY, renderSize, rotationX, rotationY);
     }
 
