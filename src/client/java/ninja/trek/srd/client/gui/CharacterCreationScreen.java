@@ -449,7 +449,7 @@ public class CharacterCreationScreen extends Screen {
 
         // Calculate rotation based on mouse position relative to panel center
         int titleHeight = 20;  // Account for "Character Preview" title
-        int renderSize = (int)(panelHeight * 0.7f);  // Scale to fit most of the panel
+        int renderSize = (int)(panelHeight * 0.45f);  // Reduced zoom to show full character body
 
         int panelCenterX = left + panelWidth / 2;
         int panelCenterY = top + panelHeight / 2;
