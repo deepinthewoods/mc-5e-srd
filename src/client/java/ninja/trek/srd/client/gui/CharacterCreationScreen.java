@@ -1,5 +1,6 @@
 package ninja.trek.srd.client.gui;
 
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.ingame.InventoryScreen;
@@ -678,32 +679,32 @@ public class CharacterCreationScreen extends Screen {
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
         // Check if click is within preview panel
-        if (button == 0 && isMouseOverPreview(mouseX, mouseY)) {
+        if (click.button() == 0 && isMouseOverPreview(click.x(), click.y())) {
             isDraggingPreview = true;
-            lastMouseX = mouseX;
-            lastMouseY = mouseY;
+            lastMouseX = click.x();
+            lastMouseY = click.y();
             return true;
         }
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubled);
     }
 
     @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        if (button == 0 && isDraggingPreview) {
+    public boolean mouseReleased(Click click) {
+        if (click.button() == 0 && isDraggingPreview) {
             isDraggingPreview = false;
             return true;
         }
-        return super.mouseReleased(mouseX, mouseY, button);
+        return super.mouseReleased(click);
     }
 
     @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (isDraggingPreview && button == 0) {
+    public boolean mouseDragged(Click click, double deltaX, double deltaY) {
+        if (isDraggingPreview && click.button() == 0) {
             // Update rotation based on drag delta
-            double dx = mouseX - lastMouseX;
-            double dy = mouseY - lastMouseY;
+            double dx = click.x() - lastMouseX;
+            double dy = click.y() - lastMouseY;
 
             previewYaw += (float)dx * 0.5f;  // Horizontal drag rotates left/right
             previewPitch += (float)dy * 0.5f;  // Vertical drag tilts up/down
@@ -711,11 +712,11 @@ public class CharacterCreationScreen extends Screen {
             // Clamp pitch to prevent flipping
             previewPitch = Math.max(-45.0f, Math.min(45.0f, previewPitch));
 
-            lastMouseX = mouseX;
-            lastMouseY = mouseY;
+            lastMouseX = click.x();
+            lastMouseY = click.y();
             return true;
         }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
+        return super.mouseDragged(click, deltaX, deltaY);
     }
 
     @Override
