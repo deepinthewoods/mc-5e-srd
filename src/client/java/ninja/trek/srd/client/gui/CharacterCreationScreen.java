@@ -434,6 +434,8 @@ public class CharacterCreationScreen extends Screen {
         }
 
         previewEntity.tick();
+        // Increment age for animation
+        previewEntity.age++;
 
         int panelWidth = PREVIEW_PANEL_WIDTH;
         int availableHeight = Math.max(140, this.height - PREVIEW_MARGIN * 2);
@@ -460,21 +462,18 @@ public class CharacterCreationScreen extends Screen {
             return;
         }
 
-        int relativeMouseX = (int) mouseX;
-        int relativeMouseY = (int) mouseY;
         float yaw = (float) Math.atan(mouseX / 40.0f) * 20.0f;
         float pitch = (float) Math.atan(mouseY / 40.0f) * 20.0f;
 
+        // Call InventoryScreen.drawEntity with the proper signature for 1.21.x
+        // The method handles entity rendering with mouse-based rotation
         InventoryScreen.drawEntity(
             context,
             x,
             y,
             size,
-            relativeMouseX,
-            relativeMouseY,
-            0.0f,
-            yaw,
-            -pitch,
+            mouseX,
+            mouseY,
             previewEntity
         );
     }
@@ -511,6 +510,10 @@ public class CharacterCreationScreen extends Screen {
                 previewEntity.refreshPositionAndAngles(0.0, world.getBottomY(), 0.0, 180.0f, 0.0f);
                 previewEntity.setBodyYaw(180.0f);
                 previewEntity.setHeadYaw(180.0f);
+                previewEntity.setYaw(180.0f);
+                previewEntity.setPitch(0.0f);
+                // Set age to ensure rendering works properly
+                previewEntity.age = 1;
                 previewDirty = true;
             }
         }
