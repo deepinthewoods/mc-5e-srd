@@ -26,7 +26,6 @@ import org.joml.Vector3f;
  */
 public class CharacterGeoRenderer extends GeoEntityRenderer<CharacterEntity, CharacterGeoRenderState> {
 
-    private final CharacterGeoModel model = new CharacterGeoModel();
     private final BoneRetargetingController retargeting = new BoneRetargetingController(SkeletonProfile.BASE);
 
     public CharacterGeoRenderer(EntityRendererFactory.Context context) {
@@ -50,7 +49,7 @@ public class CharacterGeoRenderer extends GeoEntityRenderer<CharacterEntity, Cha
 
     @Override
     public GeoModel<CharacterEntity> getGeoModel() {
-        return model;
+        return (GeoModel<CharacterEntity>) super.getGeoModel();
     }
 
     @Override
@@ -91,8 +90,10 @@ public class CharacterGeoRenderer extends GeoEntityRenderer<CharacterEntity, Cha
         super.preApplyRenderLayers(renderState, poseStack, model, renderQueue, cameraState,
                                    packedLight, packedOverlay, renderColor, reRender);
 
-        // Apply bone retargeting adjustments before rendering layers
-        applyBoneRetargeting(renderState, model);
+        // TODO: Fix bone retargeting - currently causing rendering issues
+        // The bone position modification needs to be done differently to avoid
+        // breaking the model structure
+        // applyBoneRetargeting(renderState, model);
     }
 
     /**
