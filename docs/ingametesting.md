@@ -72,7 +72,7 @@ Before testing, ensure:
 - Sliders or selection for each body part
 - Each race has different mesh index ranges
 - Preview updates (if implemented)
-[we should add the preview]
+[all ok]
 
 ### Test 1.6: Name and Final Creation
 **Steps:**
