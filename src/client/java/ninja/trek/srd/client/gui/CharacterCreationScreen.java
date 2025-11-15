@@ -2,12 +2,17 @@ package ninja.trek.srd.client.gui;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
+import net.minecraft.client.gui.screen.ingame.InventoryScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.world.ClientWorld;
 import net.minecraft.text.Text;
 import ninja.trek.srd.character.data.CharacterClass;
+import ninja.trek.srd.character.data.CharacterAppearance;
 import ninja.trek.srd.character.data.CharacterStats;
 import ninja.trek.srd.character.data.Race;
+import ninja.trek.srd.character.entity.CharacterEntity;
+import ninja.trek.srd.registry.ModEntities;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +26,12 @@ public class CharacterCreationScreen extends Screen {
     private static final int BUTTON_WIDTH = 200;
     private static final int BUTTON_HEIGHT = 20;
     private static final int SPACING = 25;
+    private static final int PREVIEW_PANEL_WIDTH = 150;
+    private static final int PREVIEW_PANEL_HEIGHT = 230;
+    private static final int PREVIEW_MARGIN = 20;
+    private static final int PREVIEW_BACKGROUND_COLOR = 0xAA111111;
+    private static final int PREVIEW_BORDER_COLOR = 0xFFFFFFFF;
+    private static final Text PREVIEW_TITLE = Text.literal("Character Preview");
 
     private enum CreationStep {
         RACE,
@@ -48,6 +59,8 @@ public class CharacterCreationScreen extends Screen {
     // UI widgets
     private TextFieldWidget nameField;
     private final List<ButtonWidget> stepButtons = new ArrayList<>();
+    private CharacterEntity previewEntity;
+    private boolean previewDirty = true;
 
     public CharacterCreationScreen() {
         super(Text.literal("Character Creation"));
@@ -90,6 +103,7 @@ public class CharacterCreationScreen extends Screen {
                     legsIndex = race.getDefaultLegsIndex();
                     armsIndex = race.getDefaultArmsIndex();
                     headIndex = race.getDefaultHeadIndex();
+                    markPreviewDirty();
                     nextStep();
                 }
             )
@@ -111,6 +125,7 @@ public class CharacterCreationScreen extends Screen {
                 Text.literal(capitalize(charClass.getName())),
                 btn -> {
                     selectedClass = charClass;
+                    markPreviewDirty();
                     nextStep();
                 }
             )
@@ -295,6 +310,7 @@ public class CharacterCreationScreen extends Screen {
         }
 
         clearAndInit();
+        markPreviewDirty();
     }
 
     private void decreaseAppearance(int partIndex) {
@@ -305,6 +321,7 @@ public class CharacterCreationScreen extends Screen {
             case 3 -> headIndex = Math.max(0, headIndex - 1);
         }
         clearAndInit();
+        markPreviewDirty();
     }
 
     private void increaseAppearance(int partIndex) {
@@ -315,6 +332,7 @@ public class CharacterCreationScreen extends Screen {
             case 3 -> headIndex++;
         }
         clearAndInit();
+        markPreviewDirty();
     }
 
     private void nextStep() {
@@ -395,8 +413,142 @@ public class CharacterCreationScreen extends Screen {
             case REVIEW -> renderReviewInfo(context, centerX, startY);
         }
 
+        renderCharacterPreview(context, mouseX, mouseY);
+
         // Step 4: Render widgets/buttons on top (top layer)
         super.render(context, mouseX, mouseY, delta);
+    }
+
+    private void renderCharacterPreview(DrawContext context, int mouseX, int mouseY) {
+        if (this.client == null) {
+            return;
+        }
+
+        ensurePreviewEntity();
+        if (previewEntity == null) {
+            return;
+        }
+
+        if (previewDirty) {
+            updatePreviewEntityState();
+        }
+
+        previewEntity.tick();
+
+        int panelWidth = PREVIEW_PANEL_WIDTH;
+        int availableHeight = Math.max(140, this.height - PREVIEW_MARGIN * 2);
+        int panelHeight = Math.min(PREVIEW_PANEL_HEIGHT, availableHeight);
+        int left = Math.max(PREVIEW_MARGIN, this.width - panelWidth - PREVIEW_MARGIN);
+        int top = (this.height - panelHeight) / 2;
+
+        context.fill(left, top, left + panelWidth, top + panelHeight, PREVIEW_BACKGROUND_COLOR);
+        drawPanelBorder(context, left, top, panelWidth, panelHeight, PREVIEW_BORDER_COLOR);
+        context.drawText(this.textRenderer, PREVIEW_TITLE, left + 8, top + 8, 0xFFFFFFFF, false);
+
+        int entityX = left + panelWidth / 2;
+        int entityY = top + panelHeight - 15;
+        int renderSize = Math.max(60, (int)(panelWidth * 0.65f));
+
+        float rotationX = entityX - mouseX;
+        float rotationY = (top + panelHeight / 2f) - mouseY;
+
+        drawPreviewEntity(context, entityX, entityY, renderSize, rotationX, rotationY);
+    }
+
+    private void drawPreviewEntity(DrawContext context, int x, int y, int size, float mouseX, float mouseY) {
+        if (previewEntity == null) {
+            return;
+        }
+
+        int relativeMouseX = (int) mouseX;
+        int relativeMouseY = (int) mouseY;
+        float yaw = (float) Math.atan(mouseX / 40.0f) * 20.0f;
+        float pitch = (float) Math.atan(mouseY / 40.0f) * 20.0f;
+
+        InventoryScreen.drawEntity(
+            context,
+            x,
+            y,
+            size,
+            relativeMouseX,
+            relativeMouseY,
+            0.0f,
+            yaw,
+            -pitch,
+            previewEntity
+        );
+    }
+
+    private void drawPanelBorder(DrawContext context, int left, int top, int width, int height, int color) {
+        context.fill(left, top, left + width, top + 1, color);
+        context.fill(left, top + height - 1, left + width, top + height, color);
+        context.fill(left, top, left + 1, top + height, color);
+        context.fill(left + width - 1, top, left + width, top + height, color);
+    }
+
+    private void ensurePreviewEntity() {
+        if (this.client == null) {
+            return;
+        }
+
+        ClientWorld world = this.client.world;
+        if (world == null) {
+            previewEntity = null;
+            return;
+        }
+
+        if (previewEntity != null && previewEntity.getEntityWorld() != world) {
+            previewEntity = null;
+            previewDirty = true;
+        }
+
+        if (previewEntity == null) {
+            previewEntity = new CharacterEntity(ModEntities.CHARACTER, world);
+            if (previewEntity != null) {
+                previewEntity.setAiDisabled(true);
+                previewEntity.setSilent(true);
+                previewEntity.setNoGravity(true);
+                previewEntity.refreshPositionAndAngles(0.0, world.getBottomY(), 0.0, 180.0f, 0.0f);
+                previewEntity.setBodyYaw(180.0f);
+                previewEntity.setHeadYaw(180.0f);
+                previewDirty = true;
+            }
+        }
+    }
+
+    private void updatePreviewEntityState() {
+        if (previewEntity == null) {
+            return;
+        }
+
+        CharacterAppearance appearance = new CharacterAppearance(bodyIndex, legsIndex, armsIndex, headIndex);
+        previewEntity.initializeCharacter(selectedRace, selectedClass, buildPreviewStats(), appearance);
+        previewEntity.setBodyYaw(180.0f);
+        previewEntity.setYaw(180.0f);
+        previewEntity.setHeadYaw(180.0f);
+        previewEntity.setPitch(0.0f);
+        previewDirty = false;
+    }
+
+    private CharacterStats buildPreviewStats() {
+        for (int score : abilityScores) {
+            if (score == 0) {
+                return CharacterStats.createDefault();
+            }
+        }
+
+        return new CharacterStats(
+            abilityScores[0],
+            abilityScores[1],
+            abilityScores[2],
+            abilityScores[3],
+            abilityScores[4],
+            abilityScores[5]
+        );
+    }
+
+    private void markPreviewDirty() {
+        previewDirty = true;
     }
 
     private void renderRaceInfo(DrawContext context, int centerX, int startY) {
@@ -509,6 +661,12 @@ public class CharacterCreationScreen extends Screen {
             return str;
         }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    @Override
+    public void removed() {
+        super.removed();
+        previewEntity = null;
     }
 
     @Override
