@@ -423,14 +423,14 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
     // GeckoLib implementation
 
     // Animation definitions with priority-based state machine
-    private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("idle");
-    private static final RawAnimation WALK = RawAnimation.begin().thenLoop("walk");
-    private static final RawAnimation RUN = RawAnimation.begin().thenLoop("run");
-    private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("attack");
-    private static final RawAnimation CAST = RawAnimation.begin().thenPlay("cast");
-    private static final RawAnimation BLOCK = RawAnimation.begin().thenLoop("block");
-    private static final RawAnimation CHANNEL = RawAnimation.begin().thenLoop("channel");
-    private static final RawAnimation DEATH = RawAnimation.begin().thenPlay("death");
+    private static final RawAnimation IDLE = RawAnimation.begin().thenLoop("animation.character.idle");
+    private static final RawAnimation WALK = RawAnimation.begin().thenLoop("animation.character.walk");
+    private static final RawAnimation RUN = RawAnimation.begin().thenLoop("animation.character.run");
+    private static final RawAnimation ATTACK = RawAnimation.begin().thenPlay("animation.character.attack");
+    private static final RawAnimation CAST = RawAnimation.begin().thenPlay("animation.character.spell.cast_instant");
+    private static final RawAnimation BLOCK = RawAnimation.begin().thenLoop("animation.character.combat.block_shield");
+    private static final RawAnimation CHANNEL = RawAnimation.begin().thenLoop("animation.character.spell.channel_concentrated");
+    private static final RawAnimation DEATH = RawAnimation.begin().thenPlay("animation.character.idle");
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
