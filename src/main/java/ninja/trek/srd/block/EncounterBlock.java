@@ -4,6 +4,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
@@ -26,14 +28,38 @@ import java.util.UUID;
 public class EncounterBlock extends Block {
     private static final int DEFAULT_TRIGGER_RADIUS = 10;
     private static final int DEFAULT_PLAYER_MOVEMENT = 6;
+    private static final int TICK_DELAY = 20; // Check every second (20 ticks)
 
     public EncounterBlock(Settings settings) {
         super(settings);
     }
 
     /**
+     * Called when the block is placed. Schedule the first tick to start checking for entities.
+     */
+    @Override
+    public void onPlaced(World world, BlockPos pos, BlockState state, LivingEntity placer, ItemStack itemStack) {
+        super.onPlaced(world, pos, state, placer, itemStack);
+        if (world instanceof ServerWorld) {
+            world.scheduleBlockTick(pos, this, TICK_DELAY);
+        }
+    }
+
+    /**
+     * Called when a scheduled tick occurs. Check for nearby entities and reschedule the next tick.
+     */
+    @Override
+    public void scheduledTick(BlockState state, ServerWorld world, BlockPos pos, Random random) {
+        checkForEncounterTrigger(world, pos);
+        // Only reschedule if the block still exists (wasn't removed by trigger)
+        if (world.getBlockState(pos).isOf(this)) {
+            world.scheduleBlockTick(pos, this, TICK_DELAY);
+        }
+    }
+
+    /**
      * Check if any players or entities are within trigger radius.
-     * This should be called via scheduledTick or another mechanism.
+     * This is called via scheduledTick every second.
      */
     private void checkForEncounterTrigger(ServerWorld level, BlockPos pos) {
         Vec3d centerPos = Vec3d.ofCenter(pos);
