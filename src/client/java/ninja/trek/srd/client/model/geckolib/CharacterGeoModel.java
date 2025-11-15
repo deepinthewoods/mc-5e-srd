@@ -24,41 +24,52 @@ import java.util.List;
 public class CharacterGeoModel extends GeoModel<CharacterEntity> {
 
     @Override
-    public Identifier getModelResource(CharacterEntity entity) {
+    public Identifier getModelResource(GeoRenderState renderState) {
         // Load race-specific model
-        String raceName = entity.getRace().getName().toLowerCase();
+        if (renderState instanceof CharacterGeoRenderState state) {
+            String raceName = state.race.getName().toLowerCase();
+            return Identifier.of(FiveESrdMod.MOD_ID,
+                "geo/entity/character/" + raceName + "/" + raceName + "_body");
+        }
+        // Fallback to human model
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "geo/entity/character/" + raceName + "/" + raceName + "_body");
+            "geo/entity/character/human/human_body");
     }
 
     @Override
-    public Identifier getTextureResource(CharacterEntity entity) {
+    public Identifier getTextureResource(GeoRenderState renderState) {
         // Load race-specific texture with optional dynamic compositing
-        String raceName = entity.getRace().getName().toLowerCase();
-        LayerConfiguration config = entity.getLayerConfiguration();
+        if (renderState instanceof CharacterGeoRenderState state) {
+            String raceName = state.race.getName().toLowerCase();
+            LayerConfiguration config = state.layerConfiguration;
 
-        // Get base skin texture
-        String skinTexture = config.getSkinTexture();
-        Identifier baseTexture = Identifier.of(FiveESrdMod.MOD_ID,
-            "textures/entity/character/base/" + raceName + "_" + skinTexture + ".png");
+            // Get base skin texture
+            String skinTexture = config.getSkinTexture();
+            Identifier baseTexture = Identifier.of(FiveESrdMod.MOD_ID,
+                "textures/entity/character/base/" + raceName + "_" + skinTexture + ".png");
 
-        // Build list of clothing layers for compositing
-        List<Identifier> clothingLayers = new ArrayList<>();
+            // Build list of clothing layers for compositing
+            List<Identifier> clothingLayers = new ArrayList<>();
 
-        // Add clothing texture if not default
-        String clothingTexture = config.getClothingTexture();
-        if (clothingTexture != null && !clothingTexture.equals("default")) {
-            clothingLayers.add(Identifier.of(FiveESrdMod.MOD_ID,
-                "textures/entity/character/clothing/" + clothingTexture + ".png"));
+            // Add clothing texture if not default
+            String clothingTexture = config.getClothingTexture();
+            if (clothingTexture != null && !clothingTexture.equals("default")) {
+                clothingLayers.add(Identifier.of(FiveESrdMod.MOD_ID,
+                    "textures/entity/character/clothing/" + clothingTexture + ".png"));
+            }
+
+            // If no layers to composite, return base texture directly
+            if (clothingLayers.isEmpty()) {
+                return baseTexture;
+            }
+
+            // Compose texture dynamically (Phase 7.3)
+            return DynamicTextureComposer.getInstance().composeTexture(baseTexture, clothingLayers);
         }
 
-        // If no layers to composite, return base texture directly
-        if (clothingLayers.isEmpty()) {
-            return baseTexture;
-        }
-
-        // Compose texture dynamically (Phase 7.3)
-        return DynamicTextureComposer.getInstance().composeTexture(baseTexture, clothingLayers);
+        // Fallback to human texture
+        return Identifier.of(FiveESrdMod.MOD_ID,
+            "textures/entity/character/base/human_default.png");
     }
 
     @Override
