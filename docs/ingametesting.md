@@ -24,6 +24,7 @@ Before testing, ensure:
 - Character creation screen should open
 - Screen should show "Race Selection" as first step
 - Available races: Human, Dwarf, Elf, Halfling should be visible
+[all ok]
 
 ### Test 1.2: Race Selection
 **Steps:**
@@ -36,6 +37,7 @@ Before testing, ensure:
 - **Dwarf**: +2 CON, Darkvision, 25ft movement
 - **Elf**: +2 DEX, Darkvision, 30ft movement
 - **Halfling**: +2 DEX, 25ft movement
+[all ok]
 
 ### Test 1.3: Class Selection
 **Steps:**
@@ -46,6 +48,7 @@ Before testing, ensure:
 - Fighter should be available
 - Hit die: d10
 - Shows starting proficiency bonus (+2 at level 1)
+[all ok]
 
 ### Test 1.4: Ability Score Assignment
 **Steps:**
@@ -57,6 +60,7 @@ Before testing, ensure:
 - Can assign each value from standard array once
 - Final scores show base + racial bonus
 - Cannot proceed until all scores assigned
+[all ok]
 
 ### Test 1.5: Appearance Customization
 **Steps:**
@@ -68,6 +72,7 @@ Before testing, ensure:
 - Sliders or selection for each body part
 - Each race has different mesh index ranges
 - Preview updates (if implemented)
+[we should add the preview]
 
 ### Test 1.6: Name and Final Creation
 **Steps:**
@@ -80,7 +85,7 @@ Before testing, ensure:
 - Entity has the configured appearance
 - Entity name displays above head
 - GUI closes automatically
-
+[all ok]
 ---
 
 ## 2. Combat Encounter System
