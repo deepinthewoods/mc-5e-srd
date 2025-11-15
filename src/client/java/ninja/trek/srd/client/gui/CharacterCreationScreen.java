@@ -447,9 +447,11 @@ public class CharacterCreationScreen extends Screen {
         drawPanelBorder(context, left, top, panelWidth, panelHeight, PREVIEW_BORDER_COLOR);
         context.drawText(this.textRenderer, PREVIEW_TITLE, left + 8, top + 8, 0xFFFFFFFF, false);
 
+        // Position the entity so it's centered vertically in the pane
+        // The entity's feet should be at the bottom with head visible at top
         int entityX = left + panelWidth / 2;
-        int entityY = top + panelHeight - 15;
-        int renderSize = Math.max(60, (int)(panelWidth * 0.65f));
+        int entityY = top + panelHeight - 30;  // Raised from -15 to -30 to show more of character
+        int renderSize = Math.max(50, (int)(panelHeight * 0.75f));  // Scale based on height instead of width
 
         float rotationX = entityX - mouseX;
         float rotationY = (top + panelHeight / 2f) - mouseY;
@@ -467,8 +469,9 @@ public class CharacterCreationScreen extends Screen {
         }
 
         // Calculate rotation based on mouse position
-        float yaw = (float) Math.atan(mouseX / 40.0f) * 20.0f;
-        float pitch = (float) Math.atan(mouseY / 40.0f) * 20.0f;
+        // Limit rotation to reasonable values
+        float yaw = Math.max(-30.0f, Math.min(30.0f, (float) Math.atan(mouseX / 40.0f) * 20.0f));
+        float pitch = Math.max(-15.0f, Math.min(15.0f, (float) Math.atan(mouseY / 40.0f) * 10.0f));
 
         // Use the correct signature for InventoryScreen.drawEntity in 1.21.10:
         // drawEntity(DrawContext, x1, y1, x2, y2, size, bodyYaw, entityYaw, entityPitch, LivingEntity)
@@ -480,8 +483,8 @@ public class CharacterCreationScreen extends Screen {
             y,             // y2 - bottom bound
             size,          // size/scale
             0.0f,          // body yaw offset
-            yaw,           // entity yaw (rotation)
-            -pitch,        // entity pitch (up/down)
+            yaw,           // entity yaw (left/right rotation)
+            pitch,         // entity pitch (up/down tilt) - removed negative sign
             previewEntity
         );
     }
