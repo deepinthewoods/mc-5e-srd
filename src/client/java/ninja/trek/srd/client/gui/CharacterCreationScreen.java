@@ -681,6 +681,7 @@ public class CharacterCreationScreen extends Screen {
         // Check if click is within preview panel
         if (click.button() == 0 && isMouseOverPreview(click.x(), click.y())) {
             isDraggingPreview = true;
+            this.setDragging(true);  // Enable drag event handling
             return true;
         }
         return super.mouseClicked(click, doubled);
@@ -690,6 +691,7 @@ public class CharacterCreationScreen extends Screen {
     public boolean mouseReleased(Click click) {
         if (click.button() == 0 && isDraggingPreview) {
             isDraggingPreview = false;
+            this.setDragging(false);  // Disable drag event handling
             return true;
         }
         return super.mouseReleased(click);
