@@ -91,7 +91,7 @@ public class CharacterGeoModel extends GeoModel<CharacterEntity> {
         // - idle, walk, run (locomotion)
         // - attack, cast, block, channel, death (basic actions)
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "animations/entity/character/locomotion.animation.json");
+            "animations/entity/character/locomotion");
     }
 
     @Override

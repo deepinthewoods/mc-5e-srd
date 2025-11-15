@@ -82,7 +82,7 @@ public class EquipmentLayerRenderer extends GeoRenderLayer<CharacterEntity, Void
     private Identifier getEquipmentModelId(String modelName, EquipmentLayerSlot slot) {
         String slotPath = slot.name().toLowerCase();
         return Identifier.of(FiveESrdMod.MOD_ID,
-            "geo/entity/character/equipment/" + slotPath + "/" + modelName + ".geo.json");
+            "geo/entity/character/equipment/" + slotPath + "/" + modelName);
     }
 
     /**
