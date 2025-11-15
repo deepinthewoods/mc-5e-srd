@@ -466,18 +466,22 @@ public class CharacterCreationScreen extends Screen {
             return;
         }
 
+        // Calculate rotation based on mouse position
         float yaw = (float) Math.atan(mouseX / 40.0f) * 20.0f;
         float pitch = (float) Math.atan(mouseY / 40.0f) * 20.0f;
 
-        // Call InventoryScreen.drawEntity with the proper signature for 1.21.x
-        // The method handles entity rendering with mouse-based rotation
+        // Use the correct signature for InventoryScreen.drawEntity in 1.21.10:
+        // drawEntity(DrawContext, x1, y1, x2, y2, size, bodyYaw, entityYaw, entityPitch, LivingEntity)
         InventoryScreen.drawEntity(
             context,
-            x,
-            y,
-            size,
-            mouseX,
-            mouseY,
+            x - size / 2,  // x1 - left bound
+            y - size,      // y1 - top bound
+            x + size / 2,  // x2 - right bound
+            y,             // y2 - bottom bound
+            size,          // size/scale
+            0.0f,          // body yaw offset
+            yaw,           // entity yaw (rotation)
+            -pitch,        // entity pitch (up/down)
             previewEntity
         );
     }
