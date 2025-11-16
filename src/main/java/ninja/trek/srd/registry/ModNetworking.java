@@ -102,5 +102,10 @@ public class ModNetworking {
             SelectCharacterPayload.ID,
             SelectCharacterPayload.CODEC
         );
+
+        PayloadTypeRegistry.playC2S().register(
+            DeleteCharacterPayload.ID,
+            DeleteCharacterPayload.CODEC
+        );
     }
 }

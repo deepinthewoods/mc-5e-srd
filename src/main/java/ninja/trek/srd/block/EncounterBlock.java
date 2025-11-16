@@ -14,8 +14,10 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.server.network.ServerPlayerEntity;
 import ninja.trek.srd.character.entity.CharacterEntity;
 import ninja.trek.srd.combat.EncounterManager;
+import ninja.trek.srd.combat.EncounterState;
 import ninja.trek.srd.combat.InitiativeTracker;
 import ninja.trek.srd.combat.DeathSaves;
+import ninja.trek.srd.network.payloads.TurnStartPayload;
 import ninja.trek.srd.util.DiceRoller;
 
 import java.util.List;
@@ -164,6 +166,30 @@ public class EncounterBlock extends Block {
         }
 
         manager.syncEncounter(level.getServer(), encounterId);
+
+        // Auto-possess the first character if it's player-owned
+        EncounterState encounter = manager.getEncounterById(encounterId);
+        if (encounter != null) {
+            UUID firstEntityId = encounter.getCurrentTurnEntity();
+            if (firstEntityId != null) {
+                Entity firstEntity = level.getServer().getOverworld().getEntity(firstEntityId);
+                if (firstEntity instanceof CharacterEntity character && character.isPlayerControlled()) {
+                    UUID ownerUUID = character.getOwnerUUID();
+                    if (ownerUUID != null) {
+                        ServerPlayerEntity owner = level.getServer().getPlayerManager().getPlayer(ownerUUID);
+                        if (owner != null) {
+                            ninja.trek.srd.character.management.PossessionManager.getInstance()
+                                .possessCharacter(level.getServer(), owner, character);
+                        }
+                    }
+                }
+
+                // Send turn start notification
+                TurnStartPayload turnStartPayload = new TurnStartPayload(encounterId, firstEntityId);
+                manager.broadcastToEncounter(level.getServer(), encounterId, turnStartPayload);
+            }
+        }
+
         // TODO: Spawn associated mobs from NBT data
     }
 }

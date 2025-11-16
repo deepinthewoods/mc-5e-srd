@@ -44,6 +44,9 @@ public class ServerPacketHandlers {
         // Handle SelectCharacter packets
         ServerPlayNetworking.registerGlobalReceiver(SelectCharacterPayload.ID, ServerPacketHandlers::handleSelectCharacter);
 
+        // Handle DeleteCharacter packets
+        ServerPlayNetworking.registerGlobalReceiver(DeleteCharacterPayload.ID, ServerPacketHandlers::handleDeleteCharacter);
+
         FiveESrdMod.LOGGER.info("Server packet handlers registered successfully!");
     }
 
@@ -315,13 +318,25 @@ public class ServerPacketHandlers {
                 TurnStartPayload turnStartPayload = new TurnStartPayload(encounter.getEncounterId(), nextEntityId);
                 manager.broadcastToEncounter(context.server(), encounter.getEncounterId(), turnStartPayload);
 
-                // Handle AI turns if next entity is an NPC
+                // Handle turn start for the next entity
                 Entity nextEntity = context.server().getOverworld().getEntity(nextEntityId);
-                if (nextEntity instanceof CharacterEntity character && !character.isPlayerControlled()) {
-                    // Schedule AI turn to execute after a short delay
-                    context.server().execute(() -> {
-                        character.executeAITurn(context.server(), encounter);
-                    });
+                if (nextEntity instanceof CharacterEntity character) {
+                    if (character.isPlayerControlled()) {
+                        // Auto-possess player-owned character on their turn
+                        UUID ownerUUID = character.getOwnerUUID();
+                        if (ownerUUID != null) {
+                            ServerPlayerEntity owner = context.server().getPlayerManager().getPlayer(ownerUUID);
+                            if (owner != null) {
+                                ninja.trek.srd.character.management.PossessionManager.getInstance()
+                                    .possessCharacter(context.server(), owner, character);
+                            }
+                        }
+                    } else {
+                        // Schedule AI turn to execute after a short delay
+                        context.server().execute(() -> {
+                            character.executeAITurn(context.server(), encounter);
+                        });
+                    }
                 }
             }
         });
@@ -422,6 +437,45 @@ public class ServerPacketHandlers {
             // Possess the character
             ninja.trek.srd.character.management.PossessionManager.getInstance()
                 .possessCharacter(context.server(), player, character);
+        });
+    }
+
+    /**
+     * Handle DeleteCharacter packet from client.
+     */
+    private static void handleDeleteCharacter(DeleteCharacterPayload payload, ServerPlayNetworking.Context context) {
+        ServerPlayerEntity player = context.player();
+
+        // Execute on server thread
+        context.server().execute(() -> {
+            // Verify that the player owns the character
+            if (!ninja.trek.srd.character.management.CharacterManager.getInstance()
+                .ownsCharacter(player.getUuid(), payload.characterUUID())) {
+                FiveESrdMod.LOGGER.warn("Player {} tried to delete character {} that they don't own",
+                    player.getName().getString(), payload.characterUUID());
+                return;
+            }
+
+            // Find the character entity
+            Entity entity = context.server().getOverworld().getEntity(payload.characterUUID());
+            if (!(entity instanceof CharacterEntity character)) {
+                FiveESrdMod.LOGGER.warn("Character {} not found for deletion", payload.characterUUID());
+                return;
+            }
+
+            FiveESrdMod.LOGGER.info("Player {} deleting character {}",
+                player.getName().getString(), character.getName().getString());
+
+            // Notify possession manager (will handle switching to another character if needed)
+            ninja.trek.srd.character.management.PossessionManager.getInstance()
+                .onCharacterRemoved(context.server(), character.getUuid());
+
+            // Unregister from character manager
+            ninja.trek.srd.character.management.CharacterManager.getInstance()
+                .unregisterCharacter(character.getUuid());
+
+            // Remove from world
+            character.discard();
         });
     }
 }

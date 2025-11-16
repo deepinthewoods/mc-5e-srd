@@ -40,6 +40,9 @@ public class FiveESrdModClient implements ClientModInitializer {
 		// Register combat HUD overlay + bindings
 		ActionHotbarOverlay.register();
 
+		// Register character list HUD
+		ninja.trek.srd.client.gui.CharacterListHud.register();
+
 		// Register character mode keybindings (G key for toggle)
 		ninja.trek.srd.client.CharacterModeKeybindings.register();
 
