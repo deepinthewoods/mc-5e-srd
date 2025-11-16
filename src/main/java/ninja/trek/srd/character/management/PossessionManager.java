@@ -1,5 +1,7 @@
 package ninja.trek.srd.character.management;
 
+import net.minecraft.inventory.SimpleInventory;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import ninja.trek.srd.character.entity.CharacterEntity;
@@ -27,6 +29,9 @@ public class PossessionManager {
     // Map of player UUID -> player mode state (true = player mode, false = party mode)
     private final Map<UUID, Boolean> playerModeState = new HashMap<>();
 
+    // Map of player UUID -> stored player inventory (when in party mode)
+    private final Map<UUID, SimpleInventory> storedPlayerInventories = new HashMap<>();
+
     private PossessionManager() {
         // Private constructor for singleton
     }
@@ -44,13 +49,22 @@ public class PossessionManager {
     /**
      * Possess a character as a player.
      * Sends network packet to client to switch camera and input.
+     * Swaps player inventory with character inventory.
      */
     public void possessCharacter(MinecraftServer server, ServerPlayerEntity player, CharacterEntity character) {
         UUID playerUUID = player.getUuid();
         UUID characterUUID = character.getUuid();
 
-        // Release any currently possessed character
+        // Release any currently possessed character (this will save their inventory back)
         releasePossession(server, player);
+
+        // Store player's inventory if not already stored (first time entering party mode)
+        if (!storedPlayerInventories.containsKey(playerUUID)) {
+            storedPlayerInventories.put(playerUUID, storePlayerInventory(player));
+        }
+
+        // Swap player inventory with character inventory
+        swapInventories(player, character);
 
         // Update mappings
         playerToPossessedCharacter.put(playerUUID, characterUUID);
@@ -66,13 +80,20 @@ public class PossessionManager {
     /**
      * Release possession of current character.
      * This does NOT return to player mode - just releases the character.
+     * Saves character's current inventory back to the character.
      */
     public void releasePossession(MinecraftServer server, ServerPlayerEntity player) {
         UUID playerUUID = player.getUuid();
-        UUID previousCharacter = playerToPossessedCharacter.remove(playerUUID);
+        UUID previousCharacterUUID = playerToPossessedCharacter.remove(playerUUID);
 
-        if (previousCharacter != null) {
-            characterToPossessingPlayer.remove(previousCharacter);
+        if (previousCharacterUUID != null) {
+            characterToPossessingPlayer.remove(previousCharacterUUID);
+
+            // Save player's current inventory back to the character
+            var entity = server.getOverworld().getEntity(previousCharacterUUID);
+            if (entity instanceof CharacterEntity previousCharacter) {
+                saveInventoryToCharacter(player, previousCharacter);
+            }
         }
 
         // Send packet to client
@@ -111,14 +132,21 @@ public class PossessionManager {
 
     /**
      * Set player mode state.
+     * Handles inventory swapping between player and party mode.
      */
     public void setPlayerMode(MinecraftServer server, ServerPlayerEntity player, boolean playerMode) {
         UUID playerUUID = player.getUuid();
         playerModeState.put(playerUUID, playerMode);
 
         if (playerMode) {
-            // Switching to player mode - release possession
+            // Switching to player mode - release possession and restore player's inventory
             releasePossession(server, player);
+
+            // Restore player's original inventory
+            SimpleInventory storedInventory = storedPlayerInventories.remove(playerUUID);
+            if (storedInventory != null) {
+                restorePlayerInventory(player, storedInventory);
+            }
         } else {
             // Switching to party mode - possess first available character
             var characters = CharacterManager.getInstance().getPlayerCharacterEntities(server, playerUUID);
@@ -145,6 +173,7 @@ public class PossessionManager {
             characterToPossessingPlayer.remove(characterUUID);
         }
         playerModeState.remove(playerUUID);
+        storedPlayerInventories.remove(playerUUID);
     }
 
     /**
@@ -169,6 +198,70 @@ public class PossessionManager {
                     setPlayerMode(server, player, true);
                 }
             }
+        }
+    }
+
+    // Inventory Management Helper Methods
+
+    /**
+     * Store the player's current inventory.
+     */
+    private SimpleInventory storePlayerInventory(ServerPlayerEntity player) {
+        SimpleInventory storage = new SimpleInventory(41);
+        for (int i = 0; i < player.getInventory().size(); i++) {
+            storage.setStack(i, player.getInventory().getStack(i).copy());
+        }
+        return storage;
+    }
+
+    /**
+     * Restore a stored inventory to the player.
+     */
+    private void restorePlayerInventory(ServerPlayerEntity player, SimpleInventory storage) {
+        player.getInventory().clear();
+        for (int i = 0; i < Math.min(storage.size(), player.getInventory().size()); i++) {
+            player.getInventory().setStack(i, storage.getStack(i).copy());
+        }
+        player.currentScreenHandler.sendContentUpdates();
+        player.playerScreenHandler.onContentChanged(player.getInventory());
+    }
+
+    /**
+     * Swap player inventory with character inventory.
+     */
+    private void swapInventories(ServerPlayerEntity player, CharacterEntity character) {
+        // Save player's current inventory temporarily
+        SimpleInventory tempStorage = new SimpleInventory(41);
+        for (int i = 0; i < player.getInventory().size(); i++) {
+            tempStorage.setStack(i, player.getInventory().getStack(i).copy());
+        }
+
+        // Clear player inventory and load character's inventory
+        player.getInventory().clear();
+        SimpleInventory charInventory = character.getInventory();
+        for (int i = 0; i < Math.min(charInventory.size(), player.getInventory().size()); i++) {
+            player.getInventory().setStack(i, charInventory.getStack(i).copy());
+        }
+
+        // Store temp inventory in character
+        charInventory.clear();
+        for (int i = 0; i < tempStorage.size(); i++) {
+            charInventory.setStack(i, tempStorage.getStack(i).copy());
+        }
+
+        // Update client
+        player.currentScreenHandler.sendContentUpdates();
+        player.playerScreenHandler.onContentChanged(player.getInventory());
+    }
+
+    /**
+     * Save player's current inventory back to character.
+     */
+    private void saveInventoryToCharacter(ServerPlayerEntity player, CharacterEntity character) {
+        SimpleInventory charInventory = character.getInventory();
+        charInventory.clear();
+        for (int i = 0; i < Math.min(player.getInventory().size(), charInventory.size()); i++) {
+            charInventory.setStack(i, player.getInventory().getStack(i).copy());
         }
     }
 }

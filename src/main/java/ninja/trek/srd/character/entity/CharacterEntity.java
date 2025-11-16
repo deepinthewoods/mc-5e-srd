@@ -8,6 +8,7 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.mob.PathAwareEntity;
 import net.minecraft.entity.attribute.DefaultAttributeContainer;
 import net.minecraft.entity.attribute.EntityAttributes;
+import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.world.World;
 import net.minecraft.util.math.Vec3d;
 import ninja.trek.srd.character.data.*;
@@ -50,6 +51,7 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
     private java.util.UUID ownerUUID; // Player who owns this character
     private ninja.trek.srd.character.ai.CombatAIController aiController;
     private Weapon equippedWeapon;
+    private SimpleInventory inventory; // Character's inventory (41 slots like player)
 
     // GeckoLib animation cache
     private final AnimatableInstanceCache animationCache = GeckoLibUtil.createInstanceCache(this);
@@ -79,6 +81,9 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
         this.characterClass = CharacterClass.FIGHTER;
         this.level = 1;
         this.equippedWeapon = Weapons.getStartingWeaponForFighter();
+
+        // Initialize inventory (41 slots: 9 hotbar + 27 main + 4 armor + 1 offhand)
+        this.inventory = new SimpleInventory(41);
 
         // Calculate initial combat state
         int maxHp = calculateMaxHitPoints();
@@ -358,6 +363,10 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
 
     public void setEquippedWeapon(Weapon weapon) {
         this.equippedWeapon = weapon;
+    }
+
+    public SimpleInventory getInventory() {
+        return inventory;
     }
 
     /**
@@ -689,8 +698,164 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
         return System.currentTimeMillis() - castStartTime;
     }
 
-    // TODO: Implement entity persistence using Minecraft 1.21.10 API
-    // The NBT save/load methods have changed significantly in 1.21.10
-    // For now, entity data will not persist across world reloads
-    // This will be implemented once the correct API is identified
+    // NBT Persistence
+
+    @Override
+    public void writeCustomDataToNbt(NbtCompound nbt) {
+        super.writeCustomDataToNbt(nbt);
+
+        // Save owner UUID
+        if (ownerUUID != null) {
+            nbt.putUuid("OwnerUUID", ownerUUID);
+        }
+
+        // Save character stats
+        nbt.putInt("Strength", stats.strength());
+        nbt.putInt("Dexterity", stats.dexterity());
+        nbt.putInt("Constitution", stats.constitution());
+        nbt.putInt("Intelligence", stats.intelligence());
+        nbt.putInt("Wisdom", stats.wisdom());
+        nbt.putInt("Charisma", stats.charisma());
+
+        // Save race and class
+        nbt.putString("Race", race.name());
+        nbt.putString("Class", characterClass.name());
+        nbt.putInt("Level", level);
+
+        // Save player-controlled flag
+        nbt.putBoolean("PlayerControlled", playerControlled);
+
+        // Save equipped weapon
+        nbt.putString("EquippedWeapon", equippedWeapon.name());
+
+        // Save combat state
+        nbt.putBoolean("InCombat", combatState.inCombat());
+        nbt.putInt("CurrentHP", combatState.currentHitPoints());
+        nbt.putInt("MaxHP", combatState.maxHitPoints());
+        nbt.putInt("ArmorClass", combatState.armorClass());
+        nbt.putBoolean("HasAction", combatState.hasAction());
+        nbt.putBoolean("HasBonusAction", combatState.hasBonusAction());
+        nbt.putBoolean("HasReaction", combatState.hasReaction());
+        nbt.putInt("RemainingMovement", combatState.remainingMovement());
+
+        // Save inventory
+        net.minecraft.nbt.NbtList inventoryNbt = new net.minecraft.nbt.NbtList();
+        for (int i = 0; i < inventory.size(); i++) {
+            net.minecraft.item.ItemStack stack = inventory.getStack(i);
+            if (!stack.isEmpty()) {
+                NbtCompound itemNbt = new NbtCompound();
+                itemNbt.putByte("Slot", (byte) i);
+                stack.encode(itemNbt);
+                inventoryNbt.add(itemNbt);
+            }
+        }
+        nbt.put("Inventory", inventoryNbt);
+
+        // Save appearance
+        CharacterAppearance appearance = getAppearance();
+        nbt.putInt("BodyIndex", appearance.bodyIndex());
+        nbt.putInt("LegsIndex", appearance.legsIndex());
+        nbt.putInt("ArmsIndex", appearance.armsIndex());
+        nbt.putInt("HeadIndex", appearance.headIndex());
+
+        // Save size scale
+        nbt.putFloat("SizeScale", sizeScale);
+    }
+
+    @Override
+    public void readCustomDataFromNbt(NbtCompound nbt) {
+        super.readCustomDataFromNbt(nbt);
+
+        // Load owner UUID
+        if (nbt.containsUuid("OwnerUUID")) {
+            ownerUUID = nbt.getUuid("OwnerUUID");
+        }
+
+        // Load character stats
+        this.stats = new CharacterStats(
+            nbt.getInt("Strength"),
+            nbt.getInt("Dexterity"),
+            nbt.getInt("Constitution"),
+            nbt.getInt("Intelligence"),
+            nbt.getInt("Wisdom"),
+            nbt.getInt("Charisma")
+        );
+
+        // Load race and class
+        if (nbt.contains("Race")) {
+            this.race = Race.valueOf(nbt.getString("Race"));
+        }
+        if (nbt.contains("Class")) {
+            this.characterClass = CharacterClass.valueOf(nbt.getString("Class"));
+        }
+        this.level = nbt.getInt("Level");
+
+        // Load player-controlled flag
+        this.playerControlled = nbt.getBoolean("PlayerControlled");
+
+        // Load equipped weapon
+        if (nbt.contains("EquippedWeapon")) {
+            this.equippedWeapon = Weapon.valueOf(nbt.getString("EquippedWeapon"));
+        }
+
+        // Load combat state
+        boolean inCombat = nbt.getBoolean("InCombat");
+        int currentHP = nbt.getInt("CurrentHP");
+        int maxHP = nbt.getInt("MaxHP");
+        int ac = nbt.getInt("ArmorClass");
+        boolean hasAction = nbt.getBoolean("HasAction");
+        boolean hasBonusAction = nbt.getBoolean("HasBonusAction");
+        boolean hasReaction = nbt.getBoolean("HasReaction");
+        int remainingMovement = nbt.getInt("RemainingMovement");
+
+        this.combatState = new CombatState(
+            inCombat,
+            0, // initiative
+            Vec3d.ZERO, // startPosition
+            remainingMovement,
+            hasAction,
+            hasBonusAction,
+            hasReaction,
+            ac,
+            currentHP,
+            maxHP,
+            false, // dodging
+            DeathSaves.createDefault(),
+            false, // disengaged
+            false // concentrating
+        );
+
+        // Load inventory
+        if (nbt.contains("Inventory", net.minecraft.nbt.NbtElement.LIST_TYPE)) {
+            net.minecraft.nbt.NbtList inventoryNbt = nbt.getList("Inventory", net.minecraft.nbt.NbtElement.COMPOUND_TYPE);
+            inventory.clear();
+            for (int i = 0; i < inventoryNbt.size(); i++) {
+                NbtCompound itemNbt = inventoryNbt.getCompound(i);
+                int slot = itemNbt.getByte("Slot") & 255;
+                net.minecraft.item.ItemStack stack = net.minecraft.item.ItemStack.fromNbt(itemNbt).orElse(net.minecraft.item.ItemStack.EMPTY);
+                if (!stack.isEmpty() && slot < inventory.size()) {
+                    inventory.setStack(slot, stack);
+                }
+            }
+        }
+
+        // Load appearance
+        if (nbt.contains("BodyIndex")) {
+            CharacterAppearance appearance = new CharacterAppearance(
+                nbt.getInt("BodyIndex"),
+                nbt.getInt("LegsIndex"),
+                nbt.getInt("ArmsIndex"),
+                nbt.getInt("HeadIndex")
+            );
+            setAppearance(appearance);
+        }
+
+        // Load size scale
+        if (nbt.contains("SizeScale")) {
+            this.sizeScale = nbt.getFloat("SizeScale");
+        }
+
+        // Update Minecraft attributes based on loaded data
+        updateMinecraftAttributes();
+    }
 }
