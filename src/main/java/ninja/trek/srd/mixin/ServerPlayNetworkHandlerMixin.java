@@ -39,6 +39,43 @@ public abstract class ServerPlayNetworkHandlerMixin {
         }
         MinecraftServer server = serverWorld.getServer();
 
+        // Handle possession - redirect movement to possessed character
+        ninja.trek.srd.character.management.PossessionManager possessionManager =
+            ninja.trek.srd.character.management.PossessionManager.getInstance();
+        UUID possessedCharacterUUID = possessionManager.getPossessedCharacter(player.getUuid());
+
+        if (possessedCharacterUUID != null) {
+            // Player is possessing a character - redirect movement to character
+            net.minecraft.entity.Entity entity = server.getOverworld().getEntity(possessedCharacterUUID);
+            if (entity instanceof ninja.trek.srd.character.entity.CharacterEntity character) {
+                // Apply rotation from packet to character
+                if (packet.changesLook()) {
+                    character.setYaw(packet.getYaw(character.getYaw()));
+                    character.setPitch(packet.getPitch(character.getPitch()));
+                    character.headYaw = packet.getYaw(character.headYaw);
+                }
+
+                // Apply position from packet to character
+                if (packet.changesPosition()) {
+                    Vec3d currentPos = new Vec3d(character.getX(), character.getY(), character.getZ());
+                    Vec3d targetPos = new Vec3d(
+                        packet.getX(currentPos.x),
+                        packet.getY(currentPos.y),
+                        packet.getZ(currentPos.z)
+                    );
+                    character.setPosition(targetPos);
+                }
+
+                // Keep player frozen at character's position
+                requestTeleport(character.getX(), character.getY(), character.getZ(),
+                    character.getYaw(), character.getPitch());
+                player.setVelocity(Vec3d.ZERO);
+
+                ci.cancel();
+                return;
+            }
+        }
+
         EncounterManager manager = EncounterManager.getInstance(server);
         EncounterState encounter = manager.getEncounterForEntity(player.getUuid());
         if (encounter == null) {

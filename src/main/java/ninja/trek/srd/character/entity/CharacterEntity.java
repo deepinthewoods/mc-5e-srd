@@ -47,6 +47,7 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
     private CombatState combatState;
     private Vec3d lastCombatPosition = Vec3d.ZERO;
     private boolean playerControlled = false;
+    private java.util.UUID ownerUUID; // Player who owns this character
     private ninja.trek.srd.character.ai.CombatAIController aiController;
     private Weapon equippedWeapon;
 
@@ -337,6 +338,14 @@ public class CharacterEntity extends PathAwareEntity implements GeoEntity {
 
     public void setPlayerControlled(boolean playerControlled) {
         this.playerControlled = playerControlled;
+    }
+
+    public java.util.UUID getOwnerUUID() {
+        return ownerUUID;
+    }
+
+    public void setOwnerUUID(java.util.UUID ownerUUID) {
+        this.ownerUUID = ownerUUID;
     }
 
     public ninja.trek.srd.character.ai.CombatAIController getAIController() {

@@ -38,6 +38,12 @@ public class ServerPacketHandlers {
         // Handle CreateCharacter packets
         ServerPlayNetworking.registerGlobalReceiver(CreateCharacterPayload.ID, ServerPacketHandlers::handleCreateCharacter);
 
+        // Handle TogglePlayerMode packets
+        ServerPlayNetworking.registerGlobalReceiver(TogglePlayerModePayload.ID, ServerPacketHandlers::handleTogglePlayerMode);
+
+        // Handle SelectCharacter packets
+        ServerPlayNetworking.registerGlobalReceiver(SelectCharacterPayload.ID, ServerPacketHandlers::handleSelectCharacter);
+
         FiveESrdMod.LOGGER.info("Server packet handlers registered successfully!");
     }
 
@@ -345,8 +351,9 @@ public class ServerPacketHandlers {
                 payload.appearance()
             );
 
-            // Set as player-controlled
+            // Set as player-controlled and assign owner
             character.setPlayerControlled(true);
+            character.setOwnerUUID(player.getUuid());
 
             // Set custom name
             character.setCustomName(net.minecraft.text.Text.literal(payload.name()));
@@ -362,8 +369,59 @@ public class ServerPacketHandlers {
                 serverWorld.spawnEntity(character);
             }
 
+            // Register character with CharacterManager
+            ninja.trek.srd.character.management.CharacterManager.getInstance()
+                .registerCharacter(player.getUuid(), character);
+
             FiveESrdMod.LOGGER.info("Character '{}' created successfully at ({}, {}, {})",
                 payload.name(), offsetX, player.getY(), offsetZ);
+        });
+    }
+
+    /**
+     * Handle TogglePlayerMode packet from client.
+     */
+    private static void handleTogglePlayerMode(TogglePlayerModePayload payload, ServerPlayNetworking.Context context) {
+        ServerPlayerEntity player = context.player();
+
+        // Execute on server thread
+        context.server().execute(() -> {
+            FiveESrdMod.LOGGER.info("Player {} toggling player mode", player.getName().getString());
+
+            ninja.trek.srd.character.management.PossessionManager.getInstance()
+                .toggleMode(context.server(), player);
+        });
+    }
+
+    /**
+     * Handle SelectCharacter packet from client.
+     */
+    private static void handleSelectCharacter(SelectCharacterPayload payload, ServerPlayNetworking.Context context) {
+        ServerPlayerEntity player = context.player();
+
+        // Execute on server thread
+        context.server().execute(() -> {
+            // Verify that the player owns the character
+            if (!ninja.trek.srd.character.management.CharacterManager.getInstance()
+                .ownsCharacter(player.getUuid(), payload.characterUUID())) {
+                FiveESrdMod.LOGGER.warn("Player {} tried to select character {} that they don't own",
+                    player.getName().getString(), payload.characterUUID());
+                return;
+            }
+
+            // Find the character entity
+            Entity entity = context.server().getOverworld().getEntity(payload.characterUUID());
+            if (!(entity instanceof CharacterEntity character)) {
+                FiveESrdMod.LOGGER.warn("Character {} not found", payload.characterUUID());
+                return;
+            }
+
+            FiveESrdMod.LOGGER.info("Player {} selecting character {}",
+                player.getName().getString(), character.getName().getString());
+
+            // Possess the character
+            ninja.trek.srd.character.management.PossessionManager.getInstance()
+                .possessCharacter(context.server(), player, character);
         });
     }
 }

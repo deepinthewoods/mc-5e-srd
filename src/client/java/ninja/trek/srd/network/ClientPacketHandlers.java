@@ -53,6 +53,18 @@ public class ClientPacketHandlers {
             ClientPacketHandlers::handleUpdateLayerConfig
         );
 
+        // Handle PossessCharacter packets
+        ClientPlayNetworking.registerGlobalReceiver(
+            PossessCharacterPayload.ID,
+            ClientPacketHandlers::handlePossessCharacter
+        );
+
+        // Handle ReleasePossession packets
+        ClientPlayNetworking.registerGlobalReceiver(
+            ReleasePossessionPayload.ID,
+            ClientPacketHandlers::handleReleasePossession
+        );
+
         FiveESrdMod.LOGGER.info("Client packet handlers registered successfully!");
     }
 
@@ -194,6 +206,28 @@ public class ClientPacketHandlers {
             } else {
                 FiveESrdMod.LOGGER.debug("Entity {} not found or not a CharacterEntity", payload.entityId());
             }
+        });
+    }
+
+    /**
+     * Handle PossessCharacter packet from server.
+     */
+    private static void handlePossessCharacter(PossessCharacterPayload payload, ClientPlayNetworking.Context context) {
+        // Execute on client thread
+        context.client().execute(() -> {
+            FiveESrdMod.LOGGER.info("Possessing character: {}", payload.characterUUID());
+            ninja.trek.srd.client.ClientPossessionManager.getInstance().possessCharacter(payload.characterUUID());
+        });
+    }
+
+    /**
+     * Handle ReleasePossession packet from server.
+     */
+    private static void handleReleasePossession(ReleasePossessionPayload payload, ClientPlayNetworking.Context context) {
+        // Execute on client thread
+        context.client().execute(() -> {
+            FiveESrdMod.LOGGER.info("Releasing possession");
+            ninja.trek.srd.client.ClientPossessionManager.getInstance().releasePossession();
         });
     }
 
