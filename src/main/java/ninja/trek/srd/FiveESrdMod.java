@@ -1,6 +1,7 @@
 package ninja.trek.srd;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import ninja.trek.srd.registry.ModBlocks;
 import ninja.trek.srd.registry.ModDataComponents;
@@ -38,6 +39,12 @@ public class FiveESrdMod implements ModInitializer {
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) ->
 			EncounterManager.getInstance(server).syncPlayerEncounterState(server, handler.player)
 		);
+
+		// Rebuild character manager mappings when server starts (after entities loaded)
+		ServerLifecycleEvents.SERVER_STARTED.register(server -> {
+			LOGGER.info("Rebuilding character manager mappings from saved entities...");
+			ninja.trek.srd.character.management.CharacterManager.getInstance().rebuildMappings(server);
+		});
 
 		LOGGER.info("5E SRD mod initialized successfully!");
 	}

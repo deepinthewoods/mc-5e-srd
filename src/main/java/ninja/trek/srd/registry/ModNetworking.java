@@ -60,6 +60,17 @@ public class ModNetworking {
             UpdateLayerConfigPayload.ID,
             UpdateLayerConfigPayload.CODEC
         );
+
+        // Character Possession System
+        PayloadTypeRegistry.playS2C().register(
+            PossessCharacterPayload.ID,
+            PossessCharacterPayload.CODEC
+        );
+
+        PayloadTypeRegistry.playS2C().register(
+            ReleasePossessionPayload.ID,
+            ReleasePossessionPayload.CODEC
+        );
     }
 
     /**
@@ -79,6 +90,22 @@ public class ModNetworking {
         PayloadTypeRegistry.playC2S().register(
             CreateCharacterPayload.ID,
             CreateCharacterPayload.CODEC
+        );
+
+        // Character Possession System
+        PayloadTypeRegistry.playC2S().register(
+            TogglePlayerModePayload.ID,
+            TogglePlayerModePayload.CODEC
+        );
+
+        PayloadTypeRegistry.playC2S().register(
+            SelectCharacterPayload.ID,
+            SelectCharacterPayload.CODEC
+        );
+
+        PayloadTypeRegistry.playC2S().register(
+            DeleteCharacterPayload.ID,
+            DeleteCharacterPayload.CODEC
         );
     }
 }
